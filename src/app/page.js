@@ -1,29 +1,20 @@
+import Card from "@/components/Card";
 import Link from "next/link";
 
 // Reusable navigation card component
 function NavCard({ name, items }) {
   return (
-    <section
+    <Card
+      name={name}
+      nameStyle={{
+        padding: "1rem",
+        paddingBottom: 0,
+      }}
       style={{
-        background: "#fff",
-        borderRadius: "1rem",
-        padding: "0 1rem",
-        minWidth: "320px",
-        maxWidth: "100%",
+        padding: "0",
+        gap: 0
       }}
     >
-      {name && (
-        <header
-          style={{
-            color: "#4E5058",
-            fontWeight: 600,
-            fontSize: "1rem",
-            paddingTop: "1rem",
-          }}
-        >
-          {name}
-        </header>
-      )}
       <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
         {items.map((item, idx) => (
           <li key={idx}>
@@ -34,7 +25,7 @@ function NavCard({ name, items }) {
                 color: "inherit",
                 display: "flex",
                 alignItems: "center",
-                padding: "1rem 0",
+                padding: "1rem",
                 gap: "1rem",
                 fontWeight: 600,
                 fontSize: "1rem",
@@ -54,14 +45,14 @@ function NavCard({ name, items }) {
                 style={{
                   borderBottom: "1px solid #F0F0F0",
                   marginLeft: "3.25rem",
-                  marginRight: 0,
+                  marginRight: 0
                 }}
               />
             )}
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }
 
@@ -84,7 +75,7 @@ export default function Home() {
 
   return (
     <div
-      className="relative min-h-screen p-12 gap-6 flex flex-col items-stretch"
+      className="relative min-h-screen gap-6 flex flex-col items-stretch"
       style={{
         background: "#F2F3F5",
         gap: "1rem",

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 // Reusable navigation card component
@@ -43,9 +42,9 @@ function NavCard({ name, items }) {
                 borderRadius: "0.5rem",
                 color: "#000"
               }}
-              className="hover:bg-[#f5f5f5] focus:bg-[#f0f0f0]"
+              className="transition-opacity hover:opacity-50 active:opacity-50 focus:opacity-50"
             >
-              <span className="material-icons" style={{ fontSize: "2rem", color: "#000" }}>
+              <span className="material-icons-round" style={{ fontSize: "2rem", color: "#000" }}>
                 {item.icon}
               </span>
               <span>{item.text}</span>
@@ -124,7 +123,7 @@ export default function Home() {
             border: "none",
           }}
         >
-          <span className="material-icons" style={{ fontSize: "1rem" }}>
+          <span className="material-icons-round" style={{ fontSize: "1rem" }}>
             account_circle
           </span>
           Uživatel
@@ -145,7 +144,7 @@ export default function Home() {
               border: "none",
             }}
           >
-            <span className="material-icons" style={{ fontSize: "1rem" }}>
+            <span className="material-icons-round" style={{ fontSize: "1rem" }}>
               logout
             </span>
             Odhlásit
@@ -164,7 +163,7 @@ export default function Home() {
             }}
             className="flex items-center justify-center"
           >
-            <span className="material-icons" style={{ fontSize: "1rem", color: "#fff" }}>
+            <span className="material-icons-round" style={{ fontSize: "1rem", color: "#fff" }}>
               settings
             </span>
           </Link>

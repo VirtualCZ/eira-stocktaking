@@ -1,60 +1,7 @@
 import Card from "@/components/Card";
+import NavCard from "@/components/NavCard";
 import Link from "next/link";
 
-// Reusable navigation card component
-function NavCard({ name, items }) {
-  return (
-    <Card
-      name={name}
-      nameStyle={{
-        padding: "1rem",
-        paddingBottom: 0,
-      }}
-      style={{
-        padding: "0",
-        gap: 0
-      }}
-    >
-      <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-        {items.map((item, idx) => (
-          <li key={idx}>
-            <Link
-              href={item.href || "#"}
-              style={{
-                textDecoration: "none",
-                color: "inherit",
-                display: "flex",
-                alignItems: "center",
-                padding: "1rem",
-                gap: "1rem",
-                fontWeight: 600,
-                fontSize: "1rem",
-                transition: "background 0.15s",
-                borderRadius: "0.5rem",
-                color: "#000"
-              }}
-              className="transition-opacity hover:opacity-50 active:opacity-50 focus:opacity-50"
-            >
-              <span className="material-icons-round" style={{ fontSize: "2rem", color: "#000" }}>
-                {item.icon}
-              </span>
-              <span>{item.text}</span>
-            </Link>
-            {idx !== items.length - 1 && (
-              <div
-                style={{
-                  borderBottom: "1px solid #F0F0F0",
-                  marginLeft: "3.25rem",
-                  marginRight: 0
-                }}
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
 
 export default function Home() {
   // Czech day names
@@ -75,7 +22,7 @@ export default function Home() {
 
   return (
     <div
-      className="relative min-h-screen gap-6 flex flex-col items-stretch"
+      className="relative min-h-screen flex flex-col items-center"
       style={{
         background: "#F2F3F5",
         gap: "1rem",
@@ -97,7 +44,7 @@ export default function Home() {
 
       {/* Button Row */}
       <div
-        className="flex justify-between w-full"
+        className="flex justify-between w-full container"
         style={{ position: "relative", zIndex: 1 }}
       >
         {/* Left: User Button */}
@@ -161,9 +108,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* ; Content */}
       <main
-        className="flex flex-col items-center sm:items-start"
+        className="flex flex-col items-center container"
         style={{
           position: "relative",
           zIndex: 1,
@@ -200,21 +147,21 @@ export default function Home() {
           <NavCard
             name="Akce"
             items={[
-              { icon: "qr_code", text: "Skenovat QR kód", href: "/scanQR" },
-              { icon: "add", text: "Vytvoř nové", href: "/new" },
-              { icon: "add", text: "Nová inventura", href: "/newStocktaking" },
+              { icon: "qr_code_scanner", text: "Skenovat QR kód", href: "/scanQR" },
+              { icon: "note_add", text: "Vytvoř nové", href: "/new" },
+              { icon: "post_add", text: "Nová inventura", href: "/newStocktaking" },
             ]}
           />
           <NavCard
             items={[
-              { icon: "list", text: "Seznam inventur", href: "/stocktakingList" },
+              { icon: "assignment", text: "Seznam inventur", href: "/stocktakingList" },
             ]}
           />
           <NavCard
             name="Ostatní"
             items={[
               { icon: "map", text: "Mapa", href: "/map" },
-              { icon: "place", text: "Lokace", href: "/location" },
+              { icon: "place", text: "Lokace", href: "/locationChooser" },
             ]}
           />
         </nav>

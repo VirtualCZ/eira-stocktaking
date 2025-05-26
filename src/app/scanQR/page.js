@@ -11,7 +11,7 @@ export default function ScanPage() {
         onUpdate={(err, result) => {
           if (result) setData(result.text);
         }}
-      style={{ width: "100vw", height: "100vh" }}
+        style={{ width: "100vw", height: "100vh" }}
       // constraints={{ facingMode: "environment" }}
       />
       {/* Overlay for QR guide */}

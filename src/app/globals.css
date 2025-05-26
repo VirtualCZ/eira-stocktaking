@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .container {
+    @apply lg:max-w-3xl md:max-w-xl;
+  }
+}
+
 :root {
   --background: #f2f3f5;
   --foreground: #000;

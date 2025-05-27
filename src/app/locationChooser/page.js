@@ -1,7 +1,8 @@
 "use client"
 import { useState } from "react";
 import DropdownCard from "../../components/DropdownCard";
-import NavCard from "@/components/NavCard";
+import Button from "@/components/Button";
+import QRScannerModal from "@/components/QRScannerModal";
 
 const buildings = [
     {
@@ -55,6 +56,53 @@ export default function LocationChooser() {
     const [selectedPodlazi, setSelectedPodlazi] = useState(null);
     const [selectedMistnost, setSelectedMistnost] = useState(null);
 
+    const [isScannerOpen, setIsScannerOpen] = useState(false); // State for modal visibility
+    const openScanner = () => setIsScannerOpen(true);
+    const closeScanner = () => setIsScannerOpen(false);
+
+    const handleQRScan = (scannedValue) => {
+        if (scannedValue) {
+            try {
+                let parsedScanData;
+                if (typeof scannedValue === 'string') {
+                    parsedScanData = JSON.parse(scannedValue);
+                } else if (typeof scannedValue === 'object' && scannedValue !== null) {
+                    parsedScanData = scannedValue; // Already an object
+                } else {
+                    console.warn("Scanned QR data is not a string or object:", scannedValue);
+                    return; // Or handle as an error
+                }
+
+                if (parsedScanData.type === "location" && parsedScanData.data) {
+                    const { budova, podlazi, mistnost } = parsedScanData.data;
+
+                    // Validate if the scanned location exists in our predefined buildings data
+                    const buildingExists = buildings.find(b => b.value === budova);
+                    const storyExists = buildingExists?.stories.find(s => s.value === podlazi);
+                    const roomExists = storyExists?.rooms.find(r => r.value === mistnost);
+
+                    if (buildingExists && storyExists && roomExists) {
+                        setSelectedBudova(budova);
+                        setSelectedPodlazi(podlazi);
+                        // Find the correct room text for display consistency if needed, or just use the value
+                        const roomObj = roomExists; // Or mistnostOptions.find(r => r.value === mistnost);
+                        setSelectedMistnost({ value: roomObj.value, text: roomObj.text });
+                    } else {
+                        console.warn("Scanned location not found in predefined data:", parsedScanData.data);
+                        // Optionally, provide user feedback about invalid location
+                    }
+                } else {
+                    console.warn("Scanned QR is not of type 'location' or data is missing.");
+                    // Optionally, provide user feedback about invalid QR type
+                }
+            } catch (e) {
+                console.error("Error parsing scanned QR data:", e);
+                // Optionally, provide user feedback about QR parsing error
+            }
+        }
+        closeScanner(); // Close modal after processing
+    };
+
     const budovaOptions = buildings.map(b => ({ value: b.value, text: b.text }));
     const selectedBuilding = buildings.find(b => b.value === selectedBudova);
     const podlaziOptions = selectedBuilding?.stories.map(s => ({ value: s.value, text: s.text })) ?? [];
@@ -107,10 +155,17 @@ export default function LocationChooser() {
                     }}>
                     Výběr lokace
                 </h1>
-                <NavCard
-                    items={[
-                        { icon: "qr_code_scanner", text: "Skenovat QR kód", href: "/scanQR" }
-                    ]}
+                <Button
+                    icon="qr_code_scanner"
+                    onClick={openScanner}
+                    style={{ marginBottom: "1rem" }} // Optional: add some margin if needed
+                >
+                    Skenovat QR kód
+                </Button>
+                <QRScannerModal
+                    isOpen={isScannerOpen}
+                    onClose={closeScanner}
+                    onScan={handleQRScan}
                 />
                 <DropdownCard
                     label="Budova"

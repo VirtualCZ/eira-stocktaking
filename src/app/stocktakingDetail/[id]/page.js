@@ -33,12 +33,6 @@ export default function StocktakingDetail() {
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
             <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
                 <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Detail položky</h1>
-                <Button icon={editMode ? undefined : "edit"} onClick={() => {
-                    setEditMode(e => !e);
-                    setEditItem(item); // reset edits on cancel
-                }}>
-                    {editMode ? "Zrušit úpravy" : "Upravit"}
-                </Button>
                 <Card name={item.name}>
                     {editMode ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -52,14 +46,14 @@ export default function StocktakingDetail() {
                                         <button
                                             key={idx}
                                             type="button"
-                                            style={{ 
-                                                width: 32, 
-                                                height: 32, 
-                                                borderRadius: "0.5rem", 
-                                                background: color, 
-                                                border: "1px solid #F0F0F0", 
-                                                cursor: "pointer", 
-                                                padding: 0, 
+                                            style={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: "0.5rem",
+                                                background: color,
+                                                border: "1px solid #F0F0F0",
+                                                cursor: "pointer",
+                                                padding: 0,
                                                 margin: 0,
                                                 transition: "transform 0.15s"
                                             }}
@@ -70,19 +64,19 @@ export default function StocktakingDetail() {
                                     ))}
                                     <button
                                         type="button"
-                                        style={{ 
-                                            display: "inline-flex", 
-                                            alignItems: "center", 
-                                            justifyContent: "center", 
-                                            width: 32, 
-                                            height: 32, 
-                                            borderRadius: "0.5rem", 
-                                            background: "#F0F0F0", 
-                                            border: "1px solid #F0F0F0", 
-                                            cursor: "pointer", 
-                                            fontWeight: "bold", 
-                                            fontSize: 16, 
-                                            padding: 0, 
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: "0.5rem",
+                                            background: "#F0F0F0",
+                                            border: "1px solid #F0F0F0",
+                                            cursor: "pointer",
+                                            fontWeight: "bold",
+                                            fontSize: 16,
+                                            padding: 0,
                                             margin: 0,
                                             transition: "background 0.15s"
                                         }}
@@ -91,36 +85,37 @@ export default function StocktakingDetail() {
                                         onClick={e => setColorPopover({ open: true, idx: null, anchor: e.target, mode: "add" })}
                                     >+</button>
                                 </div>
-                                <Modal isOpen={colorPopover.open} onClose={() => setColorPopover({ open: false })}>
-                                    <Card 
-                                        name="Vyberte barvu"
-                                        nameStyle={{
-                                            padding: "1rem",
-                                            paddingBottom: 0,
-                                        }}
-                                        style={{
-                                            padding: "0",
-                                            gap: 0
-                                        }}
-                                    >
-                                        <ul style={{ margin: 0, padding: "1rem", listStyle: "none", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                                            {COLORS.map(c => (
+                                <Modal
+                                    isOpen={colorPopover.open}
+                                    onClose={() => setColorPopover({ open: false })}
+                                    title="Vyberte barvu"
+                                    height="40vh"
+                                >
+                                    <ul style={{ margin: 0, padding: "1rem", listStyle: "none", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                                        {COLORS.map(c => {
+                                            const isDuplicate = colorPopover.mode === "add" && editItem.colors.includes(c);
+                                            return (
                                                 <li key={c}>
-                                                    <button 
-                                                        type="button" 
-                                                        style={{ 
-                                                            width: 40, 
-                                                            height: 40, 
-                                                            borderRadius: "0.5rem", 
-                                                            background: c, 
-                                                            border: "1px solid #F0F0F0", 
-                                                            cursor: "pointer", 
-                                                            outline: 'none', 
+                                                    <button
+                                                        type="button"
+                                                        style={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            borderRadius: "0.5rem",
+                                                            background: isDuplicate ? "#e0e0e0" : c,
+                                                            border: "1px solid #F0F0F0",
+                                                            cursor: isDuplicate ? "not-allowed" : "pointer",
+                                                            outline: 'none',
                                                             boxShadow: 'none',
-                                                            transition: "transform 0.15s"
+                                                            transition: "transform 0.15s",
+                                                            position: "relative",
+                                                            opacity: isDuplicate ? 0.6 : 1
                                                         }}
-                                                        className="hover:scale-110"
+                                                        className={isDuplicate ? "" : "hover:scale-110"}
+                                                        disabled={isDuplicate}
                                                         onClick={() => {
+                                                            if (isDuplicate) return;
+
                                                             if (colorPopover.mode === "edit") {
                                                                 const newColors = [...editItem.colors];
                                                                 newColors[colorPopover.idx] = c;
@@ -130,58 +125,71 @@ export default function StocktakingDetail() {
                                                             }
                                                             setColorPopover({ open: false, idx: null, anchor: null, mode: null });
                                                         }}
-                                                    ></button>
+                                                    >
+                                                        {isDuplicate && (
+                                                            <div style={{
+                                                                position: "absolute",
+                                                                top: "50%",
+                                                                left: "50%",
+                                                                width: "120%",
+                                                                height: "2px",
+                                                                backgroundColor: "#ff0000",
+                                                                transform: "translate(-50%, -50%) rotate(-45deg)",
+                                                                transformOrigin: "center"
+                                                            }} />
+                                                        )}
+                                                    </button>
                                                 </li>
-                                            ))}
-                                        </ul>
-                                        {colorPopover.mode === "edit" && (
-                                            <div style={{ borderTop: "1px solid #F0F0F0", margin: "0 1rem" }} />
-                                        )}
-                                        {colorPopover.mode === "edit" && (
-                                            <button
-                                                type="button"
-                                                style={{
-                                                    textDecoration: "none",
-                                                    color: "inherit",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    padding: "1rem",
-                                                    gap: "1rem",
-                                                    fontWeight: 600,
-                                                    fontSize: "1rem",
-                                                    transition: "background 0.15s",
-                                                    borderRadius: "0.5rem",
-                                                    color: "#e00",
-                                                    width: "100%",
-                                                    border: "none",
-                                                    background: "none",
-                                                    cursor: "pointer",
-                                                    textAlign: "left"
-                                                }}
-                                                className="transition-opacity hover:opacity-50 active:opacity-50 focus:opacity-50"
-                                                onClick={() => {
-                                                    const newColors = editItem.colors.filter((_, i) => i !== colorPopover.idx);
-                                                    setEditItem({ ...editItem, colors: newColors });
-                                                    setColorPopover({ open: false, idx: null, anchor: null, mode: null });
-                                                }}
-                                            >
-                                                <span className="material-icons-round" style={{ fontSize: "2rem", color: "#e00" }}>
-                                                    delete
-                                                </span>
-                                                <span>Odstranit barvu</span>
-                                            </button>
-                                        )}
-                                    </Card>
+                                            );
+                                        })}
+                                    </ul>
+                                    {colorPopover.mode === "edit" && (
+                                        <div style={{ borderTop: "1px solid #F0F0F0", margin: "0 1rem" }} />
+                                    )}
+                                    {colorPopover.mode === "edit" && (
+                                        <button
+                                            type="button"
+                                            style={{
+                                                textDecoration: "none",
+                                                color: "inherit",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                padding: "1rem",
+                                                gap: "1rem",
+                                                fontWeight: 600,
+                                                fontSize: "1rem",
+                                                transition: "background 0.15s",
+                                                borderRadius: "0.5rem",
+                                                color: "#e00",
+                                                width: "100%",
+                                                border: "none",
+                                                background: "none",
+                                                cursor: "pointer",
+                                                textAlign: "left"
+                                            }}
+                                            className="transition-opacity hover:opacity-50 active:opacity-50 focus:opacity-50"
+                                            onClick={() => {
+                                                const newColors = editItem.colors.filter((_, i) => i !== colorPopover.idx);
+                                                setEditItem({ ...editItem, colors: newColors });
+                                                setColorPopover({ open: false, idx: null, anchor: null, mode: null });
+                                            }}
+                                        >
+                                            <span className="material-icons-round" style={{ fontSize: "2rem", color: "#e00" }}>
+                                                delete
+                                            </span>
+                                            <span>Odstranit barvu</span>
+                                        </button>
+                                    )}
                                 </Modal>
                             </div>
                         </div>
                     ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <img src={item.image} alt={item.name} style={{ width: 120, height: 120, objectFit: "contain", borderRadius: 12, alignSelf: "center" }} />
                             <div><b>Název:</b> {item.name}</div>
                             <div><b>Datum kontroly:</b> {item.lastCheck}</div>
                             <div><b>Poznámka:</b> {item.note}</div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <b>Barvy:</b>
                                 {item.colors.map((color, idx) => (
                                     <span key={idx} style={{ display: "inline-block", width: 18, height: 18, borderRadius: "50%", background: color, border: "1px solid #F0F0F0" }} title={color}></span>
@@ -190,6 +198,21 @@ export default function StocktakingDetail() {
                         </div>
                     )}
                 </Card>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <Button
+                        onClick={() => setEditMode(!editMode)}
+                    >
+                        {editMode ? "Zrušit úpravy" : "Upravit"}
+                    </Button>
+
+                    {editMode && (
+                        <Button
+                            onClick={() => { }}
+                        >
+                            Uložit změny
+                        </Button>
+                    )}
+                </div>
             </main>
         </div>
     );

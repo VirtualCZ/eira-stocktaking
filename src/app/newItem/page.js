@@ -5,7 +5,7 @@ import Card from "@/components/Card";
 import PictureInput from "@/components/PictureInput";
 import TextInput from "@/components/TextInput";
 
-export default function NewStocktaking() {
+export default function NewItem() {
     return (
         <div
             className="relative min-h-screen flex flex-col items-center"
@@ -30,7 +30,7 @@ export default function NewStocktaking() {
                         fontWeight: 600,
                         marginBottom: "1rem",
                     }}>
-                    Nová inventurizace
+                    Nový předmět?
                 </h1>
 
                 <Card

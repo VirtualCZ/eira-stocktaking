@@ -93,23 +93,6 @@ export default function ScanPage() {
       <div style={{ position: "absolute", bottom: 100, left: 0, right: 0, color: "#fff", textAlign: "center", whiteSpace: "pre-line", fontSize: 18 }}>
         {formatted || "Scan a QR code..."}
       </div>
-      {/* Action buttons */}
-      <div style={{ position: "absolute", bottom: 32, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 16 }}>
-        <Button
-          icon="check"
-          onClick={handleReturnWithData}
-          disabled={!data || !returnTo}
-        >
-          Potvrdit lokaci
-        </Button>
-        <Button
-          icon="close"
-          onClick={handleReturnWithoutData}
-          disabled={!returnTo}
-        >
-          Zpět bez změny
-        </Button>
-      </div>
     </div>
   );
 }

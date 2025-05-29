@@ -1,22 +1,24 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { fetchStocktaking } from "@/mockApi";
 import Link from "next/link";
 import Card from "@/components/Card";
-import { fetchStocktakingOperations } from "@/mockApi";
-import Modal from "@/components/Modal";
+import Modal from "@/components/Modal";;
 
 const PAGE_SIZE = 10;
 
 const sortOptions = [
-    { label: 'ID', value: 'id' },
-    { label: 'Datum', value: 'date' },
-    { label: 'Poznámka', value: 'note' }
+    { label: 'Jméno', value: 'name' },
+    { label: 'Datum', value: 'lastCheck' },
+    { label: 'Poznámka', value: 'note' },
+    { label: 'Barva', value: 'color' }
 ];
 
-export default function StocktakingOperationsList() {
-    const [operations, setOperations] = useState([]);
-    const [sortBy, setSortBy] = useState("id");
+export default function StocktakingList() {
+    const [viewType, setViewType] = useState("wide");
+    const [sortBy, setSortBy] = useState("name");
     const [sortOrder, setSortOrder] = useState('asc');
+    const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -24,21 +26,24 @@ export default function StocktakingOperationsList() {
 
     useEffect(() => {
         setLoading(true);
-        fetchStocktakingOperations({ offset: page * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
-            setOperations(res.operations);
+        fetchStocktaking({ offset: page * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
+            setItems(res.items);
             setTotal(res.total);
             setLoading(false);
         });
     }, [page]);
 
-    const sorted = operations.slice().sort((a, b) => {
+    // Sorting (client-side for demo)
+    const sorted = items.slice().sort((a, b) => {
         let compare = 0;
-        if (sortBy === 'id') {
-            compare = a.id - b.id;
-        } else if (sortBy === 'date') {
-            compare = new Date(a.date) - new Date(b.date);
+        if (sortBy === 'name') {
+            compare = a.name.localeCompare(b.name);
+        } else if (sortBy === 'lastCheck') {
+            compare = new Date(a.lastCheck) - new Date(b.lastCheck);
         } else if (sortBy === 'note') {
             compare = a.note.localeCompare(b.note);
+        } else if (sortBy === 'color') {
+            compare = a.color.localeCompare(b.color);
         }
         return sortOrder === 'asc' ? compare : -compare;
     });
@@ -49,7 +54,6 @@ export default function StocktakingOperationsList() {
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
             <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
                 <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Seznam inventur</h1>
-                {loading ? <div>Načítání...</div> : null}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "#ebedef solid 2px", paddingBottom: "1rem" }}>
                     <button
                         onClick={() => setIsOptionsModalOpen(true)}
@@ -69,20 +73,43 @@ export default function StocktakingOperationsList() {
                         <span className="material-icons-round" style={{ color: '#4e5058', fontSize: '1.3rem' }}>expand_more</span>
                     </button>
                 </div>
+                {loading ? <div>Načítání...</div> : null}
                 <div className="flex gap-4 flex-col">
-                    {sorted.map(op => (
-                        <Link key={op.id} href={`/stocktakingList/${op.id}`} style={{ textDecoration: "none" }}>
-                            <Card style={{ flexDirection: "row", alignItems: "center" }}>
+                    {sorted.map(item => (
+                        <Link key={item.id} href={`/stocktakingDetail/${item.id}`} style={{ textDecoration: "none" }}>
+                            <Card style={{ flexDirection: "row" }}>
+                                <img src={item.image} alt={item.name} style={{ width: viewType === "wide" ? 64 : 36, height: viewType === "wide" ? 64 : 36, objectFit: "contain", borderRadius: 8, marginRight: 18 }} />
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 4 }}>Inventura #{op.id}</div>
-                                    <div style={{ color: "#555", fontSize: 14 }}>Datum: <b>{op.date}</b></div>
-                                    <div style={{ color: "#888", fontSize: 13 }}>Poznámka: {op.note}</div>
+                                    <div style={{ fontWeight: 600, fontSize: viewType === "wide" ? 20 : 16, marginBottom: 4 }}>{item.name}</div>
+                                    <div style={{ color: "#555", fontSize: 14 }}>
+                                        {viewType === "wide" && (
+                                            <>
+                                                <div>Datum kontroly: <b>{item.lastCheck}</b></div>
+                                                <div>Poznámka: <b>{item.note}</b></div>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
+                                                    {item.colors.map((color, idx) => (
+                                                        <span key={idx} style={{ display: "inline-block", width: 18, height: 18, borderRadius: "50%", background: color, border: "1px solid #ccc" }} title={color}></span>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                        {viewType === "narrow" && (
+                                            <>
+                                                <div>Datum: <b>{item.lastCheck}</b></div>
+                                                <div style={{ color: "#888", fontSize: 13 }}>{item.note}</div>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
+                                                    {item.colors.map((color, idx) => (
+                                                        <span key={idx} style={{ display: "inline-block", width: 18, height: 18, borderRadius: "50%", background: color, border: "1px solid #ccc" }} title={color}></span>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </Card>
                         </Link>
                     ))}
                 </div>
-
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
                     <button
                         disabled={page === 0}
@@ -118,9 +145,34 @@ export default function StocktakingOperationsList() {
                         }}
                     >Další</button>
                 </div>
-
                 <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)} height="auto">
                     <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
+                        {/* Display Options Card */}
+                        <Card name="Zobrazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
+                            {[{ label: 'Velké', value: 'wide' }, { label: 'Detailní', value: 'narrow' }].map((opt, idx, arr) => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => setViewType(opt.value)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '1rem',
+                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <span>{opt.label}</span>
+                                    <input
+                                        type="radio"
+                                        checked={viewType === opt.value}
+                                        onChange={() => setViewType(opt.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
+                                    />
+                                </button>
+                            ))}
+                        </Card>
                         {/* Sorting Options Card */}
                         <Card name="Seřazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
                             {sortOptions.map((opt, idx, arr) => (
@@ -176,6 +228,6 @@ export default function StocktakingOperationsList() {
                     </div>
                 </Modal>
             </main>
-        </div>
+        </div >
     );
 }

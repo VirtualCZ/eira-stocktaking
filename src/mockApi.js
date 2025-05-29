@@ -15,3 +15,17 @@ export async function fetchStocktaking({ offset = 0, limit = 10 }) {
     total: MOCK_DATA.length
   };
 }
+
+
+const MOCK_OPERATIONS = Array.from({ length: 8 }, (_, i) => ({
+  id: i + 1,
+  date: `2024-06-${(i % 28 + 1).toString().padStart(2, "0")}`,
+  note: i % 2 === 0 ? "Pravidelná inventura" : "Mimořádná kontrola"
+}));
+
+export async function fetchStocktakingOperations() {
+  await new Promise(res => setTimeout(res, 300)); // Simulate network delay
+  return {
+    operations: MOCK_OPERATIONS
+  };
+}

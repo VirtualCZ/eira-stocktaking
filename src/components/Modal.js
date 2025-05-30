@@ -8,7 +8,7 @@ export default function Modal({
     style = {},
     contentStyle = {},
     titleStyle = {},
-    height = "90vh"
+    height = "90svh"
 }) {
     const modalRef = useRef(null);
 
@@ -59,6 +59,7 @@ export default function Modal({
                     position: "relative",
                     boxShadow: "0px -5px 15px rgba(0,0,0,0.2)",
                     height: height,
+                    overflowY: "scroll",
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",

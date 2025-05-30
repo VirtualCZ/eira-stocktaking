@@ -3,11 +3,15 @@ import React, { useState, useEffect } from "react";
 import { fetchStocktaking } from "@/mockApi";
 import Link from "next/link";
 import Card from "@/components/Card";
-import Modal from "@/components/Modal";;
+import Modal from "@/components/Modal"; import Button from "@/components/Button";
+import QRScannerModal from "@/components/QRScannerModal";
+import TextInput from "@/components/TextInput";
+;
 
 const PAGE_SIZE = 10;
 
 const sortOptions = [
+    { label: 'ID', value: 'id' },
     { label: 'Jméno', value: 'name' },
     { label: 'Datum', value: 'lastCheck' },
     { label: 'Poznámka', value: 'note' },
@@ -16,13 +20,17 @@ const sortOptions = [
 
 export default function StocktakingList() {
     const [viewType, setViewType] = useState("wide");
-    const [sortBy, setSortBy] = useState("name");
+    const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+    const [scannedItem, setScannedItem] = useState(null);
+    const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+    const [editItem, setEditItem] = useState(null);
 
     useEffect(() => {
         setLoading(true);
@@ -36,7 +44,9 @@ export default function StocktakingList() {
     // Sorting (client-side for demo)
     const sorted = items.slice().sort((a, b) => {
         let compare = 0;
-        if (sortBy === 'name') {
+        if (sortBy === 'id') {
+            compare = a.id - b.id;
+        } else if (sortBy === 'id') {
             compare = a.name.localeCompare(b.name);
         } else if (sortBy === 'lastCheck') {
             compare = new Date(a.lastCheck) - new Date(b.lastCheck);
@@ -49,6 +59,37 @@ export default function StocktakingList() {
     });
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+
+
+    function handleScan(dataString) {
+        let parsed;
+        try {
+            parsed = JSON.parse(dataString);
+        } catch {
+            alert("Neplatný JSON formát.");
+            return;
+        }
+
+        if (parsed.type !== "item" || !parsed.data || typeof parsed.data.id !== "number") {
+            alert("QR kód neobsahuje platnou položku.");
+            return;
+        }
+
+        // Use real items instead of hardcoded ones
+        const found = items.find(item => item.id === parsed.data.id);
+
+        if (found) {
+            setScannedItem(found);
+            setEditItem({ ...found }); // clone to allow editing
+            setIsPreviewModalOpen(true);
+        } else {
+            const emptyItem = { id: parsed.data.id, name: "Neznámá položka", note: "", image: "" };
+            setScannedItem(emptyItem);
+            setEditItem(emptyItem);
+            setIsPreviewModalOpen(true);
+        }
+    }
+
 
     return (
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
@@ -74,6 +115,11 @@ export default function StocktakingList() {
                     </button>
                 </div>
                 {loading ? <div>Načítání...</div> : null}
+                <Button
+                    onClick={() => setIsQRModalOpen(true)}
+                    aria-label="Open QR Scanner"
+                >Skenovat položku
+                </Button>
                 <div className="flex gap-4 flex-col">
                     {sorted.map(item => (
                         <Link key={item.id} href={`/stocktakingDetail/${item.id}`} style={{ textDecoration: "none" }}>
@@ -145,7 +191,7 @@ export default function StocktakingList() {
                         }}
                     >Další</button>
                 </div>
-                <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)} height="auto">
+                <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)}>
                     <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
                         {/* Display Options Card */}
                         <Card name="Zobrazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
@@ -199,7 +245,7 @@ export default function StocktakingList() {
                                 </button>
                             ))}
                         </Card>
-                        <Card style={{ padding: 0, gap: 0, marginTop: 16 }}>
+                        <Card style={{ padding: 0, gap: 0 }}>
                             {[{ label: 'Ascending', value: 'asc' }, { label: 'Descending', value: 'desc' }].map((opt, idx, arr) => (
                                 <button
                                     key={opt.value}
@@ -227,6 +273,129 @@ export default function StocktakingList() {
                         </Card>
                     </div>
                 </Modal>
+                <QRScannerModal
+                    isOpen={isQRModalOpen}
+                    onClose={() => setIsQRModalOpen(false)}
+                    onScan={handleScan}
+                    validate={parsed => {
+                        if (parsed.type === "item" && parsed.data && typeof parsed.data.id === "number") {
+                            return {
+                                valid: true,
+                                message: `Naskenováno ID položky: ${parsed.data.id}`,
+                                data: parsed.data
+                            };
+                        }
+                        return { valid: false, message: "QR kód neobsahuje platnou položku." };
+                    }}
+                />
+                <Modal
+                    isOpen={isPreviewModalOpen}
+                    onClose={() => setIsPreviewModalOpen(false)}
+                    title="Náhled položky"
+                    contentStyle={{
+                        gap: "1rem",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    {scannedItem && (
+                        <>
+                            {scannedItem.name ? (
+                                <>
+                                    <Card>
+                                        <div
+                                            style={{
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {scannedItem.name}
+                                        </div>
+                                        <img
+                                            src={scannedItem.image}
+                                            alt={scannedItem.name}
+                                            style={{
+                                                width: "100%",
+                                                maxHeight: 150,
+                                                objectFit: "contain",
+                                                borderRadius: "1rem",
+                                            }}
+                                        />
+                                        <Button
+                                            style={{
+                                                padding: "8px 16px",
+                                                background: "#b640ff",
+                                                color: "#fff",
+                                                border: "none",
+                                                borderRadius: 8,
+                                                fontWeight: 600,
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => router.push(`/stocktakingDetail/${scannedItem.id}`)}
+                                        >
+                                            Editovat
+                                        </Button>
+                                    </Card>
+
+                                    {editItem && (
+                                        <>
+                                            <TextInput
+                                                label="Poznámka"
+                                                value={editItem.note}
+                                                onChange={(e) => setEditItem({ ...editItem, note: e.target.value })}
+                                            />
+                                        </>
+                                    )}
+
+                                    <Button
+                                        onClick={() => {
+                                            if (!editItem) return; // <-- FIX
+                                            const now = new Date().toISOString();
+                                            setEditItem((prev) => ({
+                                                ...prev,
+                                                lastUpdated: now,
+                                            }));
+                                            setIsPreviewModalOpen(false);
+                                        }}
+                                    >
+                                        OK
+                                    </Button>
+
+                                    <Button onClick={() => setIsPreviewModalOpen(false)}>
+                                        Zavřít
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
+                                        Položka s ID {scannedItem.id} nebyla nalezena.
+                                    </div>
+                                    <Button
+                                        style={{
+                                            margin: 8,
+                                            padding: "8px 16px",
+                                            background: "#b640ff",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: 8,
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                        }}
+                                        onClick={() => {
+                                            router.push(
+                                                `/stocktakingDetail/new?preloadId=${scannedItem.id}`
+                                            );
+                                            setIsPreviewModalOpen(false);
+                                        }}
+                                    >
+                                        Přidat novou položku
+                                    </Button>
+                                    <Button onClick={() => setIsPreviewModalOpen(false)}>Zavřít</Button>
+                                </>
+                            )}
+                        </>
+                    )}
+                </Modal>
+
             </main>
         </div >
     );

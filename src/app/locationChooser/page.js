@@ -166,6 +166,17 @@ export default function LocationChooser() {
                     isOpen={isScannerOpen}
                     onClose={closeScanner}
                     onScan={handleQRScan}
+                    validate={parsed => {
+                        if (parsed.type === "location" && parsed.data) {
+                            const { budova, podlazi, mistnost } = parsed.data;
+                            return {
+                                valid: true,
+                                message: `Naskenováno: ${budova || "?"} / ${podlazi || "?"} / ${mistnost || "?"}`,
+                                data: parsed.data
+                            };
+                        }
+                        return { valid: false, message: "QR kód neobsahuje data o lokaci." };
+                    }}
                 />
                 <DropdownCard
                     label="Budova"

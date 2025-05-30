@@ -3,21 +3,21 @@ import { useState, useEffect } from "react";
 import QrScanner from "react-qr-barcode-scanner";
 import Modal from "./Modal";
 
-export default function QRScannerModal({ isOpen, onClose, onScan }) {
+export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
     const [scannedDataString, setScannedDataString] = useState(null);
     const [displayMessage, setDisplayMessage] = useState("Skenujte QR kód...");
     const [showModal, setShowModal] = useState(false);
     const [scannerError, setScannerError] = useState(false);
 
     useEffect(() => {
-        if (isOpen) {
-            setShowModal(true);
-            setDisplayMessage("Skenujte QR kód...");
-            setScannedDataString(null);
-            setScannerError(false);
-        } else {
+        if (!isOpen) {
             setShowModal(false);
+            return;
         }
+        setShowModal(true);
+        setDisplayMessage("Skenujte QR kód...");
+        setScannedDataString(null);
+        setScannerError(false);
     }, [isOpen]);
 
     useEffect(() => {
@@ -25,30 +25,28 @@ export default function QRScannerModal({ isOpen, onClose, onScan }) {
             if (!scannerError) setDisplayMessage("Skenujte QR kód...");
             return;
         }
-
         setScannerError(false);
-
-        try {
-            const parsedData = JSON.parse(scannedDataString);
-
-            if (typeof parsedData === 'object' && parsedData !== null) { // Basic check for now
-                const { budova, podlazi, mistnost } = parsedData.data || {}; // Handle if data is not present
-                if (parsedData.type === "location") {
-                    setDisplayMessage(
-                        `Naskenováno: ${budova || "?"} / ${podlazi || "?"} / ${mistnost || "?"}`
-                    );
-                    onScan(scannedDataString);
-                    onClose();
-                } else {
-                    setDisplayMessage("QR kód neobsahuje data o lokaci.");
-                }
+        if (validate) {
+            let result = { valid: false, message: "QR není ve správném formátu JSON." };
+            try {
+                const parsed = JSON.parse(scannedDataString);
+                result = validate(parsed);
+            } catch (e) {}
+            if (result.valid) {
+                setDisplayMessage(result.message || "Naskenováno!");
+                onScan(scannedDataString, result.data);
+                onClose();
             } else {
-                setDisplayMessage("QR kód má neočekávaný formát.");
+                setDisplayMessage(result.message || "QR není platný.");
             }
-        } catch (e) {
-            setDisplayMessage("QR není ve správném formátu JSON.");
+        } else {
+            // No validation: just send the scanned string and close
+            onScan(scannedDataString);
+            onClose();
         }
-    }, [scannedDataString, onScan, onClose, scannerError]);
+    // Only run when scannedDataString changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scannedDataString]);
 
     const handleScan = (err, result) => {
         if (result && result.text) {
@@ -69,6 +67,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan }) {
             contentStyle={{
                 padding: 0
             }}
+            height="70vh"
             isOpen={showModal}>
                 <div style={{
                     background: "#282828",

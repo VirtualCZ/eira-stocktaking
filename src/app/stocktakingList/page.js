@@ -147,7 +147,7 @@ export default function StocktakingOperationsList() {
                                 </button>
                             ))}
                         </Card>
-                        <Card style={{ padding: 0, gap: 0, marginTop: 16 }}>
+                        <Card style={{ padding: 0, gap: 0 }}>
                             {[{ label: 'Ascending', value: 'asc' }, { label: 'Descending', value: 'desc' }].map((opt, idx, arr) => (
                                 <button
                                     key={opt.value}

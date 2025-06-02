@@ -42,7 +42,6 @@ export default function NewItem() {
                         label="Popis"
                         placeholder="Zadejte popis"
                     />
-                    <Button icon="qr_code">Upravit přes QR</Button>
                 </Card>
             </main>
         </div>

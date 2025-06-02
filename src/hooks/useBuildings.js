@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-const buildings = [
+export const buildings = [
     {
         value: "A",
         text: "Budova A",

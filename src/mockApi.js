@@ -1,3 +1,5 @@
+import { buildings } from "./hooks/useBuildings";
+
 // First, define the 5 hardcoded items
 const HARDCODED_ITEMS = [
   {
@@ -6,7 +8,8 @@ const HARDCODED_ITEMS = [
     name: "ThinkPad T14 Gen1",
     lastCheck: "2024-05-04",
     note: "Chybí napájecí adaptér",
-    colors: ["black"]
+    colors: ["black"],
+    location: { building: "A", story: "1", room: "101" }
   },
   {
     id: 2,
@@ -14,7 +17,8 @@ const HARDCODED_ITEMS = [
     name: "iMac 24 M1",
     lastCheck: "2024-05-08",
     note: "",
-    colors: ["silver", "white"]
+    colors: ["silver", "white"],
+    location: { building: "A", story: "1", room: "102" }
   },
   {
     id: 3,
@@ -22,7 +26,8 @@ const HARDCODED_ITEMS = [
     name: "iPhone 13 Pro",
     lastCheck: "2024-05-10",
     note: "Poškrábaný povrch",
-    colors: ["blue"]
+    colors: ["blue"],
+    location: { building: "A", story: "2", room: "201" }
   },
   {
     id: 4,
@@ -30,7 +35,8 @@ const HARDCODED_ITEMS = [
     name: "Monitor LG 27UL500",
     lastCheck: "2024-05-12",
     note: "",
-    colors: ["white"]
+    colors: ["white"],
+    location: { building: "A", story: "2", room: "202" }
   },
   {
     id: 5,
@@ -38,7 +44,8 @@ const HARDCODED_ITEMS = [
     name: "MacBook Air M2",
     lastCheck: "2024-05-15",
     note: "Chybí napájecí adaptér",
-    colors: ["gray"]
+    colors: ["gray"],
+    location: { building: "B", story: "1", room: "103" }
   }
 ];
 
@@ -46,13 +53,17 @@ const HARDCODED_ITEMS = [
 const DYNAMIC_ITEMS = Array.from({ length: 95 }, (_, i) => {
   const idx = i + 5 + 1; // +5 to account for hardcoded items, +1 to start from id 6
   const baseColor = ["blue", "silver", "white", "black", "gray", "red"][i % 6];
+  // Cycle through all available locations
+  const buildingList = buildings;
+  const location = buildingList[i % buildingList.length];
   return {
     id: idx,
     image: ["/file.svg", "/globe.svg", "/window.svg", "/vercel.svg"][i % 4],
     name: `Item ${idx}`,
     lastCheck: `2024-05-${(i % 28 + 1).toString().padStart(2, "0")}`,
     note: i % 7 === 0 ? "Chybí napájecí adaptér" : i % 5 === 0 ? "Poškrábaný povrch" : "",
-    colors: baseColor === "red" ? ["gray", "red"] : [baseColor]
+    colors: baseColor === "red" ? ["gray", "red"] : [baseColor],
+    location
   };
 });
 

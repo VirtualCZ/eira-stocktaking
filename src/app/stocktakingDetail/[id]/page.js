@@ -8,6 +8,7 @@ import PictureInput from "@/components/PictureInput";
 import TextInput from "@/components/TextInput";
 import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
+import LocationPickerModal from "@/components/LocationPickerModal";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -16,6 +17,7 @@ export default function StocktakingDetail() {
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
     const [colorPopover, setColorPopover] = useState({ open: false, idx: null, anchor: null });
     const COLORS = ["blue", "silver", "white", "black", "gray", "red"];
     const [editItem, setEditItem] = useState(null);
@@ -38,10 +40,25 @@ export default function StocktakingDetail() {
                 <PageHeading heading="Detail položky" route={returnTo} />
                 <Card name={item.name}>
                     {editMode ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <PictureInput label="Fotka" value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} />
                             <TextInput label="Název" value={editItem.name} onChange={e => setEditItem({ ...editItem, name: e.target.value })} />
+                            <TextInput label="Cena" value={editItem.price || ""} onChange={e => setEditItem({ ...editItem, price: e.target.value })} />
                             <TextInput label="Poznámka" value={editItem.note} onChange={e => setEditItem({ ...editItem, note: e.target.value })} />
+                            <div>
+                                <Button type="button" onClick={() => setModalOpen(true)}>Upravit lokaci</Button>
+                                {editItem.location && (
+                                    <div className="text-sm text-gray-600">
+                                        Budova {editItem.location.budova}<br />Podlaží {editItem.location.podlazi}<br />Místnost {editItem.location.mistnost}
+                                    </div>
+                                )}
+                            </div>
+                            <LocationPickerModal
+                                isOpen={modalOpen}
+                                onClose={() => setModalOpen(false)}
+                                onSave={loc => setEditItem({ ...editItem, location: loc })}
+                                initialLocation={editItem.location}
+                            />
                             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 <b>Barvy:</b>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

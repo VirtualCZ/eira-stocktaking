@@ -148,7 +148,7 @@ export default function Home() {
             name="Akce"
             items={[
               { icon: "qr_code_scanner", text: "Skenovat QR kód", href: "/scanQR" },
-              { icon: "note_add", text: "Vytvoř nové", href: "/new" },
+              { icon: "note_add", text: "Vytvoř nové", href: "/newItem" },
               { icon: "post_add", text: "Nová inventura", href: "/newStocktaking" },
             ]}
           />

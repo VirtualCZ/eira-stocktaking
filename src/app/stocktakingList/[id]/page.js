@@ -6,6 +6,8 @@ import Card from "@/components/Card";
 import Modal from "@/components/Modal"; import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
 import TextInput from "@/components/TextInput";
+import PageHeading from "@/components/PageHeading";
+import { usePathname } from "next/navigation";
 ;
 
 const PAGE_SIZE = 10;
@@ -19,6 +21,7 @@ const sortOptions = [
 ];
 
 export default function StocktakingList() {
+    const pathname = usePathname();
     const [viewType, setViewType] = useState("wide");
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
@@ -94,7 +97,7 @@ export default function StocktakingList() {
     return (
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
             <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
-                <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Seznam inventur</h1>
+                <PageHeading heading="Předměty v inventuře" route="/" />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "#ebedef solid 2px", paddingBottom: "1rem" }}>
                     <button
                         onClick={() => setIsOptionsModalOpen(true)}
@@ -122,7 +125,10 @@ export default function StocktakingList() {
                 </Button>
                 <div className="flex gap-4 flex-col">
                     {sorted.map(item => (
-                        <Link key={item.id} href={`/stocktakingDetail/${item.id}`} style={{ textDecoration: "none" }}>
+                        <Link
+                            key={item.id}
+                            href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(pathname)}`}
+                            style={{ textDecoration: "none" }}>
                             <Card style={{ flexDirection: "row" }}>
                                 <img src={item.image} alt={item.name} style={{ width: viewType === "wide" ? 64 : 36, height: viewType === "wide" ? 64 : 36, objectFit: "contain", borderRadius: 8, marginRight: 18 }} />
                                 <div style={{ flex: 1 }}>

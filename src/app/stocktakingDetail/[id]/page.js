@@ -1,15 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Card from "@/components/Card";
 import { fetchStocktaking } from "@/mockApi";
 import Button from "@/components/Button";
 import PictureInput from "@/components/PictureInput";
 import TextInput from "@/components/TextInput";
 import Modal from "@/components/Modal";
+import PageHeading from "@/components/PageHeading";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get("returnTo") || "/";
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
@@ -32,7 +35,7 @@ export default function StocktakingDetail() {
     return (
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
             <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
-                <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Detail položky</h1>
+                <PageHeading heading="Detail položky" route={returnTo} />
                 <Card name={item.name}>
                     {editMode ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

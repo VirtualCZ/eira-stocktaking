@@ -2,6 +2,7 @@
 
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import PageHeading from "@/components/PageHeading";
 import PictureInput from "@/components/PictureInput";
 import TextInput from "@/components/TextInput";
 
@@ -24,14 +25,8 @@ export default function NewItem() {
                     gap: "1rem"
                 }}
             >
-                <h1
-                    style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                    }}>
-                    Nový předmět?
-                </h1>
+
+                <PageHeading heading="Nový předmět" route="/" />
 
                 <Card
                     name="Lokace"

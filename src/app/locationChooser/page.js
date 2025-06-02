@@ -5,6 +5,7 @@ import { useSetLocation, useGetLocation } from "@/hooks/useLocation";
 import DropdownCard from "@/components/DropdownCard";
 import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
+import PageHeading from "@/components/PageHeading";
 
 export default function LocationChooser() {
     const setLocation = useSetLocation();
@@ -133,14 +134,8 @@ export default function LocationChooser() {
                     gap: "1rem"
                 }}
             >
-                <h1
-                    style={{
-                        fontSize: "1.5rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                    }}>
-                    Výběr lokace
-                </h1>
+                <PageHeading heading="Výběr lokace" route="/" />
+
                 <Button
                     icon="qr_code_scanner"
                     onClick={openScanner}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Card from "@/components/Card";
 import { fetchStocktakingOperations } from "@/mockApi";
 import Modal from "@/components/Modal";
+import PageHeading from "@/components/PageHeading";
 
 const PAGE_SIZE = 10;
 
@@ -48,7 +49,7 @@ export default function StocktakingOperationsList() {
     return (
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
             <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
-                <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "1rem" }}>Seznam inventur</h1>
+                <PageHeading heading="Seznam inventur" route="/" />
                 {loading ? <div>Načítání...</div> : null}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "#ebedef solid 2px", paddingBottom: "1rem" }}>
                     <button

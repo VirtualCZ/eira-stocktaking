@@ -9,6 +9,7 @@ import { useGetLocation } from "@/hooks/useLocation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createStocktaking } from "@/mockApi";
+import PageHeading from "@/components/PageHeading";
 
 export default function NewStocktaking() {
     const [name, setName] = useState("");
@@ -32,7 +33,7 @@ export default function NewStocktaking() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!name || !date || !note || !location) {
+        if (!name || !date || !location) {
             alert("Vyplňte prosím všechna pole a vyberte lokaci.");
             return;
         }
@@ -69,17 +70,8 @@ export default function NewStocktaking() {
                 }}
             >
 
-                <div className="flex items-center mb-4">
-                    <Link href="/" className="flex items-center">
-                        <span className="material-icons-round" style={{ fontSize: "1.5rem" }}>
-                            home
-                        </span>
-                    </Link>
-                    <div className="w-px h-6 bg-black mx-2" />
-                    <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>
-                        Nová inventura
-                    </h1>
-                </div>
+                <PageHeading heading="Nová inventura" route="/" />
+
                 <form onSubmit={handleSubmit}>
                     <Card>
                         <TextInput

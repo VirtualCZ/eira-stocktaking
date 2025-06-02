@@ -130,7 +130,7 @@ export default function StocktakingList() {
                                     <div style={{ color: "#555", fontSize: 14 }}>
                                         {viewType === "wide" && (
                                             <>
-                                                <div>Datum kontroly: <b>{item.lastCheck}</b></div>
+                                                <div>Datum kontroly: <b>{item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}</b></div>
                                                 <div>Poznámka: <b>{item.note}</b></div>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
                                                     {item.colors.map((color, idx) => (
@@ -141,7 +141,7 @@ export default function StocktakingList() {
                                         )}
                                         {viewType === "narrow" && (
                                             <>
-                                                <div>Datum: <b>{item.lastCheck}</b></div>
+                                                <div>Datum: <b>{item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}</b></div>
                                                 <div style={{ color: "#888", fontSize: 13 }}>{item.note}</div>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
                                                     {item.colors.map((color, idx) => (
@@ -321,15 +321,6 @@ export default function StocktakingList() {
                                             }}
                                         />
                                         <Button
-                                            style={{
-                                                padding: "8px 16px",
-                                                background: "#b640ff",
-                                                color: "#fff",
-                                                border: "none",
-                                                borderRadius: 8,
-                                                fontWeight: 600,
-                                                cursor: "pointer",
-                                            }}
                                             onClick={() => router.push(`/stocktakingDetail/${scannedItem.id}`)}
                                         >
                                             Editovat
@@ -348,12 +339,12 @@ export default function StocktakingList() {
 
                                     <Button
                                         onClick={() => {
-                                            if (!editItem) return; // <-- FIX
+                                            if (!editItem) return;
                                             const now = new Date().toISOString();
-                                            setEditItem((prev) => ({
-                                                ...prev,
-                                                lastUpdated: now,
-                                            }));
+                                            setItems((prevItems) => prevItems.map(item =>
+                                                item.id === editItem.id ? { ...item, lastCheck: now, note: editItem.note } : item
+                                            ));
+                                            setEditItem({ ...editItem, lastCheck: now });
                                             setIsPreviewModalOpen(false);
                                         }}
                                     >

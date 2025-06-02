@@ -1,57 +1,15 @@
 "use client"
-import { useState } from "react";
-import DropdownCard from "../../components/DropdownCard";
+import { useEffect, useState } from "react";
+import { useBuildings } from "@/hooks/useBuildings";
+import { useSetLocation, useGetLocation } from "@/hooks/useLocation";
+import DropdownCard from "@/components/DropdownCard";
 import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
 
-const buildings = [
-    {
-        value: "A",
-        text: "Budova A",
-        stories: [
-            {
-                value: "1",
-                text: "1. podlaží",
-                rooms: [
-                    { value: "101", text: "Místnost 101 v budově A" },
-                    { value: "102", text: "Místnost 102 v budově A" }
-                ]
-            },
-            {
-                value: "2",
-                text: "2. podlaží",
-                rooms: [
-                    { value: "201", text: "Místnost 201 v budově A" },
-                    { value: "202", text: "Místnost 202 v budově A" }
-                ]
-            }
-        ]
-    },
-    {
-        value: "B",
-        text: "Budova B",
-        stories: [
-            {
-                value: "1",
-                text: "1. podlaží",
-                rooms: [
-                    { value: "103", text: "Místnost 103 v budově B" },
-                    { value: "104", text: "Místnost 104 v budově B" }
-                ]
-            },
-            {
-                value: "3",
-                text: "3. podlaží",
-                rooms: [
-                    { value: "301", text: "Místnost 301 v budově B" },
-                    { value: "302", text: "Místnost 302 v budově B" }
-                ]
-            }
-        ]
-    }
-];
-
 export default function LocationChooser() {
+    const setLocation = useSetLocation();
+    const getLocation = useGetLocation();
+    const buildings = useBuildings();
     const [selectedBudova, setSelectedBudova] = useState(null);
     const [selectedPodlazi, setSelectedPodlazi] = useState(null);
     const [selectedMistnost, setSelectedMistnost] = useState(null);
@@ -59,6 +17,34 @@ export default function LocationChooser() {
     const [isScannerOpen, setIsScannerOpen] = useState(false); // State for modal visibility
     const openScanner = () => setIsScannerOpen(true);
     const closeScanner = () => setIsScannerOpen(false);
+
+    useEffect(() => {
+        const stored = getLocation();
+        if (stored) {
+            const { budova, podlazi, mistnost } = stored;
+
+            // Validate stored values exist in the buildings data
+            const building = buildings.find(b => b.value === budova);
+            const story = building?.stories.find(s => s.value === podlazi);
+            const room = story?.rooms.find(r => r.value === mistnost);
+
+            if (building && story && room) {
+                setSelectedBudova(budova);
+                setSelectedPodlazi(podlazi);
+                setSelectedMistnost({ value: room.value, text: room.text });
+            }
+        }
+    }, [getLocation]);
+
+    useEffect(() => {
+        if (selectedBudova && selectedPodlazi && selectedMistnost) {
+            setLocation({
+                budova: selectedBudova,
+                podlazi: selectedPodlazi,
+                mistnost: selectedMistnost.value,
+            });
+        }
+    }, [selectedBudova, selectedPodlazi, selectedMistnost, setLocation]);
 
     const handleQRScan = (scannedValue) => {
         if (scannedValue) {

@@ -81,3 +81,9 @@ export async function fetchStocktakingOperations() {
     operations: MOCK_OPERATIONS
   };
 }
+
+
+export async function createStocktaking() {
+  await new Promise(res => setTimeout(res, 1000)); // Simulate 1 second delay
+  return { id: 5 }; // Fixed mock ID
+}

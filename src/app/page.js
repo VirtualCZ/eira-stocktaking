@@ -1,4 +1,5 @@
 import Card from "@/components/Card";
+import LocationNavCard from "@/components/LocationNavCard";
 import NavCard from "@/components/NavCard";
 import Link from "next/link";
 
@@ -144,11 +145,12 @@ export default function Home() {
             width: "100%",
           }}
         >
+          <LocationNavCard />
           <NavCard
             name="Akce"
             items={[
               { icon: "qr_code_scanner", text: "Skenovat QR kód", href: "/scanQR" },
-              { icon: "note_add", text: "Vytvoř nové", href: "/newItem" },
+              { icon: "note_add", text: "Nový předmět", href: "/newItem" },
               { icon: "post_add", text: "Nová inventura", href: "/newStocktaking" },
             ]}
           />
@@ -161,7 +163,6 @@ export default function Home() {
             name="Ostatní"
             items={[
               { icon: "map", text: "Mapa", href: "/map" },
-              { icon: "place", text: "Lokace", href: "/locationChooser" },
             ]}
           />
         </nav>

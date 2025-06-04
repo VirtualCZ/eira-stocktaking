@@ -1,121 +1,106 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import PageHeading from "@/components/PageHeading";
+import { useState } from "react";
 import QrScanner from "react-qr-barcode-scanner";
+import Modal from "@/components/Modal";
+import { useRouter } from "next/navigation";
+import { useSetLocation } from "@/hooks/useLocation";
 import Button from "@/components/Button";
 
-function InnerScanPage() {
-  const [data, setData] = useState(null);
-  const [formatted, setFormatted] = useState("");
-  const searchParams = useSearchParams();
-  const returnTo = searchParams.get("returnTo");
+export default function ScanPage() {
+  const [showModal, setShowModal] = useState(false);
+  const [locationData, setLocationData] = useState(null);
   const router = useRouter();
+  const setLocation = useSetLocation();
 
-  useEffect(() => {
-    if (!data) return;
-    try {
-      const parsed = JSON.parse(data);
-      if (parsed.type === "location" && parsed.data) {
-        const { budova, podlazi, mistnost } = parsed.data;
-        setFormatted(
-          `Budova: ${budova || "-"}\nPodlaží: ${podlazi || "-"}\nMístnost: ${mistnost || "-"}`
-        );
-      } else {
-        setFormatted("QR neobsahuje platnou lokaci.");
-      }
-    } catch {
-      setFormatted("QR není ve správném formátu.");
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (data) {
-      localStorage.setItem("scannedLocation", data);
-    }
-  }, [data]);
-
-  const handleReturnWithData = () => {
-    if (!data || !returnTo) return;
-    try {
-      const parsed = JSON.parse(data);
-      if (parsed.type === "location" && parsed.data) {
-        const params = new URLSearchParams(parsed.data).toString();
-        router.push(`${returnTo}?${params}`);
+  const handleScan = (err, result) => {
+    if (result) {
+      let parsed;
+      try {
+        parsed = JSON.parse(result.text);
+      } catch {
         return;
       }
-    } catch {}
-    router.push(returnTo);
+      if (parsed.type === "item" && parsed.data && parsed.data.id) {
+        router.push(`/stocktakingDetail/${parsed.data.id}`);
+      } else if (parsed.type === "location" && parsed.data) {
+        setLocationData(parsed.data);
+        setShowModal(true);
+      }
+    }
   };
 
-  const handleReturnWithoutData = () => {
-    if (returnTo) router.push(returnTo);
-    else router.back();
+  const handleConfirmLocation = () => {
+    if (locationData) {
+      setLocation(locationData);
+    }
+    setShowModal(false);
+    setLocationData(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setLocationData(null);
   };
 
   return (
-    <div style={{ width: "100vw", height: "100vh", background: "#000", position: "relative" }}>
-      <div
-        style={{
-          position: "absolute",
-          top: 8,
-          left: 0,
-          right: 0,
-          color: "#fff",
-          textAlign: "center",
-          fontSize: 12,
-          opacity: 0.7,
-          zIndex: 10,
-        }}
-      >
-        returnTo: {returnTo || "(none)"}
-      </div>
-      <QrScanner
-        onUpdate={(err, result) => {
-          if (result) {
-            setData(result.text);
-          }
-        }}
-        style={{ width: "100vw", height: "100vh" }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          width: "60vw",
-          height: "60vw",
-          maxWidth: "320px",
-          maxHeight: "320px",
-          transform: "translate(-50%, -50%)",
-          border: "4px solid #fff",
-          borderRadius: "16px",
-          boxSizing: "border-box",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 100,
-          left: 0,
-          right: 0,
-          color: "#fff",
-          textAlign: "center",
-          whiteSpace: "pre-line",
-          fontSize: 18,
-        }}
-      >
-        {formatted || "Scan a QR code..."}
-      </div>
+    <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
+      <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
+        <PageHeading heading="Sken QR" route="/" />
+        <div style={{ display: "flex", borderRadius: "1rem", overflow: "hidden", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", position: "relative" }}>
+          <QrScanner
+            onUpdate={handleScan}
+            onError={(error) => handleScan(error, null)}
+            constraints={{ facingMode: "environment" }}
+            style={{ width: "100%", height: "100%" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: "60%",
+              aspectRatio: "1 / 1",
+              transform: "translate(-50%, -50%)",
+              border: "4px solid #fff",
+              borderRadius: "16px",
+              boxSizing: "border-box",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+        <Modal
+          isOpen={showModal}
+          onClose={handleCloseModal}
+          title="Změnit lokaci?"
+          height="fit-content"
+          contentStyle={{
+            gap: "1rem",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          <div>Chcete změnit svoji lokaci na:
+            {locationData && (
+              <div>
+                Budova: {locationData.budova || "-"}<br />
+                Podlaží: {locationData.podlazi || "-"}<br />
+                Místnost: {locationData.mistnost || "-"}
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={handleConfirmLocation}
+          >
+            Ano
+          </Button>
+          <Button
+            onClick={handleCloseModal}
+          >
+            Ne
+          </Button>
+        </Modal>
+      </main>
     </div>
-  );
-}
-
-// This is the actual default export for the page
-export default function ScanPage() {
-  return (
-    <Suspense fallback={<div style={{ padding: 32, color: "#fff" }}>Načítání…</div>}>
-      <InnerScanPage />
-    </Suspense>
   );
 }

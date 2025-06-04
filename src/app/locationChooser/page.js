@@ -139,7 +139,7 @@ export default function LocationChooser() {
                 <Button
                     icon="qr_code_scanner"
                     onClick={openScanner}
-                    style={{ marginBottom: "1rem" }} // Optional: add some margin if needed
+                    style={{ marginBottom: "1rem" }}
                 >
                     Skenovat QR kód
                 </Button>

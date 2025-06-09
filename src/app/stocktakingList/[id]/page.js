@@ -8,6 +8,8 @@ import QRScannerModal from "@/components/QRScannerModal";
 import TextInput from "@/components/TextInput";
 import PageHeading from "@/components/PageHeading";
 import { usePathname, useSearchParams } from "next/navigation";
+import HeadingCard from "@/components/HeadingCard";
+import LocationNavCard from "@/components/LocationNavCard";
 ;
 
 const PAGE_SIZE = 10;
@@ -24,7 +26,6 @@ export default function StocktakingList() {
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
     const pathname = usePathname();
-    const [viewType, setViewType] = useState("wide");
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [items, setItems] = useState([]);
@@ -36,6 +37,14 @@ export default function StocktakingList() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [editItem, setEditItem] = useState(null);
+
+    const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
+
+    const viewModeOptions = [
+        { value: 'grid', label: 'Mřížka' },
+        { value: 'detailed', label: 'Detailní' },
+        { value: 'compact', label: 'Kompaktní' },
+    ];
 
     useEffect(() => {
         setLoading(true);
@@ -97,71 +106,125 @@ export default function StocktakingList() {
 
 
     return (
-        <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
-            <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
+        <div className="relative min-h-screen flex flex-col items-center">
+            <main className="container flex flex-col gap-4 p-4" style={{ minHeight: "100vh" }}>
                 <PageHeading heading="Předměty v inventuře" route={returnTo} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "#ebedef solid 2px", paddingBottom: "1rem" }}>
-                    <button
-                        onClick={() => setIsOptionsModalOpen(true)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: '#ebedef',
-                            border: 'none',
-                            borderRadius: 999,
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            gap: '0.5rem',
-                        }}
-                    >
-                        <span className="material-icons-round" style={{ color: '#4e5058', fontSize: '1.3rem' }}>tune</span>
-                        <span style={{ flex: 1, textAlign: 'left', color: '#4e5058', fontWeight: 600 }}>Možnosti zobrazení</span>
-                        <span className="material-icons-round" style={{ color: '#4e5058', fontSize: '1.3rem' }}>expand_more</span>
-                    </button>
-                </div>
+
+                <HeadingCard
+                    heading="Seznam položek"
+                    leftActions={[
+                        { icon: "home", onClick: () => alert("Home") },
+                    ]}
+                    rightActions={[
+                        { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
+                    ]}
+                />
+
+                <LocationNavCard editMode={true} />
+
                 {loading ? <div>Načítání...</div> : null}
-                <Button
+                {/* <Button
                     onClick={() => setIsQRModalOpen(true)}
                     aria-label="Open QR Scanner"
                 >Skenovat položku
-                </Button>
-                <div className="flex gap-4 flex-col">
+                </Button> */}
+                <div className="flex flex-col gap-2">
                     {sorted.map(item => (
-                        <Link
-                            key={item.id}
-                            href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
-                            style={{ textDecoration: "none" }}>
-                            <Card style={{ flexDirection: "row" }}>
-                                <img src={item.image} alt={item.name} style={{ width: viewType === "wide" ? 64 : 36, height: viewType === "wide" ? 64 : 36, objectFit: "contain", borderRadius: 8, marginRight: 18 }} />
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 600, fontSize: viewType === "wide" ? 20 : 16, marginBottom: 4 }}>{item.name}</div>
-                                    <div style={{ color: "#555", fontSize: 14 }}>
-                                        {viewType === "wide" && (
-                                            <>
-                                                <div>Datum kontroly: <b>{item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}</b></div>
-                                                <div>Poznámka: <b>{item.note}</b></div>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
-                                                    {item.colors.map((color, idx) => (
-                                                        <span key={idx} style={{ display: "inline-block", width: 18, height: 18, borderRadius: "50%", background: color, border: "1px solid #ccc" }} title={color}></span>
-                                                    ))}
+                        <>
+                            {viewMode === 'grid' && (
+                                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                                    {sorted.map(item => (
+                                        <Link
+                                            key={item.id}
+                                            href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                            style={{ textDecoration: "none" }}
+                                        >
+                                            <div className="flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] h-full">
+                                                {/* Image */}
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    style={{ width: "100%", height: 100, objectFit: "cover", display: "block" }}
+                                                />
+                                                {/* Content */}
+                                                <div className="p-4 flex flex-col justify-between flex-grow">
+                                                    {/* First part */}
+                                                    <div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-base text-black">{item.name}</span>
+                                                            <span className="material-icons-round text-black text-xl">more_horiz</span>
+                                                        </div>
+                                                        <div className="text-xs text-[#535353]">{item.note}</div>
+                                                    </div>
+                                                    {/* Second part */}
+                                                    <div className="italic text-xs text-[#535353] mt-2">
+                                                        Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                                    </div>
                                                 </div>
-                                            </>
-                                        )}
-                                        {viewType === "narrow" && (
-                                            <>
-                                                <div>Datum: <b>{item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}</b></div>
-                                                <div style={{ color: "#888", fontSize: 13 }}>{item.note}</div>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "6px 0 0 0" }}>
-                                                    {item.colors.map((color, idx) => (
-                                                        <span key={idx} style={{ display: "inline-block", width: 18, height: 18, borderRadius: "50%", background: color, border: "1px solid #ccc" }} title={color}></span>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
+                                            </div>
+                                        </Link>
+                                    ))}
                                 </div>
-                            </Card>
-                        </Link>
+                            )}
+
+
+                            {viewMode === 'detailed' && (
+                                <Link
+                                    key={item.id}
+                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                        {/* Top: Image */}
+                                        <img
+                                            src={item.image}
+                                            alt={item.name}
+                                            style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                                        />
+                                        {/* Bottom: Content */}
+                                        <div className="p-4 gap-4 flex flex-col">
+                                            {/* First part */}
+                                            <div>
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: "#000" }}>{item.name}</span>
+                                                    <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>more_horiz</span>
+                                                </div>
+                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                            </div>
+                                            {/* Second part */}
+                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            )}
+                            {viewMode === 'compact' && (
+                                <Link
+                                    key={item.id}
+                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                        {/* Bottom: Content */}
+                                        <div className="p-4 gap-4 flex flex-col">
+                                            {/* First part */}
+                                            <div>
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: "#000" }}>{item.name}</span>
+                                                    <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>more_horiz</span>
+                                                </div>
+                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                            </div>
+                                            {/* Second part */}
+                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            )}
+                        </>
                     ))}
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
@@ -203,29 +266,17 @@ export default function StocktakingList() {
                     <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
                         {/* Display Options Card */}
                         <Card name="Zobrazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
-                            {[{ label: 'Velké', value: 'wide' }, { label: 'Detailní', value: 'narrow' }].map((opt, idx, arr) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setViewType(opt.value)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '1rem',
-                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <span>{opt.label}</span>
-                                    <input
-                                        type="radio"
-                                        checked={viewType === opt.value}
-                                        onChange={() => setViewType(opt.value)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
-                                    />
-                                </button>
-                            ))}
+                            <div className="flex gap-2 mb-4">
+                                {viewModeOptions.map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setViewMode(opt.value)}
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold ${viewMode === opt.value ? 'bg-black text-white' : 'bg-[#ebedef] text-black'}`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
                         </Card>
                         {/* Sorting Options Card */}
                         <Card name="Seřazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>

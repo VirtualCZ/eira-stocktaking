@@ -1,6 +1,6 @@
 import LocationNavCard from "@/components/LocationNavCard";
 import { NavButton, NavLink } from "@/components/NavCard";
-import SpecialHeadingCard from "@/components/SpecialHeadingCard";
+import HeadingCard from "@/components/HeadingCard";
 import Link from "next/link";
 
 
@@ -67,7 +67,7 @@ export default function Home() {
         className="flex flex-col gap-4 container"
       >
 
-        <SpecialHeadingCard
+        <HeadingCard
           heading="Dobrý den,"
           // actions={[{ icon: "home", onClick: () => alert("Home") }]}
           extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page

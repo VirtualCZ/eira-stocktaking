@@ -6,7 +6,6 @@ import TextInput from "@/components/TextInput";
 import { useEffect, useState } from "react";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import { useGetLocation } from "@/hooks/useLocation";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createStocktaking } from "@/mockApi";
 import PageHeading from "@/components/PageHeading";

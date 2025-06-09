@@ -157,6 +157,7 @@ export default function Home() {
           <NavCard
             items={[
               { icon: "assignment", text: "Seznam inventur", href: "/stocktakingList" },
+              { icon: "assignment", text: "Seznam předmětů", href: "/stocktakingList" }
             ]}
           />
           <NavCard

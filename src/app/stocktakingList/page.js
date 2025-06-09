@@ -5,6 +5,7 @@ import Card from "@/components/Card";
 import { fetchStocktakingOperations } from "@/mockApi";
 import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
+import { usePathname } from "next/navigation";
 
 const PAGE_SIZE = 10;
 
@@ -17,6 +18,7 @@ const sortOptions = [
 export default function StocktakingOperationsList() {
     const [operations, setOperations] = useState([]);
     const [sortBy, setSortBy] = useState("id");
+    const pathname = usePathname();
     const [sortOrder, setSortOrder] = useState('asc');
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
@@ -72,7 +74,7 @@ export default function StocktakingOperationsList() {
                 </div>
                 <div className="flex gap-4 flex-col">
                     {sorted.map(op => (
-                        <Link key={op.id} href={`/stocktakingList/${op.id}`} style={{ textDecoration: "none" }}>
+                        <Link key={op.id} href={`/stocktakingList/${op.id}?returnTo=${encodeURIComponent(pathname)}`} style={{ textDecoration: "none" }}>
                             <Card style={{ flexDirection: "row", alignItems: "center" }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 4 }}>Inventura #{op.id}</div>

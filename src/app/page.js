@@ -1,6 +1,6 @@
-import Card from "@/components/Card";
 import LocationNavCard from "@/components/LocationNavCard";
-import NavCard from "@/components/NavCard";
+import { NavButton, NavLink } from "@/components/NavCard";
+import SpecialHeadingCard from "@/components/SpecialHeadingCard";
 import Link from "next/link";
 
 
@@ -23,148 +23,82 @@ export default function Home() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center"
+      className="min-h-screen flex flex-col items-center"
       style={{
-        background: "#F2F3F5",
+        background: "#ffffff",
         gap: "1rem",
         padding: "1rem",
       }}
     >
-      {/* Banner */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "8rem",
-          background: "#b640ff",
-          zIndex: 0,
-        }}
-      />
-
       {/* Button Row */}
       <div
-        className="flex justify-between w-full container"
-        style={{ position: "relative", zIndex: 1 }}
+        className="flex justify-between container"
       >
-        {/* Left: User Button */}
-        <button
-          className="flex items-center gap-1"
-          style={{
-            borderRadius: "100px",
-            height: "fit-content",
-            background: "rgba(0,0,0,0.53)",
-            padding: "0.5rem",
-            fontWeight: 600,
-            fontSize: "0.75rem",
-            color: "#fff",
-            border: "none",
-          }}
-        >
-          <span className="material-icons-round" style={{ fontSize: "1rem" }}>
-            account_circle
-          </span>
-          Uživatel
-        </button>
-
-        {/* Right: Sign Out and Settings */}
-        <div className="flex items-center gap-4">
+        {/* Left: Uživateľ, Log out */}
+        <div className="flex gap-2">
           <button
-            className="flex items-center gap-1"
-            style={{
-              borderRadius: "100px",
-              height: "fit-content",
-              background: "rgba(255,0,4,0.53)",
-              padding: "0.5rem",
-              fontWeight: 600,
-              fontSize: "0.75rem",
-              color: "#fff",
-              border: "none",
-            }}
+            className="flex items-center gap-2 p-3 rounded-2xl"
+            style={{ backgroundColor: "#000" }}
           >
-            <span className="material-icons-round" style={{ fontSize: "1rem" }}>
-              logout
-            </span>
-            Odhlásit
+            <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>account_circle</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Uživatel</span>
           </button>
+          <button
+            className="flex items-center gap-2 p-3 rounded-2xl"
+            style={{ backgroundColor: "#ff0000" }}
+          >
+            <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>logout</span>
+          </button>
+        </div>
+        {/* Right: Settings */}
+        <div className="flex items-center">
           <Link
             href="/settings"
-            style={{
-              borderRadius: "100px",
-              height: "fit-content",
-              background: "rgba(0,0,0,0.53)",
-              padding: "0.5rem",
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center p-3 rounded-2xl"
+            style={{ backgroundColor: "#000" }}
           >
-            <span className="material-icons-round" style={{ fontSize: "1rem", color: "#fff" }}>
-              settings
-            </span>
+            <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>settings</span>
           </Link>
         </div>
       </div>
 
       {/* ; Content */}
       <main
-        className="flex flex-col items-center container"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          marginTop: "4.5rem",
-          width: "100%",
-        }}
+        className="flex flex-col gap-4 container"
       >
-        <header
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: "0.25rem",
-            width: "100%",
-            marginBottom: "2rem",
-          }}
-        >
-          <h2 style={{ fontWeight: 600, fontSize: "1.5rem", color: "#000", margin: 0 }}>
-            Dobrý den,
-          </h2>
-          <p style={{ fontWeight: 400, fontSize: "1rem", color: "#333", margin: 0 }}>
-            dnes je {dayName} {formattedDate}
-          </p>
-        </header>
 
-        <nav
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "2.5rem",
-            width: "100%",
-          }}
-        >
-          <LocationNavCard />
-          <NavCard
-            name="Akce"
-            items={[
-              { icon: "qr_code_scanner", text: "Skenovat QR kód", href: "/scanQR" },
-              { icon: "note_add", text: "Nový předmět", href: "/newItem" },
-              { icon: "post_add", text: "Nová inventura", href: "/newStocktaking" },
-            ]}
+        <SpecialHeadingCard
+          heading="Dobrý den,"
+          // actions={[{ icon: "home", onClick: () => alert("Home") }]}
+          extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
+        />
+
+        <LocationNavCard editMode={true} />
+        <nav className="flex flex-col gap-2">
+          <div className="flex flex-row gap-2">
+            <NavButton
+              text="Skenovat QR kód"
+              size="big"
+              icon="qr_code_scanner"
+              href="scanQR"
+              variant="dark"
+            />
+            <NavLink
+              text="Seznam položek"
+              size="big"
+              icon="assignment"
+              href="stocktakingList"
+            />
+          </div>
+          <NavLink
+            text="Nový předmět"
+            href="newItem"
           />
-          <NavCard
-            items={[
-              { icon: "assignment", text: "Seznam inventur", href: "/stocktakingList" },
-              { icon: "assignment", text: "Seznam předmětů", href: "/stocktakingList" }
-            ]}
+          <NavLink
+            text="Seznam poloažek"
           />
-          <NavCard
-            name="Ostatní"
-            items={[
-              { icon: "map", text: "Mapa", href: "/map" },
-            ]}
+          <NavLink
+            text="Přidat položku"
           />
         </nav>
       </main>

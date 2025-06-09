@@ -1,10 +1,9 @@
 "use client"
 import Link from "next/link";
-import Card from "./Card";
 import { useEffect, useState } from "react";
 import { useGetLocation } from "@/hooks/useLocation";
 
-export default function LocationNavCard() {
+export default function LocationNavCard({ editMode }) {
   const getLocation = useGetLocation();
   const [location, setLocation] = useState(null);
 
@@ -17,42 +16,32 @@ export default function LocationNavCard() {
   const mistnost = location?.mistnost || "-";
 
   return (
-    <Card style={{ padding: 0, gap: 0 }}>
-      <div style={{ display: "flex", alignItems: "stretch", width: "100%", minHeight: 96 }}>
-        {/* Left: Location info */}
-        <div style={{ padding: "1rem", paddingRight: 0, display: "flex", alignItems: "center" }}>
-          <span className="material-icons-round" style={{ fontSize: "2rem", color: "#b640ff", borderRadius: "1rem" }}>
+    <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+      {/* Left: Location info */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+        <div style={{ color: "#535353", fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
+          Lokace:
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span className="material-icons-round" style={{ fontSize: 14, color: "#000" }}>
             location_on
           </span>
+          <span style={{ fontWeight: 700, fontSize: 12, color: "#000" }}>
+            Budova {budova}, Podlaží {podlazi}, Místnost {mistnost}
+          </span>
         </div>
-        <div style={{ flex: 1, padding: "1rem", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <header style={{ color: "#4E5058", fontWeight: 600, fontSize: "1rem", paddingBottom: "0.25rem" }}>
-            Lokace
-          </header>
-          <div style={{ lineHeight: "1.25rem" }}>Budova: {budova}</div>
-          <div style={{ lineHeight: "1.25rem" }}>Patro: {podlazi}</div>
-          <div style={{ lineHeight: "1.25rem" }}>Místnost: {mistnost}</div>
-        </div>
-        {/* Right: Edit strip */}
+      </div>
+      {/* Right: Edit icon (only if editMode) */}
+      {editMode && (
         <Link
           href="/locationChooser"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#b640ff",
-            minHeight: "100%",
-            borderTopRightRadius: "1rem",
-            borderBottomRightRadius: "1rem",
-            textDecoration: "none",
-            padding: "1rem"
-          }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 8, textDecoration: "none" }}
         >
-          <span className="material-icons-round" style={{ fontSize: "2rem", color: "#fff" }}>
+          <span className="material-icons-round" style={{ fontSize: 14, color: "#000" }}>
             edit
           </span>
         </Link>
-      </div>
-    </Card>
+      )}
+    </div>
   );
 }

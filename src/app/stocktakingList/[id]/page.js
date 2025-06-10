@@ -150,11 +150,21 @@ export default function StocktakingList() {
                                                 <div className="p-4 flex flex-col justify-between flex-grow">
                                                     {/* First part */}
                                                     <div>
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="font-bold text-base text-black">{item.name}</span>
-                                                            <span className="material-icons-round text-black text-xl">more_horiz</span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                            <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={e => {
+                                                                    e.preventDefault();
+                                                                    alert('More options coming soon!');
+                                                                }}
+                                                                className="focus:outline-none"
+                                                                style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
+                                                            >
+                                                                <span className="material-icons-round text-black text-xl">more_horiz</span>
+                                                            </button>
                                                         </div>
-                                                        <div className="text-xs text-[#535353]">{item.note}</div>
+                                                        <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                                     </div>
                                                     {/* Second part */}
                                                     <div className="italic text-xs text-[#535353] mt-2">
@@ -185,9 +195,19 @@ export default function StocktakingList() {
                                         <div className="p-4 gap-4 flex flex-col">
                                             {/* First part */}
                                             <div>
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                    <span style={{ fontWeight: 700, fontSize: 16, color: "#000" }}>{item.name}</span>
-                                                    <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>more_horiz</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => {
+                                                            e.preventDefault();
+                                                            alert('More options coming soon!');
+                                                        }}
+                                                        className="focus:outline-none"
+                                                        style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
+                                                    >
+                                                        <span className="material-icons-round text-black text-xl">more_horiz</span>
+                                                    </button>
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
@@ -210,9 +230,19 @@ export default function StocktakingList() {
                                         <div className="p-4 gap-4 flex flex-col">
                                             {/* First part */}
                                             <div>
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                    <span style={{ fontWeight: 700, fontSize: 16, color: "#000" }}>{item.name}</span>
-                                                    <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>more_horiz</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={e => {
+                                                            e.preventDefault();
+                                                            alert('More options coming soon!');
+                                                        }}
+                                                        className="focus:outline-none"
+                                                        style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
+                                                    >
+                                                        <span className="material-icons-round text-black text-xl">more_horiz</span>
+                                                    </button>
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>

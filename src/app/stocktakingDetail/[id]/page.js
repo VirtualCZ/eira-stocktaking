@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
- import { fetchStocktaking } from "@/mockApi";
+import { fetchStocktaking } from "@/mockApi";
 import Button from "@/components/Button";
 import PictureInput from "@/components/PictureInput";
 import TextInput from "@/components/TextInput";
@@ -216,7 +216,7 @@ export default function StocktakingDetail() {
                                         <ContextRow
                                             icon="edit"
                                             label="Edit"
-                                            action={() => alert('Edit clicked')}
+                                            action={() => setEditMode(!editMode)}
                                         />
                                         <ContextRow
                                             icon="content_copy"

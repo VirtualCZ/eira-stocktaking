@@ -10,7 +10,8 @@ import PageHeading from "@/components/PageHeading";
 import { usePathname, useSearchParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import LocationNavCard from "@/components/LocationNavCard";
-;
+import { ContextButton, ContextRow } from "@/components/ContextMenu";
+import { Pagination } from "@/components/Pagination";
 
 const PAGE_SIZE = 10;
 
@@ -30,13 +31,18 @@ export default function StocktakingList() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(0);
+    // const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [editItem, setEditItem] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(0);
+    const totalItems = 70; // Example total items
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
 
@@ -48,12 +54,12 @@ export default function StocktakingList() {
 
     useEffect(() => {
         setLoading(true);
-        fetchStocktaking({ offset: page * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
+        fetchStocktaking({ offset: currentPage * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
             setItems(res.items);
             setTotal(res.total);
             setLoading(false);
         });
-    }, [page]);
+    }, [currentPage]);
 
     // Sorting (client-side for demo)
     const sorted = items.slice().sort((a, b) => {
@@ -72,7 +78,7 @@ export default function StocktakingList() {
         return sortOrder === 'asc' ? compare : -compare;
     });
 
-    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+    // const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
 
     function handleScan(dataString) {
@@ -152,17 +158,19 @@ export default function StocktakingList() {
                                                     <div>
                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                             <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={e => {
-                                                                    e.preventDefault();
-                                                                    alert('More options coming soon!');
-                                                                }}
-                                                                className="focus:outline-none"
-                                                                style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
-                                                            >
-                                                                <span className="material-icons-round text-black text-xl">more_horiz</span>
-                                                            </button>
+                                                            <ContextButton>
+                                                                <ContextRow
+                                                                    icon="content_copy"
+                                                                    label="Duplicate"
+                                                                    action={() => alert('Duplicate clicked')}
+                                                                />
+                                                                <ContextRow
+                                                                    icon="delete"
+                                                                    label="Delete"
+                                                                    action={() => alert('Delete clicked')}
+                                                                    color="#FF6262"
+                                                                />
+                                                            </ContextButton>
                                                         </div>
                                                         <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                                     </div>
@@ -197,17 +205,19 @@ export default function StocktakingList() {
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={e => {
-                                                            e.preventDefault();
-                                                            alert('More options coming soon!');
-                                                        }}
-                                                        className="focus:outline-none"
-                                                        style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
-                                                    >
-                                                        <span className="material-icons-round text-black text-xl">more_horiz</span>
-                                                    </button>
+                                                    <ContextButton>
+                                                        <ContextRow
+                                                            icon="content_copy"
+                                                            label="Duplicate"
+                                                            action={() => alert('Duplicate clicked')}
+                                                        />
+                                                        <ContextRow
+                                                            icon="delete"
+                                                            label="Delete"
+                                                            action={() => alert('Delete clicked')}
+                                                            color="#FF6262"
+                                                        />
+                                                    </ContextButton>
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
@@ -232,17 +242,19 @@ export default function StocktakingList() {
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={e => {
-                                                            e.preventDefault();
-                                                            alert('More options coming soon!');
-                                                        }}
-                                                        className="focus:outline-none"
-                                                        style={{ background: 'none', border: 'none', padding: 0, margin: 0, cursor: 'pointer' }}
-                                                    >
-                                                        <span className="material-icons-round text-black text-xl">more_horiz</span>
-                                                    </button>
+                                                    <ContextButton>
+                                                        <ContextRow
+                                                            icon="content_copy"
+                                                            label="Duplicate"
+                                                            action={() => alert('Duplicate clicked')}
+                                                        />
+                                                        <ContextRow
+                                                            icon="delete"
+                                                            label="Delete"
+                                                            action={() => alert('Delete clicked')}
+                                                            color="#FF6262"
+                                                        />
+                                                    </ContextButton>
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
@@ -257,41 +269,14 @@ export default function StocktakingList() {
                         </>
                     ))}
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
-                    <button
-                        disabled={page === 0}
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        style={{
-                            padding: "8px 20px",
-                            border: "none",
-                            borderRadius: 8,
-                            color: "#b640ff",
-                            fontWeight: 600,
-                            fontSize: 16,
-                            cursor: page === 0 ? "not-allowed" : "pointer",
-                            opacity: page === 0 ? 0.5 : 1,
-                            transition: "background 0.2s, color 0.2s, opacity 0.2s"
-                        }}
-                    >Předchozí</button>
-                    <span style={{ minWidth: 120, textAlign: "center", color: "#222", fontWeight: 500, fontSize: 16 }}>
-                        Strana {page + 1} / {total > 0 ? Math.ceil(total / PAGE_SIZE) : 1}
-                    </span>
-                    <button
-                        disabled={page + 1 >= totalPages}
-                        onClick={() => setPage(p => p + 1)}
-                        style={{
-                            padding: "8px 20px",
-                            border: "none",
-                            borderRadius: 8,
-                            color: "#b640ff",
-                            fontWeight: 600,
-                            fontSize: 16,
-                            cursor: page + 1 >= totalPages ? "not-allowed" : "pointer",
-                            opacity: page + 1 >= totalPages ? 0.5 : 1,
-                            transition: "background 0.2s, color 0.2s, opacity 0.2s"
-                        }}
-                    >Další</button>
-                </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => {
+                        setCurrentPage(newPage);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
                 <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)}>
                     <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
                         {/* Display Options Card */}

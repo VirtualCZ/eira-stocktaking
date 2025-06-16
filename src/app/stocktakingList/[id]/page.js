@@ -202,87 +202,93 @@ export default function StocktakingList() {
                                 ))}
                             </div>
                         )}
-
-
                         {viewMode === 'detailed' && (
-                            <Link
-                                key={item.id}
-                                href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
-                                style={{ textDecoration: "none" }}
-                            >
-                                <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                                    {/* Top: Image */}
-                                    <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
-                                    />
-                                    {/* Bottom: Content */}
-                                    <div className="p-4 gap-4 flex flex-col">
-                                        {/* First part */}
-                                        <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                                <ContextButton>
-                                                    <ContextRow
-                                                        icon="swap_horiz"
-                                                        label="Přesun"
-                                                        action={() => alert('Přesun clicked')}
-                                                    />
-                                                    <ContextRow
-                                                        icon="visibility"
-                                                        label="Nalezeno"
-                                                        action={() => alert('Nalezeno clicked')}
-                                                    />
-                                                </ContextButton>
+                            sorted.map(item => (
+                                <Link
+                                    key={item.id}
+                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                        {/* Top: Image */}
+                                        <img
+                                            src={item.image}
+                                            alt={item.name}
+                                            style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                                        />
+                                        {/* Bottom: Content */}
+                                        <div className="p-4 gap-4 flex flex-col">
+                                            {/* First part */}
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <ContextButton>
+                                                        <ContextRow
+                                                            icon="swap_horiz"
+                                                            label="Přesun"
+                                                            action={() => alert('Přesun clicked')}
+                                                        />
+                                                        <ContextRow
+                                                            icon="visibility"
+                                                            label="Nalezeno"
+                                                            action={() => alert('Nalezeno clicked')}
+                                                        />
+                                                    </ContextButton>
+                                                </div>
+                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
-                                            <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
-                                        </div>
-                                        {/* Second part */}
-                                        <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                            Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            {/* Second part */}
+                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            ))
                         )}
+
                         {viewMode === 'compact' && (
-                            <Link
-                                key={item.id}
-                                href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
-                                style={{ textDecoration: "none" }}
-                            >
-                                <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                                    {/* Bottom: Content */}
-                                    <div className="p-4 gap-4 flex flex-col">
-                                        {/* First part */}
-                                        <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                                <ContextButton>
-                                                    <ContextRow
-                                                        icon="content_copy"
-                                                        label="Duplicate"
-                                                        action={() => alert('Duplicate clicked')}
-                                                    />
-                                                    <ContextRow
-                                                        icon="delete"
-                                                        label="Delete"
-                                                        action={() => alert('Delete clicked')}
-                                                        color="#FF6262"
-                                                    />
-                                                </ContextButton>
+                            sorted.map(item => (
+                                <Link
+                                    key={item.id}
+                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                        {/* Bottom: Content */}
+                                        <div className="p-4 gap-4 flex flex-col">
+                                            {/* First part */}
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <ContextButton>
+                                                        <ContextRow
+                                                            icon="content_copy"
+                                                            label="Duplicate"
+                                                            action={() => alert('Duplicate clicked')}
+                                                        />
+                                                        <ContextRow
+                                                            icon="delete"
+                                                            label="Delete"
+                                                            action={() => alert('Delete clicked')}
+                                                            color="#FF6262"
+                                                        />
+                                                    </ContextButton>
+                                                </div>
+                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
-                                            <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
-                                        </div>
-                                        {/* Second part */}
-                                        <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                            Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            {/* Second part */}
+                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            ))
+
                         )}
+
+
                     </>
                 </div>
                 <Pagination
@@ -296,64 +302,30 @@ export default function StocktakingList() {
                 {/* Fixed bottom bar with search and QR button */}
                 <div
                     ref={bottomBarRef}
+                    className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
                     style={{
-                        position: 'fixed',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        zIndex: 100,
-                        padding: 16,
                         background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',
-                        backdropFilter: 'blur(4px)',
-                        WebkitBackdropFilter: 'blur(4px)',
-                        display: 'flex',
-                        gap: 8,
-                        alignItems: 'center',
                     }}
                 >
-                    {/* Search input */}
-                    <div style={{
-                        flex: 1,
-                        background: '#282828',
-                        color: '#fff',
-                        padding: 12,
-                        borderRadius: 16,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                    }}>
-                        <span className="material-icons-round" style={{ fontSize: 16, color: '#fff' }}>search</span>
-                        <input
-                            type="text"
-                            placeholder="Hledat..."
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                outline: 'none',
-                                color: '#fff',
-                                fontSize: 14,
-                                flex: 1,
-                                height: "16px"
-                            }}
-                        />
+                    <div className="container flex items-center gap-2 py-4">
+                        {/* Search input */}
+                        <div className="flex flex-1 items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white">
+                            <span className="material-icons-round text-white text-[16px]">search</span>
+                            <input
+                                type="text"
+                                placeholder="Hledat..."
+                                className="flex-1 bg-transparent border-none outline-none text-sm text-white h-4"
+                            />
+                        </div>
+
+                        {/* QR Button */}
+                        <button
+                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
+                            onClick={() => alert('QR scan')}
+                        >
+                            <span className="material-icons-round text-white text-[16px]">qr_code</span>
+                        </button>
                     </div>
-                    {/* QR button */}
-                    <button
-                        style={{
-                            background: '#282828',
-                            color: '#fff',
-                            padding: 12,
-                            borderRadius: 16,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            border: 'none',
-                            cursor: 'pointer',
-                        }}
-                        onClick={() => alert('QR scan')}
-                    >
-                        <span className="material-icons-round" style={{ fontSize: 16, color: '#fff' }}>qr_code</span>
-                    </button>
                 </div>
                 <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)}>
                     <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>

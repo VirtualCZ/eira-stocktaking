@@ -73,32 +73,30 @@ export default function Home() {
           extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
         />
 
-        <LocationNavCard editMode={true} />
+        {/* <LocationNavCard editMode={true} /> */}
         <nav className="flex flex-col gap-2">
           <div className="flex flex-row gap-2">
-            <NavButton
-              text="Skenovat QR kód"
-              size="big"
-              icon="qr_code_scanner"
-              href="scanQR"
-              variant="dark"
-            />
             <NavLink
-              text="Seznam položek"
+              text="Inventura"
               size="big"
               icon="assignment"
               href="stocktakingList"
+              variant="dark"
+            />
+            <NavLink
+              text="Najdi majetek"
+              size="big"
+              icon="search"
+              href="search"
             />
           </div>
           <NavLink
-            text="Nový předmět"
+            text="Přidat nový předmět"
             href="newItem"
           />
           <NavLink
             text="Seznam poloažek"
-          />
-          <NavLink
-            text="Přidat položku"
+            href="itemList"
           />
         </nav>
       </main>

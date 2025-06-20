@@ -7,7 +7,6 @@ import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
 import { usePathname } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
-import RadioButtonGroup from "@/components/RadioButtonGroup";
 import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
 
@@ -117,6 +116,7 @@ export default function StocktakingOperationsList() {
                         }}
                     >Další</button>
                 </div>
+
                 <SortOptionsModal
                     isOpen={isOptionsModalOpen}
                     onClose={() => setIsOptionsModalOpen(false)}

@@ -3,7 +3,8 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { fetchStocktaking } from "@/mockApi";
 import Link from "next/link";
 import Card from "@/components/Card";
-import Modal from "@/components/Modal"; import Button from "@/components/Button";
+import Modal from "@/components/Modal";
+import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
 import TextInput from "@/components/TextInput";
 import PageHeading from "@/components/PageHeading";
@@ -14,6 +15,7 @@ import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
 import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
+import CenteredModal from "@/components/CenteredModal";
 
 const PAGE_SIZE = 10;
 
@@ -37,6 +39,8 @@ export default function StocktakingList() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [editItem, setEditItem] = useState(null);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
     const totalItems = 70; // Example total items
@@ -47,6 +51,13 @@ export default function StocktakingList() {
 
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
+
+    // Mock data for modal
+    const foundItem = {
+        name: "Židle Alfa",
+        note: "Kancelářská židle z obchodu abcd",
+        image: "/file.svg",
+    };
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -125,27 +136,20 @@ export default function StocktakingList() {
 
 
     return (
-        <div className="relative min-h-screen flex flex-col items-center">
-            <main className="container flex flex-col gap-4 p-4" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
-                {/* <PageHeading heading="Předměty v inventuře" route={returnTo} /> */}
-
+        <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
+            <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
+                {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
-                    heading="Seznam položek"
+                    heading="Seznam inventur"
                     leftActions={[
                         {
-                            icon: returnTo === "/" ? "home" : "arrow_back", href: returnTo
-                        },
+                            icon: "home", href: "/"
+                        }
                     ]}
                     rightActions={[
-                        { icon: "filter_alt", onClick: () => setIsOptionsModalOpen(true) },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
-                        {
-                            icon: viewMode === 'grid' ? 'grid_view' : viewMode === 'detailed' ? 'view_list' : 'view_module',
-                            onClick: () => {
-                                const modes = ['grid', 'detailed', 'compact'];
-                                setViewMode(modes[(modes.indexOf(viewMode) + 1) % modes.length]);
-                            }
-                        }
+                        { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
+                        { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
                     ]}
                 />
 
@@ -357,6 +361,125 @@ export default function StocktakingList() {
                         return { valid: false, message: "QR kód neobsahuje platnou položku." };
                     }}
                 />
+                <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
+                    <div style={{ display: "flex", flexDirection: "column", gap:"1rem" }}>
+                        <div style={{ color: "#FF6262", fontWeight: 600 }}>
+                            Položka nalezena v jiné místnosti
+                        </div>
+                        <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
+                            {/* Top: Image */}
+                            <img
+                                src={foundItem.image}
+                                alt={foundItem.name}
+                                style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                            />
+                            {/* Bottom: Content */}
+                            <div className="p-4 gap-4 flex flex-col">
+                                {/* First part */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{foundItem.name}</span>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{foundItem.note}</div>
+                                </div>
+                                {/* Second part */}
+                                <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                    Poslední kontrola 12.4.2024
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", maxWidth: 400 }}>
+                            <LocationNavCard />
+                            <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
+                            <LocationNavCard />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", maxWidth: 400 }}>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Potvrdit změnu lokace
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                                onClick={() => setIsQrModalOpen(false)}
+                            >
+                                Storno
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                            </button>
+                        </div>
+                    </div>
+                </CenteredModal>
+                <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
+                        <div style={{ color: "#FF6262", fontWeight: 600 }}>
+                            Položka není součástí inventurního seznamu.
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", maxWidth: 400 }}>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Založit novou položku
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>add</span>
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                                onClick={() => setIsNotInInventoryModalOpen(false)}
+                            >
+                                Storno
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                            </button>
+                        </div>
+                    </div>
+                </CenteredModal>
                 <Modal
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}

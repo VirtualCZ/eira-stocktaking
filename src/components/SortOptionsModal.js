@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Modal from "./Modal";
 import Card from "./Card";
 import RadioButton from "./RadioButton";
@@ -17,6 +17,7 @@ export default function SortOptionsModal({
 }) {
     const [sortBy, setSortBy] = useState(initialSortBy || (sortOptions[0] && sortOptions[0].value));
     const [sortOrder, setSortOrder] = useState(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
+    const prevIsOpen = useRef(isOpen);
 
     useEffect(() => {
         if (onChange) {
@@ -25,10 +26,12 @@ export default function SortOptionsModal({
     }, [sortBy, sortOrder]);
 
     useEffect(() => {
-        if (isOpen) {
+        // Only reset when opening
+        if (!prevIsOpen.current && isOpen) {
             setSortBy(initialSortBy || (sortOptions[0] && sortOptions[0].value));
             setSortOrder(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
         }
+        prevIsOpen.current = isOpen;
     }, [isOpen, initialSortBy, initialSortOrder, sortOptions, orderOptions]);
 
     return (

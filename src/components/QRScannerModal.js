@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import QrScanner from "react-qr-barcode-scanner";
-import Modal from "./Modal";
+import CenteredModal from "./CenteredModal";
 
 export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
     const [scannedDataString, setScannedDataString] = useState(null);
@@ -31,7 +31,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
             try {
                 const parsed = JSON.parse(scannedDataString);
                 result = validate(parsed);
-            } catch (e) {}
+            } catch (e) { }
             if (result.valid) {
                 setDisplayMessage(result.message || "Naskenováno!");
                 onScan(scannedDataString, result.data);
@@ -44,8 +44,8 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
             onScan(scannedDataString);
             onClose();
         }
-    // Only run when scannedDataString changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // Only run when scannedDataString changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scannedDataString]);
 
     const handleScan = (err, result) => {
@@ -63,86 +63,64 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
     if (!isOpen && !showModal) return null;
 
     return (
-        <Modal
+        <CenteredModal
             contentStyle={{
                 padding: 0
             }}
             height="70vh"
-            isOpen={showModal}>
-                <div style={{
-                    background: "#282828",
-                    padding: "20px",
-                    paddingTop: "50px",
-                    textAlign: "center",
-                    position: "relative",
-                    width: "100%",
-                    boxShadow: "0px -5px 15px rgba(0,0,0,0.2)",
-                    transform: showModal ? "translateY(0%)" : "translateY(100%)",
-                    transition: "transform 0.3s ease-in-out",
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                }}>
-                    <button
-                        onClick={onClose}
+            isOpen={showModal}
+            onClose={onClose}
+            title="QR Sken"
+        >
+            <div style={{
+                background: "#fff",
+                padding: "20px",
+                paddingTop: "50px",
+                textAlign: "center",
+                position: "relative",
+                width: "100%",
+                boxShadow: "0px -5px 15px rgba(0,0,0,0.2)",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+            }}>
+
+                <div style={{ flexGrow: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: "16px" }}>
+                    {isOpen && (
+                        <QrScanner
+                            onUpdate={handleScan}
+                            onError={(error) => handleScan(error, null)}
+                            constraints={{ facingMode: "environment" }}
+                            style={{ width: "100%", height: "100%" }}
+                        />
+                    )}
+                    <div
                         style={{
                             position: "absolute",
-                            top: "1rem",
-                            right: "1rem",
-                            background: "rgba(255,255,255,0.1)",
-                            borderRadius: "50%",
-                            width: "30px",
-                            height: "30px",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#fff",
-                            zIndex: 1000
+                            top: "50%",
+                            left: "50%",
+                            width: "min(60vw, 200px)",
+                            height: "min(60vw, 200px)",
+                            transform: "translate(-50%, -50%)",
+                            border: "3px solid rgba(0, 0, 0, 0.7)",
+                            borderRadius: "12px",
+                            boxSizing: "border-box",
+                            pointerEvents: "none"
                         }}
-                    >
-                        <span className="material-icons-round" style={{ fontSize: "18px" }}>
-                            close
-                        </span>
-                    </button>
-
-                    <div style={{ flexGrow: 1, position: 'relative', width: '100%', overflow: 'hidden' }}>
-                        {isOpen && (
-                            <QrScanner
-                                onUpdate={handleScan}
-                                onError={(error) => handleScan(error, null)}
-                                constraints={{ facingMode: "environment" }}
-                                style={{ width: "100%", height: "100%" }}
-                            />
-                        )}
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                width: "min(60vw, 200px)",
-                                height: "min(60vw, 200px)",
-                                transform: "translate(-50%, -50%)",
-                                border: "3px solid rgba(255,255,255,0.7)",
-                                borderRadius: "12px",
-                                boxSizing: "border-box",
-                                pointerEvents: "none"
-                            }}
-                        />
-                    </div>
-
-                    <div style={{
-                        color: "#fff",
-                        whiteSpace: "pre-line",
-                        fontSize: 16,
-                        padding: "10px 0",
-                        minHeight: '40px',
-                        flexShrink: 0
-                    }}>
-                        {displayMessage}
-                    </div>
+                    />
                 </div>
-        </Modal>
+
+                <div style={{
+                    color: "#fff",
+                    whiteSpace: "pre-line",
+                    fontSize: 16,
+                    padding: "10px 0",
+                    minHeight: '40px',
+                    flexShrink: 0
+                }}>
+                    {displayMessage}
+                </div>
+            </div>
+        </CenteredModal>
     );
 }

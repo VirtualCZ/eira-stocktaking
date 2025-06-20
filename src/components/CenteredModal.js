@@ -9,11 +9,13 @@ export default function CenteredModal({
     contentStyle = {},
     titleStyle = {},
     width = "90vw",
-    height = "auto"
+    height = "auto",
+    disableClickAway = false
 }) {
     const modalRef = useRef(null);
 
     useEffect(() => {
+        if (disableClickAway) return;
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
                 onClose();
@@ -27,7 +29,7 @@ export default function CenteredModal({
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, disableClickAway]);
 
     return (
         <div style={{

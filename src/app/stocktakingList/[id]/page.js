@@ -10,12 +10,16 @@ import TextInput from "@/components/TextInput";
 import PageHeading from "@/components/PageHeading";
 import { usePathname, useSearchParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
-import LocationNavCard from "@/components/LocationNavCard";
+import LocationModalTrigger from "@/components/LocationModalTrigger";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
 import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
+import LocationButtonCard from "@/components/LocationButtonCard";
+import LocationPickerModal from "@/components/LocationPickerModal";
+import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
+import LocationNavCard from "@/components/LocationNavCard";
 
 const PAGE_SIZE = 10;
 
@@ -41,6 +45,11 @@ export default function StocktakingList() {
     const [editItem, setEditItem] = useState(null);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+    const [location, setLocationState] = useState(null);
+
+    const getLocation = useGetLocation();
+    const setLocation = useSetLocation();
 
     const [currentPage, setCurrentPage] = useState(0);
     const totalItems = 70; // Example total items
@@ -59,6 +68,18 @@ export default function StocktakingList() {
         image: "/file.svg",
     };
 
+    const currentLocation = {
+        budova: "A",
+        podlazi: "1",
+        mistnost: "101",
+    };
+
+    const newLocation = {
+        budova: "B",
+        podlazi: "2",
+        mistnost: "202",
+    };
+
     useLayoutEffect(() => {
         const updatePadding = () => {
             if (bottomBarRef.current) {
@@ -70,6 +91,19 @@ export default function StocktakingList() {
         window.addEventListener("resize", updatePadding);
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
+
+    useEffect(() => {
+        const loc = getLocation();
+        if (loc) {
+            setLocationState(loc);
+        }
+    }, [getLocation]);
+
+    const handleLocationSave = (newLoc) => {
+        setLocation(newLoc);
+        setLocationState(newLoc);
+        setIsLocationModalOpen(false);
+    }
 
     const viewModeOptions = [
         { value: 'grid', label: 'Mřížka' },
@@ -153,7 +187,7 @@ export default function StocktakingList() {
                     ]}
                 />
 
-                <LocationNavCard editMode={true} />
+                <LocationModalTrigger onClick={() => setIsLocationModalOpen(true)} />
 
                 {loading ? <div>Načítání...</div> : null}
                 {/* <Button
@@ -329,7 +363,7 @@ export default function StocktakingList() {
                         {/* QR Button */}
                         <button
                             className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
-                            onClick={() => alert('QR scan')}
+                            onClick={() => setIsQRModalOpen(true)}
                         >
                             <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>qr_code</span>
                         </button>
@@ -389,9 +423,9 @@ export default function StocktakingList() {
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", maxWidth: 400 }}>
-                            <LocationNavCard />
+                            <LocationButtonCard location={currentLocation} editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationNavCard />
+                            <LocationButtonCard location={newLocation} editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", maxWidth: 400 }}>
                             <button
@@ -480,6 +514,12 @@ export default function StocktakingList() {
                         </div>
                     </div>
                 </CenteredModal>
+                <LocationPickerModal
+                    isOpen={isLocationModalOpen}
+                    onClose={() => setIsLocationModalOpen(false)}
+                    onSave={handleLocationSave}
+                    initialLocation={location}
+                />
                 <Modal
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}

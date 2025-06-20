@@ -70,13 +70,20 @@ export default function StocktakingOperationsList() {
                 <div className="flex gap-4 flex-col">
                     {sorted.map(op => (
                         <Link key={op.id} href={`/stocktakingList/${op.id}?returnTo=${encodeURIComponent(pathname)}`} style={{ textDecoration: "none" }}>
-                            <Card style={{ flexDirection: "row", alignItems: "center" }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 600, fontSize: 20, marginBottom: 4 }}>Inventura #{op.id}</div>
-                                    <div style={{ color: "#555", fontSize: 14 }}>Datum: <b>{op.date}</b></div>
-                                    <div style={{ color: "#888", fontSize: 13 }}>Poznámka: {op.note}</div>
+                            <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                <div className="p-4 gap-4 flex flex-col">
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{op.name || `Inventura #${op.id}`}</span>
+                                            <span className="material-icons-round" style={{ fontSize: 18, color: '#000' }}>arrow_forward_ios</span>
+                                        </div>
+                                        <div style={{ fontSize: 12, color: "#535353" }}>{op.note}</div>
+                                    </div>
+                                    <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                        Datum: {op.date}
+                                    </div>
                                 </div>
-                            </Card>
+                            </div>
                         </Link>
                     ))}
                 </div>

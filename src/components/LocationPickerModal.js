@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import Modal from "./Modal";
+import CenteredModal from "./CenteredModal";
 import Button from "./Button";
 import { useBuildings } from "../hooks/useBuildings";
 import QRScannerModal from "./QRScannerModal";
@@ -121,21 +121,83 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <div
-                className="container"
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem"
-                }}
-            >
-                <Button type="button" icon="qr_code_scanner" onClick={() => setIsScannerOpen(true)}>
-                    Skenovat QR kód
-                </Button>
+        <>
+            {isOpen && (
+                <CenteredModal isOpen={isOpen} onClose={onClose} title="Výběr lokace" disableClickAway={isScannerOpen}>
+                    <div
+                        className="container"
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "1rem"
+                        }}
+                    >
+                        <button
+                            type="button"
+                            onClick={() => setIsScannerOpen(true)}
+                            style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                background: "#282828",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "1rem",
+                                padding: "0.75rem",
+                                fontSize: "0.75rem",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Nastavit přes QR kód
+                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>qr_code</span>
+                        </button>
+                        <DropdownCard
+                            label="Budova"
+                            options={budovaOptions}
+                            selected={selectedBudovaOption}
+                            onSelect={handleBudovaSelect}
+                        />
+                        <DropdownCard
+                            label="Podlaží"
+                            options={podlaziOptions}
+                            selected={selectedPodlaziOption}
+                            onSelect={handlePodlaziSelect}
+                            disabled={!selectedBudova}
+                        />
+                        <DropdownCard
+                            label="Místnost"
+                            options={mistnostOptions}
+                            selected={selectedMistnostOption}
+                            onSelect={handleMistnostSelect}
+                            disabled={!selectedPodlazi}
+                        />
+                        <button
+                            onClick={handleSave}
+                            disabled={!selectedMistnost}
+                            style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                background: "#282828",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "1rem",
+                                padding: "0.75rem",
+                                fontSize: "0.75rem",
+                                cursor: "pointer",
+                                opacity: !selectedMistnost ? 0.5 : 1
+                            }}
+                        >
+                            Uložit
+                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                        </button>
+                    </div>
+                </CenteredModal>
+            )}
+            {isScannerOpen && (
                 <QRScannerModal
                     isOpen={isScannerOpen}
                     onClose={() => setIsScannerOpen(false)}
@@ -145,8 +207,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                             const { budova, podlazi, mistnost } = parsed.data;
                             return {
                                 valid: true,
-                                message: `Naskenováno: ${budova || "?"} / ${podlazi || "?"} / ${mistnost || "?"
-                                    }`,
+                                message: `Naskenováno: ${budova || "?"} / ${podlazi || "?"} / ${mistnost || "?"}`,
                                 data: parsed.data,
                             };
                         }
@@ -156,30 +217,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                         };
                     }}
                 />
-                <DropdownCard
-                    label="Budova"
-                    options={budovaOptions}
-                    selected={selectedBudovaOption}
-                    onSelect={handleBudovaSelect}
-                />
-                <DropdownCard
-                    label="Podlaží"
-                    options={podlaziOptions}
-                    selected={selectedPodlaziOption}
-                    onSelect={handlePodlaziSelect}
-                    disabled={!selectedBudova}
-                />
-                <DropdownCard
-                    label="Místnost"
-                    options={mistnostOptions}
-                    selected={selectedMistnostOption}
-                    onSelect={handleMistnostSelect}
-                    disabled={!selectedPodlazi}
-                />
-                <Button onClick={handleSave} disabled={!selectedMistnost}>
-                    Uložit
-                </Button>
-            </div>
-        </Modal>
+            )}
+        </>
     );
 }

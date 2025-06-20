@@ -1,17 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { fetchStocktaking } from "@/mockApi";
-import Button from "@/components/Button";
 import PictureInput from "@/components/PictureInput";
-import TextInput from "@/components/TextInput";
-import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
-import LocationPickerModal from "@/components/LocationPickerModal";
 import LocationNavCard from "@/components/LocationNavCard";
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
+import EditableField from "@/components/EditableField";
+import Link from "next/link";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -24,6 +22,8 @@ export default function StocktakingDetail() {
     const [colorPopover, setColorPopover] = useState({ open: false, idx: null, anchor: null });
     const COLORS = ["blue", "silver", "white", "black", "gray", "red"];
     const [editItem, setEditItem] = useState(null);
+    const bottomBarRef = useRef(null);
+    const [bottomPadding, setBottomPadding] = useState(0);
 
     useEffect(() => {
         setLoading(true);
@@ -34,175 +34,88 @@ export default function StocktakingDetail() {
         });
     }, [id]);
 
+    useLayoutEffect(() => {
+        const updatePadding = () => {
+            if (bottomBarRef.current) {
+                setBottomPadding(bottomBarRef.current.offsetHeight);
+            }
+        };
+        updatePadding();
+        window.addEventListener("resize", updatePadding);
+        return () => window.removeEventListener("resize", updatePadding);
+    }, []);
+
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
     if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
 
     return (
         <div className="relative min-h-screen flex flex-col" style={{}}>
-            <main className="flex flex-col items-center" style={{ minHeight: "100vh" }}>
-                <PageHeading heading="Detail položky" route={returnTo} />
+            {/* Floating nav button */}
+            <Link
+                href={returnTo}
+                style={{
+                    position: "fixed",
+                    top: "1rem",
+                    left: "1rem",
+                    background: "#000",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 16,
+                    width: 38,
+                    height: 38,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 1100,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                    textDecoration: "none"
+                }}
+            >
+                <span className="material-icons-round" style={{ fontSize: 16 }}>
+                    {returnTo === "/" ? "home" : "arrow_back"}
+                </span>
+            </Link>
+            <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
                 {editMode ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                        <PictureInput label="Fotka" value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} />
-                        <TextInput label="Název" value={editItem.name} onChange={e => setEditItem({ ...editItem, name: e.target.value })} />
-                        <TextInput label="Cena" value={editItem.price || ""} onChange={e => setEditItem({ ...editItem, price: e.target.value })} />
-                        <TextInput label="Poznámka" value={editItem.note} onChange={e => setEditItem({ ...editItem, note: e.target.value })} />
-                        <div>
-                            {/* <Button type="button" onClick={() => setModalOpen(true)}>Upravit lokaci</Button> */}
-                            {editItem.location && (
-                                <div className="text-sm text-gray-600">
-                                    Budova {editItem.location.budova}<br />Podlaží {editItem.location.podlazi}<br />Místnost {editItem.location.mistnost}
+                    <div className="flex flex-col container" style={{}}>
+                        <PictureInput value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} />
+                        <div className="p-4 flex flex-col gap-4">
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <EditableField
+                                        value={editItem.name}
+                                        onChange={e => setEditItem({ ...editItem, name: e.target.value })}
+                                        label={"Název"}
+                                        placeholder="Název"
+                                    />
                                 </div>
-                            )}
-                        </div>
-                        <LocationPickerModal
-                            isOpen={modalOpen}
-                            onClose={() => setModalOpen(false)}
-                            onSave={loc => setEditItem({ ...editItem, location: loc })}
-                            initialLocation={editItem.location}
-                        />
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            <b>Barvy:</b>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                {editItem.colors.map((color, idx) => (
-                                    <button
-                                        key={idx}
-                                        type="button"
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: "0.5rem",
-                                            background: color,
-                                            border: "1px solid #F0F0F0",
-                                            cursor: "pointer",
-                                            padding: 0,
-                                            margin: 0,
-                                            transition: "transform 0.15s"
-                                        }}
-                                        className="hover:scale-110"
-                                        title={color}
-                                        onClick={e => setColorPopover({ open: true, idx, anchor: e.target, mode: "edit" })}
-                                    ></button>
-                                ))}
-                                <button
-                                    type="button"
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: "0.5rem",
-                                        background: "#F0F0F0",
-                                        border: "1px solid #F0F0F0",
-                                        cursor: "pointer",
-                                        fontWeight: "bold",
-                                        fontSize: 16,
-                                        padding: 0,
-                                        margin: 0,
-                                        transition: "background 0.15s"
-                                    }}
-                                    className="hover:bg-gray-200"
-                                    title="Přidat barvu"
-                                    onClick={e => setColorPopover({ open: true, idx: null, anchor: e.target, mode: "add" })}
-                                >+</button>
+                                <EditableField
+                                    value={editItem.note}
+                                    onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                    label={"Popisek"}
+                                    placeholder="Popisek"
+                                />
                             </div>
-                            <Modal
-                                isOpen={colorPopover.open}
-                                onClose={() => setColorPopover({ open: false })}
-                                title="Vyberte barvu"
-                                height="40vh"
-                            >
-                                <ul style={{ margin: 0, padding: "1rem", listStyle: "none", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                                    {COLORS.map(c => {
-                                        const isDuplicate = colorPopover.mode === "add" && editItem.colors.includes(c);
-                                        return (
-                                            <li key={c}>
-                                                <button
-                                                    type="button"
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        borderRadius: "0.5rem",
-                                                        background: isDuplicate ? "#e0e0e0" : c,
-                                                        border: "1px solid #F0F0F0",
-                                                        cursor: isDuplicate ? "not-allowed" : "pointer",
-                                                        outline: 'none',
-                                                        boxShadow: 'none',
-                                                        transition: "transform 0.15s",
-                                                        position: "relative",
-                                                        opacity: isDuplicate ? 0.6 : 1
-                                                    }}
-                                                    className={isDuplicate ? "" : "hover:scale-110"}
-                                                    disabled={isDuplicate}
-                                                    onClick={() => {
-                                                        if (isDuplicate) return;
-
-                                                        if (colorPopover.mode === "edit") {
-                                                            const newColors = [...editItem.colors];
-                                                            newColors[colorPopover.idx] = c;
-                                                            setEditItem({ ...editItem, colors: newColors });
-                                                        } else {
-                                                            setEditItem({ ...editItem, colors: [...editItem.colors, c] });
-                                                        }
-                                                        setColorPopover({ open: false, idx: null, anchor: null, mode: null });
-                                                    }}
-                                                >
-                                                    {isDuplicate && (
-                                                        <div style={{
-                                                            position: "absolute",
-                                                            top: "50%",
-                                                            left: "50%",
-                                                            width: "120%",
-                                                            height: "2px",
-                                                            backgroundColor: "#ff0000",
-                                                            transform: "translate(-50%, -50%) rotate(-45deg)",
-                                                            transformOrigin: "center"
-                                                        }} />
-                                                    )}
-                                                </button>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {colorPopover.mode === "edit" && (
-                                    <div style={{ borderTop: "1px solid #F0F0F0", margin: "0 1rem" }} />
-                                )}
-                                {colorPopover.mode === "edit" && (
-                                    <button
-                                        type="button"
-                                        style={{
-                                            textDecoration: "none",
-                                            color: "inherit",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            padding: "1rem",
-                                            gap: "1rem",
-                                            fontWeight: 600,
-                                            fontSize: "1rem",
-                                            transition: "background 0.15s",
-                                            borderRadius: "0.5rem",
-                                            color: "#e00",
-                                            width: "100%",
-                                            border: "none",
-                                            background: "none",
-                                            cursor: "pointer",
-                                            textAlign: "left"
-                                        }}
-                                        className="transition-opacity hover:opacity-50 active:opacity-50 focus:opacity-50"
-                                        onClick={() => {
-                                            const newColors = editItem.colors.filter((_, i) => i !== colorPopover.idx);
-                                            setEditItem({ ...editItem, colors: newColors });
-                                            setColorPopover({ open: false, idx: null, anchor: null, mode: null });
-                                        }}
-                                    >
-                                        <span className="material-icons-round" style={{ fontSize: "2rem", color: "#e00" }}>
-                                            delete
-                                        </span>
-                                        <span>Odstranit barvu</span>
-                                    </button>
-                                )}
-                            </Modal>
+                            <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
+                                <EditableField
+                                    value={editItem.note}
+                                    onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                    label={"Poznámka"}
+                                    placeholder="Poznámka"
+                                    multiline
+                                />
+                            </div>
+                            <LocationNavCard editMode={true} location={editItem.location} />
+                            <CardContainer>
+                                <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                                <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                                <EditableField value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                            </CardContainer>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
+                                <div>Poslední úprava {item.lastCheck}</div>
+                                <div>ID {item.id}</div>
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -211,7 +124,7 @@ export default function StocktakingDetail() {
                         <div className="p-4 flex flex-col gap-4">
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>Kancelářská židle z obchodu abcd</span>
+                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
                                     <ContextButton>
                                         <ContextRow
                                             icon="edit"
@@ -251,22 +164,36 @@ export default function StocktakingDetail() {
                         </div>
                     </div>
                 )}
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <Button
-                        onClick={() => setEditMode(!editMode)}
-                    >
-                        {editMode ? "Zrušit úpravy" : "Upravit"}
-                    </Button>
 
-                    {editMode && (
-                        <Button
-                            onClick={() => { }}
+            </main>
+            {editMode && (
+                <div
+                    ref={bottomBarRef}
+                    className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
+                    style={{
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',
+                    }}
+                >
+                    <div className="container flex items-center gap-2 p-4 justify-center">
+                        <button
+                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
+                            style={{ fontSize: "0.75rem" }}
+                            onClick={() => setEditMode(false)}
+                        >
+                            Zrušit úpravy
+                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>close</span>
+                        </button>
+                        <button
+                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
+                            onClick={() => { /* Save logic here */ }}
+                            style={{ fontSize: "0.75rem" }}
                         >
                             Uložit změny
-                        </Button>
-                    )}
+                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>check</span>
+                        </button>
+                    </div>
                 </div>
-            </main>
+            )}
         </div>
     );
 }

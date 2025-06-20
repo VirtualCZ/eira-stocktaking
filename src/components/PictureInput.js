@@ -16,17 +16,14 @@ export default function PictureInput({ label, onChange }) {
     };
     return (
         <div style={{ position: "relative", width: "100%" }}>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: "1rem" }}>{label}</label>
+            {label && <label style={{ display: "block", fontWeight: 600, marginBottom: "1rem" }}>{label}</label>}
             <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handleFile} />
             <picture style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 width: "100%",
-                height: 200,
-                background: "#e3e3e3",
-                borderRadius: 12,
-                marginBottom: 8,
+                height: 280,
                 position: "relative",
                 overflow: "hidden"
             }}>
@@ -35,59 +32,51 @@ export default function PictureInput({ label, onChange }) {
                 ) : (
                     <span style={{ color: "#000", opacity: "50%", fontSize: 32 }} className="material-icons-round">broken_image</span>
                 )}
-                {/* Settings-style button (top right) */}
+                {/* Absolute top right: camera/plus and trash buttons */}
                 <div style={{
                     position: "absolute",
-                    top: 0,
-                    right: 0,
+                    top: "1rem",
+                    right: "1rem",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "1rem",
-                    padding: "1rem"
+                    gap: "0.5rem",
+                    zIndex: 2
                 }}>
                     <button
                         type="button"
                         onClick={() => inputRef.current.click()}
                         style={{
-                            borderRadius: "100px",
-                            height: 40,
-                            width: 40,
-                            background: "rgba(0,0,0,0.53)",
+                            borderRadius: "1rem",
+                            padding: "0.75rem",
+                            background: "#000",
                             border: "none",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            zIndex: 2,
                             cursor: "pointer"
                         }}
                         className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
                     >
-                        <span className="material-icons-round" style={{ color: "#fff", fontSize: 24 }}>add_a_photo</span>
+                        <span className="material-icons-round" style={{ color: "#fff", fontSize: 14 }}>add_a_photo</span>
                     </button>
-                    {/* Red X button (bottom right, only if image) */}
-                    {preview && (
-                        <button
-                            type="button"
-                            onClick={handleDelete}
-                            style={{
-                                borderRadius: "100px",
-                                height: 40,
-                                width: 40,
-                                background: "#ff3b3b",
-                                border: "none",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                zIndex: 2,
-                                cursor: "pointer"
-                            }}
-                            className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
-                        >
-                            <span className="material-icons-round" style={{ color: "#fff", fontSize: 24 }}>close</span>
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        style={{
+                            borderRadius: "1rem",
+                            padding: "0.75rem",
+                            background: "#000",
+                            border: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer"
+                        }}
+                        className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
+                    >
+                        <span className="material-icons-round" style={{ color: "#FF6262", fontSize: 14 }}>delete</span>
+                    </button>
                 </div>
-
             </picture>
         </div>
     );

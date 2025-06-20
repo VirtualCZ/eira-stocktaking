@@ -6,6 +6,10 @@ import { fetchStocktakingOperations } from "@/mockApi";
 import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
 import { usePathname } from "next/navigation";
+import HeadingCard from "@/components/HeadingCard";
+import RadioButtonGroup from "@/components/RadioButtonGroup";
+import RadioButton from "@/components/RadioButton";
+import SortOptionsModal from "@/components/SortOptionsModal";
 
 const PAGE_SIZE = 10;
 
@@ -50,28 +54,20 @@ export default function StocktakingOperationsList() {
 
     return (
         <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
-            <main className="container" style={{ minHeight: "100vh", background: "#F2F3F5", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
-                <PageHeading heading="Seznam inventur" route="/" />
+            <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
+                {/* <PageHeading heading="Seznam inventur" route="/" /> */}
+                <HeadingCard
+                    heading="Seznam inventur"
+                    leftActions={[
+                        {
+                            icon: "home", href: "/"
+                        }
+                    ]}
+                    rightActions={[
+                        { icon: "sort", onClick: () => setIsOptionsModalOpen(true) }
+                    ]}
+                />
                 {loading ? <div>Načítání...</div> : null}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "#ebedef solid 2px", paddingBottom: "1rem" }}>
-                    <button
-                        onClick={() => setIsOptionsModalOpen(true)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: '#ebedef',
-                            border: 'none',
-                            borderRadius: 999,
-                            padding: '0.5rem',
-                            cursor: 'pointer',
-                            gap: '0.5rem',
-                        }}
-                    >
-                        <span className="material-icons-round" style={{ color: '#4e5058', fontSize: '1.3rem' }}>tune</span>
-                        <span style={{ flex: 1, textAlign: 'left', color: '#4e5058', fontWeight: 600 }}>Možnosti zobrazení</span>
-                        <span className="material-icons-round" style={{ color: '#4e5058', fontSize: '1.3rem' }}>expand_more</span>
-                    </button>
-                </div>
                 <div className="flex gap-4 flex-col">
                     {sorted.map(op => (
                         <Link key={op.id} href={`/stocktakingList/${op.id}?returnTo=${encodeURIComponent(pathname)}`} style={{ textDecoration: "none" }}>
@@ -121,63 +117,17 @@ export default function StocktakingOperationsList() {
                         }}
                     >Další</button>
                 </div>
-
-                <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)} height="auto">
-                    <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
-                        {/* Sorting Options Card */}
-                        <Card name="Seřazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
-                            {sortOptions.map((opt, idx, arr) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setSortBy(opt.value)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '1rem',
-                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <span>{opt.label}</span>
-                                    <input
-                                        type="radio"
-                                        checked={sortBy === opt.value}
-                                        onChange={() => setSortBy(opt.value)}
-                                        onClick={e => e.stopPropagation()}
-                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
-                                    />
-                                </button>
-                            ))}
-                        </Card>
-                        <Card style={{ padding: 0, gap: 0 }}>
-                            {[{ label: 'Ascending', value: 'asc' }, { label: 'Descending', value: 'desc' }].map((opt, idx, arr) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setSortOrder(opt.value)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '1rem',
-                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
-                                        marginLeft: 8,
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <span>{opt.label}</span>
-                                    <input
-                                        type="radio"
-                                        checked={sortOrder === opt.value}
-                                        onChange={() => setSortOrder(opt.value)}
-                                        onClick={e => e.stopPropagation()}
-                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
-                                    />
-                                </button>
-                            ))}
-                        </Card>
-                    </div>
-                </Modal>
+                <SortOptionsModal
+                    isOpen={isOptionsModalOpen}
+                    onClose={() => setIsOptionsModalOpen(false)}
+                    sortOptions={sortOptions}
+                    initialSortBy={sortBy}
+                    initialSortOrder={sortOrder}
+                    onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                    }}
+                />
             </main>
         </div>
     );

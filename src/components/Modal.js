@@ -53,7 +53,7 @@ export default function Modal({
                 }}
             >
                 <div style={{
-                    background: "#f2f3f5",
+                    background: "#fff",
                     borderTopLeftRadius: "1rem",
                     borderTopRightRadius: "1rem",
                     position: "relative",
@@ -72,16 +72,14 @@ export default function Modal({
                         <div style={{
                             padding: "1rem",
                             paddingBottom: "0.5rem",
-                            borderBottom: "1px solid #F0F0F0",
                             position: "relative",
                             ...titleStyle
                         }}>
                             {title && (
                                 <h3 style={{
                                     margin: 0,
-                                    fontSize: "1.25rem",
-                                    fontWeight: 600,
-                                    textAlign: "center",
+                                    fontSize: "1rem",
+                                    fontWeight: 700,
                                     color: "#000"
                                 }}>
                                     {title}

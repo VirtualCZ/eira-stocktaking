@@ -12,6 +12,8 @@ import HeadingCard from "@/components/HeadingCard";
 import LocationNavCard from "@/components/LocationNavCard";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
+import RadioButton from "@/components/RadioButton";
+import SortOptionsModal from "@/components/SortOptionsModal";
 
 const PAGE_SIZE = 10;
 
@@ -20,7 +22,6 @@ const sortOptions = [
     { label: 'Jméno', value: 'name' },
     { label: 'Datum', value: 'lastCheck' },
     { label: 'Poznámka', value: 'note' },
-    { label: 'Barva', value: 'color' }
 ];
 
 export default function StocktakingList() {
@@ -126,12 +127,14 @@ export default function StocktakingList() {
     return (
         <div className="relative min-h-screen flex flex-col items-center">
             <main className="container flex flex-col gap-4 p-4" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
-                <PageHeading heading="Předměty v inventuře" route={returnTo} />
+                {/* <PageHeading heading="Předměty v inventuře" route={returnTo} /> */}
 
                 <HeadingCard
                     heading="Seznam položek"
                     leftActions={[
-                        { icon: "home", onClick: () => alert("Home") },
+                        {
+                            icon: returnTo === "/" ? "home" : "arrow_back", href: returnTo
+                        },
                     ]}
                     rightActions={[
                         { icon: "filter_alt", onClick: () => setIsOptionsModalOpen(true) },
@@ -307,14 +310,15 @@ export default function StocktakingList() {
                         background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',
                     }}
                 >
-                    <div className="container flex items-center gap-2 py-4">
+                    <div className="container flex items-center gap-2 p-4">
                         {/* Search input */}
                         <div className="flex flex-1 items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white">
-                            <span className="material-icons-round text-white text-[16px]">search</span>
+                            <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>search</span>
                             <input
                                 type="text"
                                 placeholder="Hledat..."
-                                className="flex-1 bg-transparent border-none outline-none text-sm text-white h-4"
+                                className="flex-1 bg-transparent border-none outline-none text-white h-4"
+                                style={{ fontSize: "16px" }}
                             />
                         </div>
 
@@ -323,80 +327,21 @@ export default function StocktakingList() {
                             className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
                             onClick={() => alert('QR scan')}
                         >
-                            <span className="material-icons-round text-white text-[16px]">qr_code</span>
+                            <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>qr_code</span>
                         </button>
                     </div>
                 </div>
-                <Modal title="Možnosti zobrazení" isOpen={isOptionsModalOpen} onClose={() => setIsOptionsModalOpen(false)}>
-                    <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
-                        {/* Display Options Card */}
-                        <Card name="Zobrazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
-                            <div className="flex gap-2 mb-4">
-                                {viewModeOptions.map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        onClick={() => setViewMode(opt.value)}
-                                        className={`px-3 py-1 rounded-full text-xs font-semibold ${viewMode === opt.value ? 'bg-black text-white' : 'bg-[#ebedef] text-black'}`}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </Card>
-                        {/* Sorting Options Card */}
-                        <Card name="Seřazení" nameStyle={{ padding: "1rem", paddingBottom: 0 }} style={{ padding: 0, gap: 0 }}>
-                            {sortOptions.map((opt, idx, arr) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setSortBy(opt.value)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '1rem',
-                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <span>{opt.label}</span>
-                                    <input
-                                        type="radio"
-                                        checked={sortBy === opt.value}
-                                        onChange={() => setSortBy(opt.value)}
-                                        onClick={e => e.stopPropagation()}
-                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
-                                    />
-                                </button>
-                            ))}
-                        </Card>
-                        <Card style={{ padding: 0, gap: 0 }}>
-                            {[{ label: 'Ascending', value: 'asc' }, { label: 'Descending', value: 'desc' }].map((opt, idx, arr) => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => setSortOrder(opt.value)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: '1rem',
-                                        borderBottom: idx < arr.length - 1 ? '1px solid #ebedef' : 'none',
-                                        marginLeft: 8,
-                                        cursor: 'pointer',
-                                    }}
-                                >
-                                    <span>{opt.label}</span>
-                                    <input
-                                        type="radio"
-                                        checked={sortOrder === opt.value}
-                                        onChange={() => setSortOrder(opt.value)}
-                                        onClick={e => e.stopPropagation()}
-                                        style={{ accentColor: '#b640ff', width: 20, height: 20 }}
-                                    />
-                                </button>
-                            ))}
-                        </Card>
-                    </div>
-                </Modal>
+                <SortOptionsModal
+                    isOpen={isOptionsModalOpen}
+                    onClose={() => setIsOptionsModalOpen(false)}
+                    sortOptions={sortOptions}
+                    initialSortBy={sortBy}
+                    initialSortOrder={sortOrder}
+                    onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                    }}
+                />
                 <QRScannerModal
                     isOpen={isQRModalOpen}
                     onClose={() => setIsQRModalOpen(false)}

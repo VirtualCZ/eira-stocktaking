@@ -10,6 +10,8 @@ import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import EditableField from "@/components/EditableField";
 import Link from "next/link";
+import CenteredModal from "@/components/CenteredModal";
+import SwipeToDelete from "@/components/SwipeToDelete";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -22,6 +24,7 @@ export default function StocktakingDetail() {
     const [colorPopover, setColorPopover] = useState({ open: false, idx: null, anchor: null });
     const COLORS = ["blue", "silver", "white", "black", "gray", "red"];
     const [editItem, setEditItem] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
 
@@ -139,7 +142,7 @@ export default function StocktakingDetail() {
                                         <ContextRow
                                             icon="delete"
                                             label="Delete"
-                                            action={() => alert('Delete clicked')}
+                                            action={() => setIsDeleteModalOpen(true)}
                                             color="#FF6262"
                                         />
                                     </ContextButton>
@@ -166,6 +169,16 @@ export default function StocktakingDetail() {
                 )}
 
             </main>
+            {/* Delete Confirmation Modal */}
+            <CenteredModal title={"Opravdu chcete smazat předmět?"} isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                    <div style={{ fontSize: 12, fontStyle: 'italic' }}>Tuto operaci nelze vrátit!</div>
+                    <SwipeToDelete onConfirm={() => {
+                        alert('Item deleted!');
+                        setIsDeleteModalOpen(false);
+                    }} />
+                </div>
+            </CenteredModal>
             {editMode && (
                 <div
                     ref={bottomBarRef}

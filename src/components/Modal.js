@@ -91,7 +91,6 @@ export default function Modal({
                                     position: "absolute",
                                     top: "1rem",
                                     right: "1rem",
-                                    background: "rgba(0, 0, 0, 0.1)",
                                     borderRadius: "50%",
                                     width: "30px",
                                     height: "30px",
@@ -102,7 +101,6 @@ export default function Modal({
                                     justifyContent: "center",
                                     color: "#000",
                                     zIndex: 1000,
-                                    transition: "background 0.15s ease-in-out"
                                 }}
                                 className="hover:bg-gray-200 active:bg-gray-300"
                             >

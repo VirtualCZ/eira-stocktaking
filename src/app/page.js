@@ -1,10 +1,13 @@
+"use client"
 import LocationNavCard from "@/components/LocationNavCard";
 import { NavButton, NavLink } from "@/components/NavCard";
 import HeadingCard from "@/components/HeadingCard";
 import Link from "next/link";
-
+import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 
 export default function Home() {
+  const { selectedInventura } = useSelectedInventura();
+  
   // Czech day names
   const days = [
     "neděle",
@@ -75,12 +78,19 @@ export default function Home() {
 
         {/* <LocationNavCard editMode={true} /> */}
         <nav className="flex flex-col gap-2">
+          <NavLink
+            text={selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
+            size="small"
+            icon="inventory"
+            href="stocktakingList"
+            variant="light"
+          />
           <div className="flex flex-row gap-2">
             <NavLink
               text="Inventura"
               size="big"
               icon="assignment"
-              href="stocktakingList"
+              href={selectedInventura ? `stocktakingList/${selectedInventura.id}?returnTo=/` : "stocktakingList"}
               variant="dark"
             />
             <NavLink

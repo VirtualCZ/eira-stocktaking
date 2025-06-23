@@ -47,6 +47,8 @@ export default function StocktakingList() {
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [location, setLocationState] = useState(null);
+    const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
+    const [searchTerm, setSearchTerm] = useState('');
 
     const getLocation = useGetLocation();
     const setLocation = useSetLocation();
@@ -56,7 +58,6 @@ export default function StocktakingList() {
     const itemsPerPage = 10;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
     const viewModes = [
         { mode: 'grid', icon: 'view_module' },
         { mode: 'detailed', icon: 'view_list' },
@@ -128,8 +129,20 @@ export default function StocktakingList() {
         });
     }, [currentPage]);
 
+    // Filter items based on search term
+    const filteredItems = items.filter(item => {
+        if (!searchTerm.trim()) return true;
+        
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            item.id.toString().includes(searchLower) ||
+            (item.name && item.name.toLowerCase().includes(searchLower)) ||
+            (item.note && item.note.toLowerCase().includes(searchLower))
+        );
+    });
+
     // Sorting (client-side for demo)
-    const sorted = items.slice().sort((a, b) => {
+    const sorted = filteredItems.slice().sort((a, b) => {
         let compare = 0;
         if (sortBy === 'id') {
             compare = a.id - b.id;
@@ -144,9 +157,6 @@ export default function StocktakingList() {
         }
         return sortOrder === 'asc' ? compare : -compare;
     });
-
-    // const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
-
 
     function handleScan(dataString) {
         let parsed;
@@ -176,7 +186,6 @@ export default function StocktakingList() {
             setIsPreviewModalOpen(true);
         }
     }
-
 
     return (
         <div className="relative min-h-screen flex flex-col items-center">
@@ -369,6 +378,8 @@ export default function StocktakingList() {
                             <input
                                 type="text"
                                 placeholder="Hledat..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 className="flex-1 bg-transparent border-none outline-none text-white h-4"
                                 style={{ fontSize: "16px" }}
                             />

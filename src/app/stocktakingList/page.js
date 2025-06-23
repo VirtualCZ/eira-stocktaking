@@ -5,11 +5,12 @@ import Card from "@/components/Card";
 import { fetchStocktakingOperations } from "@/mockApi";
 import Modal from "@/components/Modal";
 import PageHeading from "@/components/PageHeading";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import { Pagination } from "@/components/Pagination";
+import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 
 const PAGE_SIZE = 10;
 
@@ -23,12 +24,15 @@ export default function StocktakingOperationsList() {
     const [operations, setOperations] = useState([]);
     const [sortBy, setSortBy] = useState("id");
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get("returnTo") || "/";
     const [sortOrder, setSortOrder] = useState('asc');
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('grid'); // grid, detailed, compact
+    const { selectInventura } = useSelectedInventura();
 
     const viewModes = [
         { mode: 'grid', icon: 'view_module' },
@@ -38,6 +42,10 @@ export default function StocktakingOperationsList() {
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === viewMode);
     const nextViewMode = () => {
         setViewMode(viewModes[(currentViewIdx + 1) % viewModes.length].mode);
+    };
+
+    const handleInventuraClick = (op) => {
+        selectInventura(op);
     };
 
     useEffect(() => {
@@ -81,7 +89,12 @@ export default function StocktakingOperationsList() {
                 {loading ? <div>Načítání...</div> : null}
                 <div className="flex gap-2 flex-col">
                     {sorted.map(op => (
-                        <Link key={op.id} href={`/stocktakingList/${op.id}?returnTo=${encodeURIComponent(pathname)}`} style={{ textDecoration: "none" }}>
+                        <Link 
+                            key={op.id} 
+                            href={`/`} 
+                            style={{ textDecoration: "none" }}
+                            onClick={() => handleInventuraClick(op)}
+                        >
                             <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                                 <div className="p-4 gap-4 flex flex-col">
                                     <div>

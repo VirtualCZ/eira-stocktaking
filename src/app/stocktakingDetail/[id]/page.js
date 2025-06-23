@@ -12,6 +12,9 @@ import EditableField from "@/components/EditableField";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
+import LocationModalTrigger from "@/components/LocationModalTrigger";
+import LocationPickerModal from "@/components/LocationPickerModal";
+import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -25,8 +28,13 @@ export default function StocktakingDetail() {
     const COLORS = ["blue", "silver", "white", "black", "gray", "red"];
     const [editItem, setEditItem] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+    const [location, setLocationState] = useState(null);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
+
+    const getLocation = useGetLocation();
+    const setLocation = useSetLocation();
 
     useEffect(() => {
         setLoading(true);
@@ -36,6 +44,19 @@ export default function StocktakingDetail() {
             setLoading(false);
         });
     }, [id]);
+
+    useEffect(() => {
+        const loc = getLocation();
+        if (loc) {
+            setLocationState(loc);
+        }
+    }, [getLocation]);
+
+    const handleLocationSave = (newLoc) => {
+        setLocationState(newLoc);
+        setEditItem(prev => ({ ...prev, location: newLoc }));
+        setIsLocationModalOpen(false);
+    };
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -110,7 +131,7 @@ export default function StocktakingDetail() {
                                         multiline
                                     />
                                 </div>
-                                <LocationNavCard editMode={true} location={editItem.location} />
+                                <LocationModalTrigger onClick={() => setIsLocationModalOpen(true)} />
                                 <CardContainer>
                                     <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                                     <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
@@ -209,6 +230,12 @@ export default function StocktakingDetail() {
                     </div>
                 </div>
             )}
+            <LocationPickerModal
+                isOpen={isLocationModalOpen}
+                onClose={() => setIsLocationModalOpen(false)}
+                onSave={handleLocationSave}
+                initialLocation={location}
+            />
         </div>
     );
 }

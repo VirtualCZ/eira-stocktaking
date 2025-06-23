@@ -57,6 +57,15 @@ export default function StocktakingList() {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
+    const viewModes = [
+        { mode: 'grid', icon: 'view_module' },
+        { mode: 'detailed', icon: 'view_list' },
+        { mode: 'compact', icon: 'view_agenda' }
+    ];
+    const currentViewIdx = viewModes.findIndex(vm => vm.mode === viewMode);
+    const nextViewMode = () => {
+        setViewMode(viewModes[(currentViewIdx + 1) % viewModes.length].mode);
+    };
 
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
@@ -170,8 +179,8 @@ export default function StocktakingList() {
 
 
     return (
-        <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
-            <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
+        <div className="relative min-h-screen flex flex-col items-center">
+            <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
                 {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
                     heading="Seznam inventur"
@@ -181,6 +190,11 @@ export default function StocktakingList() {
                         }
                     ]}
                     rightActions={[
+                        {
+                            icon: viewModes[currentViewIdx].icon,
+                            onClick: nextViewMode,
+                            title: 'Změnit zobrazení'
+                        },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
                         { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
                         { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
@@ -422,12 +436,12 @@ export default function StocktakingList() {
                                 </div>
                             </div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", maxWidth: 400 }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
                             <LocationButtonCard location={currentLocation} editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
                             <LocationButtonCard location={newLocation} editMode={false} />
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", maxWidth: 400 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button
                                 style={{
                                     flex: 1,
@@ -473,7 +487,7 @@ export default function StocktakingList() {
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
                             Položka není součástí inventurního seznamu.
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", maxWidth: 400 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button
                                 style={{
                                     flex: 1,

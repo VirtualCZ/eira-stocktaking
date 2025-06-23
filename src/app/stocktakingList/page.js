@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
+import { Pagination } from "@/components/Pagination";
 
 const PAGE_SIZE = 10;
 
@@ -27,6 +28,17 @@ export default function StocktakingOperationsList() {
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState('grid'); // grid, detailed, compact
+
+    const viewModes = [
+        { mode: 'grid', icon: 'view_module' },
+        { mode: 'detailed', icon: 'view_list' },
+        { mode: 'compact', icon: 'view_agenda' }
+    ];
+    const currentViewIdx = viewModes.findIndex(vm => vm.mode === viewMode);
+    const nextViewMode = () => {
+        setViewMode(viewModes[(currentViewIdx + 1) % viewModes.length].mode);
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -52,7 +64,7 @@ export default function StocktakingOperationsList() {
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
     return (
-        <div className="relative min-h-screen flex flex-col items-center" style={{ background: "#F2F3F5" }}>
+        <div className="relative min-h-screen flex flex-col items-center">
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
                 {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
@@ -67,7 +79,7 @@ export default function StocktakingOperationsList() {
                     ]}
                 />
                 {loading ? <div>Načítání...</div> : null}
-                <div className="flex gap-4 flex-col">
+                <div className="flex gap-2 flex-col">
                     {sorted.map(op => (
                         <Link key={op.id} href={`/stocktakingList/${op.id}?returnTo=${encodeURIComponent(pathname)}`} style={{ textDecoration: "none" }}>
                             <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -88,41 +100,14 @@ export default function StocktakingOperationsList() {
                     ))}
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
-                    <button
-                        disabled={page === 0}
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        style={{
-                            padding: "8px 20px",
-                            border: "none",
-                            borderRadius: 8,
-                            color: "#b640ff",
-                            fontWeight: 600,
-                            fontSize: 16,
-                            cursor: page === 0 ? "not-allowed" : "pointer",
-                            opacity: page === 0 ? 0.5 : 1,
-                            transition: "background 0.2s, color 0.2s, opacity 0.2s"
-                        }}
-                    >Předchozí</button>
-                    <span style={{ minWidth: 120, textAlign: "center", color: "#222", fontWeight: 500, fontSize: 16 }}>
-                        Strana {page + 1} / {total > 0 ? Math.ceil(total / PAGE_SIZE) : 1}
-                    </span>
-                    <button
-                        disabled={page + 1 >= totalPages}
-                        onClick={() => setPage(p => p + 1)}
-                        style={{
-                            padding: "8px 20px",
-                            border: "none",
-                            borderRadius: 8,
-                            color: "#b640ff",
-                            fontWeight: 600,
-                            fontSize: 16,
-                            cursor: page + 1 >= totalPages ? "not-allowed" : "pointer",
-                            opacity: page + 1 >= totalPages ? 0.5 : 1,
-                            transition: "background 0.2s, color 0.2s, opacity 0.2s"
-                        }}
-                    >Další</button>
-                </div>
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => {
+                        setPage(newPage);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
 
                 <SortOptionsModal
                     isOpen={isOptionsModalOpen}

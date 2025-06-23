@@ -54,124 +54,126 @@ export default function StocktakingDetail() {
     return (
         <div className="relative min-h-screen flex flex-col" style={{}}>
             {/* Floating nav button */}
-            <Link
-                href={returnTo}
-                style={{
-                    position: "fixed",
-                    top: "1rem",
-                    left: "1rem",
-                    background: "#000",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 16,
-                    width: 38,
-                    height: 38,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 1100,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    textDecoration: "none"
-                }}
-            >
-                <span className="material-icons-round" style={{ fontSize: 16 }}>
-                    {returnTo === "/" ? "home" : "arrow_back"}
-                </span>
-            </Link>
             <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
-                {editMode ? (
-                    <div className="flex flex-col container" style={{}}>
-                        <PictureInput value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} />
-                        <div className="p-4 flex flex-col gap-4">
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="flex flex-col container" style={{}}>
+                    <Link
+                        href={returnTo}
+                        style={{
+                            position: "absolute",
+                            marginTop: "1rem",
+                            marginLeft: "1rem",
+                            background: "#000",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 16,
+                            width: 38,
+                            height: 38,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 1100,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            textDecoration: "none"
+                        }}
+                    >
+                        <span className="material-icons-round" style={{ fontSize: 16 }}>
+                            {returnTo === "/" ? "home" : "arrow_back"}
+                        </span>
+                    </Link>
+                    {editMode ? (
+                        <>
+                            <PictureInput value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} editMode={true} />
+                            <div className="p-4 flex flex-col gap-4">
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <EditableField
+                                            value={editItem.name}
+                                            onChange={e => setEditItem({ ...editItem, name: e.target.value })}
+                                            label={"Název"}
+                                            placeholder="Název"
+                                        />
+                                    </div>
                                     <EditableField
-                                        value={editItem.name}
-                                        onChange={e => setEditItem({ ...editItem, name: e.target.value })}
-                                        label={"Název"}
-                                        placeholder="Název"
+                                        value={editItem.note}
+                                        onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                        label={"Popisek"}
+                                        placeholder="Popisek"
                                     />
                                 </div>
-                                <EditableField
-                                    value={editItem.note}
-                                    onChange={e => setEditItem({ ...editItem, note: e.target.value })}
-                                    label={"Popisek"}
-                                    placeholder="Popisek"
-                                />
-                            </div>
-                            <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                <EditableField
-                                    value={editItem.note}
-                                    onChange={e => setEditItem({ ...editItem, note: e.target.value })}
-                                    label={"Poznámka"}
-                                    placeholder="Poznámka"
-                                    multiline
-                                />
-                            </div>
-                            <LocationNavCard editMode={true} location={editItem.location} />
-                            <CardContainer>
-                                <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                                <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                                <EditableField value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
-                            </CardContainer>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                                <div>Poslední úprava {item.lastCheck}</div>
-                                <div>ID {item.id}</div>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col container" style={{}}>
-                        <img src={item.image} alt={item.name} style={{ width: "100%", height: 280, objectFit: "contain", borderRadius: 12, alignSelf: "center" }} />
-                        <div className="p-4 flex flex-col gap-4">
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
-                                    <ContextButton>
-                                        <ContextRow
-                                            icon="edit"
-                                            label="Edit"
-                                            action={() => setEditMode(!editMode)}
-                                        />
-                                        <ContextRow
-                                            icon="content_copy"
-                                            label="Duplicate"
-                                            action={() => alert('Duplicate clicked')}
-                                        />
-                                        <ContextRow
-                                            icon="delete"
-                                            label="Delete"
-                                            action={() => setIsDeleteModalOpen(true)}
-                                            color="#FF6262"
-                                        />
-                                    </ContextButton>
+                                <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
+                                    <EditableField
+                                        value={editItem.note}
+                                        onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                        label={"Poznámka"}
+                                        placeholder="Poznámka"
+                                        multiline
+                                    />
                                 </div>
-                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                <LocationNavCard editMode={true} location={editItem.location} />
+                                <CardContainer>
+                                    <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                                    <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                                    <EditableField value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                                </CardContainer>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
+                                    <div>Poslední úprava {item.lastCheck}</div>
+                                    <div>ID {item.id}</div>
+                                </div>
                             </div>
-                            <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka:</div>
-                                <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
+                        </>
+                    ) : (
+                        <>
+                            <PictureInput value={item.image || ""} editMode={false} />
+                            <div className="p-4 flex flex-col gap-4">
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                        <ContextButton>
+                                            <ContextRow
+                                                icon="edit"
+                                                label="Edit"
+                                                action={() => setEditMode(!editMode)}
+                                            />
+                                            <ContextRow
+                                                icon="content_copy"
+                                                label="Duplicate"
+                                                action={() => alert('Duplicate clicked')}
+                                            />
+                                            <ContextRow
+                                                icon="delete"
+                                                label="Delete"
+                                                action={() => setIsDeleteModalOpen(true)}
+                                                color="#FF6262"
+                                            />
+                                        </ContextButton>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                </div>
+                                <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
+                                    <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka:</div>
+                                    <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
+                                </div>
+                                <LocationNavCard />
+                                <CardContainer>
+                                    <DetailCardRow label="Váha:" value="2kg" />
+                                    <DetailCardRow label="Velikost:" value="50x40x50cm" />
+                                    <DetailCardRow label="Cena:" value="1 234,-" />
+                                </CardContainer>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
+                                    <div>Poslední úprava {item.lastCheck}</div>
+                                    <div>ID {item.id}</div>
+                                </div>
                             </div>
-                            <LocationNavCard />
-                            <CardContainer>
-                                <DetailCardRow label="Váha:" value="2kg" />
-                                <DetailCardRow label="Velikost:" value="50x40x50cm" />
-                                <DetailCardRow label="Cena:" value="1 234,-" />
-                            </CardContainer>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                                <div>Poslední úprava {item.lastCheck}</div>
-                                <div>ID {item.id}</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
 
             </main>
             {/* Delete Confirmation Modal */}
             <CenteredModal title={"Opravdu chcete smazat předmět?"} isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div style={{ fontSize: 12, fontStyle: 'italic' }}>Tuto operaci nelze vrátit!</div>
                     <SwipeToDelete onConfirm={() => {
                         alert('Item deleted!');

@@ -4,7 +4,7 @@ import { buildings } from "./hooks/useBuildings";
 const HARDCODED_ITEMS = [
   {
     id: 1,
-    image: "/file.svg",
+    image: "/IMG_0517.webp",
     name: "ThinkPad T14 Gen1",
     lastCheck: "2024-05-04",
     note: "Chybí napájecí adaptér",

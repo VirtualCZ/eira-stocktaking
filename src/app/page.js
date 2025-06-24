@@ -79,7 +79,7 @@ export default function Home() {
         {/* <LocationNavCard editMode={true} /> */}
         <nav className="flex flex-col gap-2">
           <NavLink
-            text={selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
+            text="Seznam inventur"
             size="small"
             icon="inventory"
             href="stocktakingList"
@@ -87,7 +87,7 @@ export default function Home() {
           />
           <div className="flex flex-row gap-2">
             <NavLink
-              text="Inventura"
+              text={selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
               size="big"
               icon="assignment"
               href={selectedInventura ? `stocktakingList/${selectedInventura.id}?returnTo=/` : "stocktakingList"}

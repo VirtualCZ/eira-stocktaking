@@ -7,19 +7,16 @@ import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
 import TextInput from "@/components/TextInput";
-import PageHeading from "@/components/PageHeading";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import LocationModalTrigger from "@/components/LocationModalTrigger";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
-import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
 import LocationButtonCard from "@/components/LocationButtonCard";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
-import LocationNavCard from "@/components/LocationNavCard";
 
 const PAGE_SIZE = 10;
 
@@ -32,8 +29,8 @@ const sortOptions = [
 
 export default function StocktakingList() {
     const searchParams = useSearchParams();
-    const returnTo = searchParams.get("returnTo") || "/";
     const pathname = usePathname();
+    const router = useRouter();
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [items, setItems] = useState([]);
@@ -115,11 +112,6 @@ export default function StocktakingList() {
         setIsLocationModalOpen(false);
     }
 
-    const viewModeOptions = [
-        { value: 'grid', label: 'Mřížka' },
-        { value: 'detailed', label: 'Detailní' },
-        { value: 'compact', label: 'Kompaktní' },
-    ];
 
     useEffect(() => {
         setLoading(true);
@@ -192,7 +184,7 @@ export default function StocktakingList() {
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
                 {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
-                    heading="Seznam inventur"
+                    heading="Seznam předmětů"
                     leftActions={[
                         {
                             icon: "home", href: "/"
@@ -228,7 +220,7 @@ export default function StocktakingList() {
                                         href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
                                         style={{ textDecoration: "none" }}
                                     >
-                                        <div className="flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] h-full">
+                                        <div className="flex flex-col rounded-2xl overflow-visible bg-[#f0f1f3] h-full">
                                             {/* Image */}
                                             <img
                                                 src={item.image}
@@ -242,6 +234,16 @@ export default function StocktakingList() {
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
                                                         <ContextButton>
+                                                            <ContextRow
+                                                                icon="edit"
+                                                                label="Edit"
+                                                                action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                            />
+                                                            <ContextRow
+                                                                icon="visibility"
+                                                                label="Upravit"
+                                                                action={() => alert('Nalezeno clicked')}
+                                                            />
                                                             <ContextRow
                                                                 icon="swap_horiz"
                                                                 label="Přesun"
@@ -273,7 +275,7 @@ export default function StocktakingList() {
                                     href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
                                         {/* Top: Image */}
                                         <img
                                             src={item.image}
@@ -287,6 +289,11 @@ export default function StocktakingList() {
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
                                                     <ContextButton>
+                                                        <ContextRow
+                                                            icon="edit"
+                                                            label="Edit"
+                                                            action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                        />
                                                         <ContextRow
                                                             icon="swap_horiz"
                                                             label="Přesun"
@@ -318,7 +325,7 @@ export default function StocktakingList() {
                                     href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
                                         {/* Bottom: Content */}
                                         <div className="p-4 gap-4 flex flex-col">
                                             {/* First part */}
@@ -326,6 +333,11 @@ export default function StocktakingList() {
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
                                                     <ContextButton>
+                                                        <ContextRow
+                                                            icon="edit"
+                                                            label="Edit"
+                                                            action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                        />
                                                         <ContextRow
                                                             icon="content_copy"
                                                             label="Duplicate"
@@ -366,9 +378,9 @@ export default function StocktakingList() {
                 {/* Fixed bottom bar with search and QR button */}
                 <div
                     ref={bottomBarRef}
-                    className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
+                    className="fixed left-0 right-0 bottom-0 z-[100] flex justify-center backdrop-blur-md"
                     style={{
-                        background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%, rgba(0,0,0,0.25) 100%)',
                     }}
                 >
                     <div className="container flex items-center gap-2 p-4">

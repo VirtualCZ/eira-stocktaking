@@ -4,7 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 export function ContextRow({ icon, label, action, color = '#fff' }) {
   return (
     <button
-      onClick={action}
+      onClick={e => {
+        e.stopPropagation();
+        e.preventDefault();
+        action && action(e);
+      }}
       style={{
         background: 'none',
         border: 'none',
@@ -30,11 +34,12 @@ export function ContextRow({ icon, label, action, color = '#fff' }) {
 export function ContextButton({ children }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (menuRef.current && !menuRef.current.contains(event.target) && buttonRef.current && !buttonRef.current.contains(event.target)) {
         setIsMenuOpen(false);
       }
     }
@@ -45,10 +50,10 @@ export function ContextButton({ children }) {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }} ref={menuRef}>
+    <div style={{ position: 'relative', display: 'inline-block' }} ref={buttonRef}>
       <button
         type="button"
-        onClick={(e) => {
+        onClick={e => {
           e.preventDefault();
           setIsMenuOpen(!isMenuOpen);
         }}
@@ -57,21 +62,24 @@ export function ContextButton({ children }) {
       >
         <span className="material-icons-round text-black text-xl">more_horiz</span>
       </button>
-
       {isMenuOpen && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '100%',
-          backgroundColor: '#282828',
-          borderRadius: '16px',
-          padding: '12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          zIndex: 1000,
-          minWidth: '50px'
-        }}>
+        <div
+          ref={menuRef}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: '100%',
+            backgroundColor: '#282828',
+            borderRadius: '16px',
+            padding: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            zIndex: 2000,
+            minWidth: '140px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+          }}
+        >
           {children}
         </div>
       )}

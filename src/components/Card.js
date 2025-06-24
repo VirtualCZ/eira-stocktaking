@@ -11,6 +11,7 @@ export default function Card({ nameStyle, name, children, style }) {
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
+                overflow: "visible",
                 ...style
             }}>
             {name && (

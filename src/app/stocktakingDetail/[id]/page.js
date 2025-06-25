@@ -26,6 +26,8 @@ export default function StocktakingDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
+    const [barJustRendered, setBarJustRendered] = useState(false);
+    const [barRendered, setBarRendered] = useState(false);
 
     const getLocation = useGetLocation();
 
@@ -63,16 +65,60 @@ export default function StocktakingDetail() {
     }, [editMode, editItem, getLocation]);
 
     useLayoutEffect(() => {
+        if (editMode) {
+            setBarJustRendered(true);
+        }
+    }, [editMode]);
+
+    useLayoutEffect(() => {
+        if (barJustRendered && bottomBarRef.current) {
+            setBottomPadding(bottomBarRef.current.offsetHeight);
+            setBarJustRendered(false);
+        }
+    }, [barJustRendered]);
+
+    useLayoutEffect(() => {
         const updatePadding = () => {
             if (bottomBarRef.current) {
-                setBottomPadding(bottomBarRef.current.offsetHeight);
+                const height = bottomBarRef.current.offsetHeight;
+                console.log('Bottom bar ref present, height:', height);
+                setBottomPadding(height);
             } else {
+                console.log('Bottom bar ref NOT present');
                 setBottomPadding(0);
             }
         };
-        updatePadding();
+    
+        updatePadding(); // initial call
+    
+        const observer = new MutationObserver(() => {
+            updatePadding(); // recheck when DOM mutates
+        });
+    
+        if (bottomBarRef.current) {
+            observer.observe(bottomBarRef.current, { attributes: true, childList: true, subtree: true });
+        }
+    
         window.addEventListener("resize", updatePadding);
-        return () => window.removeEventListener("resize", updatePadding);
+    
+        return () => {
+            observer.disconnect();
+            window.removeEventListener("resize", updatePadding);
+        };
+    }, [editMode, bottomBarRef.current]);
+
+    useEffect(() => {
+        if (!editMode) setBarRendered(false);
+    }, [editMode]);
+
+    useEffect(() => {
+        if (editMode && barRendered && bottomBarRef.current) {
+            setBottomPadding(bottomBarRef.current.offsetHeight);
+        }
+    }, [editMode, barRendered]);
+
+    useEffect(() => {
+        console.log('editMode:', editMode);
     }, [editMode]);
 
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
@@ -218,7 +264,12 @@ export default function StocktakingDetail() {
             </CenteredModal>
             {editMode && (
                 <div
-                    ref={bottomBarRef}
+                    ref={el => {
+                        bottomBarRef.current = el;
+                        if (el) {
+                            setBarRendered(true);
+                        }
+                    }}
                     className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
                     style={{
                         background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',

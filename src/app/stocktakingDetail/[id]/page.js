@@ -3,8 +3,7 @@ import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { fetchStocktaking } from "@/mockApi";
 import PictureInput from "@/components/PictureInput";
-import PageHeading from "@/components/PageHeading";
-import LocationNavCard from "@/components/LocationNavCard";
+
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
@@ -12,8 +11,7 @@ import EditableField from "@/components/EditableField";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
-import LocationModalTrigger from "@/components/LocationModalTrigger";
-import LocationPickerModal from "@/components/LocationPickerModal";
+import LocationPicker from "@/components/LocationPicker";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 
 export default function StocktakingDetail() {
@@ -23,40 +21,46 @@ export default function StocktakingDetail() {
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [colorPopover, setColorPopover] = useState({ open: false, idx: null, anchor: null });
-    const COLORS = ["blue", "silver", "white", "black", "gray", "red"];
+
     const [editItem, setEditItem] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [location, setLocationState] = useState(null);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
 
     const getLocation = useGetLocation();
-    const setLocation = useSetLocation();
 
     useEffect(() => {
         setLoading(true);
         fetchStocktaking({ offset: Number(id) - 1, limit: 1 }).then(res => {
-            setItem(res.items[0]);
-            setEditItem(res.items[0]);
+            const fetched = res.items[0];
+            // Map API location fields to Czech field names
+            const mappedLoc = fetched.location
+                ? {
+                    budova: fetched.location.building,
+                    podlazi: fetched.location.story,
+                    mistnost: fetched.location.room,
+                }
+                : null;
+            setItem({ ...fetched, location: mappedLoc });
+            setEditItem({ ...fetched, location: mappedLoc });
             setLoading(false);
         });
     }, [id]);
 
     useEffect(() => {
-        const loc = getLocation();
-        if (loc) {
-            setLocationState(loc);
+        if (searchParams.get('edit') === '1') {
+            setEditMode(true);
         }
-    }, [getLocation]);
+    }, [searchParams]);
 
-    const handleLocationSave = (newLoc) => {
-        setLocationState(newLoc);
-        setEditItem(prev => ({ ...prev, location: newLoc }));
-        setIsLocationModalOpen(false);
-    };
+    useEffect(() => {
+        if (editMode && editItem && !editItem.location) {
+            const userLoc = getLocation();
+            if (userLoc) {
+                setEditItem(prev => ({ ...prev, location: userLoc }));
+            }
+        }
+    }, [editMode, editItem, getLocation]);
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -131,7 +135,11 @@ export default function StocktakingDetail() {
                                         multiline
                                     />
                                 </div>
-                                <LocationModalTrigger onClick={() => setIsLocationModalOpen(true)} />
+                                <LocationPicker
+                                    getter={() => editItem.location}
+                                    setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
+                                    editMode={true}
+                                />
                                 <CardContainer>
                                     <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                                     <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
@@ -176,7 +184,11 @@ export default function StocktakingDetail() {
                                     <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka:</div>
                                     <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
                                 </div>
-                                <LocationNavCard />
+                                <LocationPicker
+                                    getter={() => editItem.location}
+                                    setter={() => {}}
+                                    editMode={false}
+                                />
                                 <CardContainer>
                                     <DetailCardRow label="Váha:" value="2kg" />
                                     <DetailCardRow label="Velikost:" value="50x40x50cm" />
@@ -230,12 +242,6 @@ export default function StocktakingDetail() {
                     </div>
                 </div>
             )}
-            <LocationPickerModal
-                isOpen={isLocationModalOpen}
-                onClose={() => setIsLocationModalOpen(false)}
-                onSave={handleLocationSave}
-                initialLocation={location}
-            />
         </div>
     );
 }

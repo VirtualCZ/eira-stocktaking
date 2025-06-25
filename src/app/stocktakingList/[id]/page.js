@@ -17,6 +17,7 @@ import CenteredModal from "@/components/CenteredModal";
 import LocationButtonCard from "@/components/LocationButtonCard";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
+import UserLocationPicker from "@/components/UserLocationPicker";
 
 const PAGE_SIZE = 10;
 
@@ -202,7 +203,7 @@ export default function StocktakingList() {
                     ]}
                 />
 
-                <LocationModalTrigger onClick={() => setIsLocationModalOpen(true)} />
+                <UserLocationPicker editMode={true} />
 
                 {loading ? <div>Načítání...</div> : null}
                 {/* <Button

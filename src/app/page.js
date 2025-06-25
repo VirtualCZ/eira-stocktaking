@@ -1,6 +1,5 @@
 "use client"
-import LocationNavCard from "@/components/LocationNavCard";
-import { NavButton, NavLink } from "@/components/NavCard";
+import { NavLink } from "@/components/NavCard";
 import HeadingCard from "@/components/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
@@ -76,7 +75,6 @@ export default function Home() {
           extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
         />
 
-        {/* <LocationNavCard editMode={true} /> */}
         <nav className="flex flex-col gap-2">
           <NavLink
             text="Seznam inventur"

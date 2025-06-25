@@ -2,14 +2,11 @@
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import PictureInput from "@/components/PictureInput";
-import LocationNavCard from "@/components/LocationNavCard";
 import CardContainer from "@/components/CardContainer";
 import EditableField from "@/components/EditableField";
 import Link from "next/link";
-import CenteredModal from "@/components/CenteredModal";
-import LocationModalTrigger from "@/components/LocationModalTrigger";
-import LocationPickerModal from "@/components/LocationPickerModal";
-import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
+import LocationPicker from "@/components/LocationPicker";
+import { useGetLocation } from "@/hooks/useLocation";
 
 export default function NewItem() {
     const searchParams = useSearchParams();
@@ -23,7 +20,6 @@ export default function NewItem() {
         image: "",
         location: null
     });
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [location, setLocationState] = useState(null);
     const bottomBarRef = useRef(null);
@@ -118,7 +114,11 @@ export default function NewItem() {
                                 multiline
                             />
                         </div>
-                        <LocationModalTrigger onClick={() => setIsLocationModalOpen(true)} />
+                        <LocationPicker
+                            getter={() => newItem.location}
+                            setter={loc => setNewItem(prev => ({ ...prev, location: loc }))}
+                            editMode={true}
+                        />
                         <CardContainer>
                             <EditableField value={newItem.weight || ''} onChange={e => setNewItem({ ...newItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                             <EditableField value={newItem.size || ''} onChange={e => setNewItem({ ...newItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
@@ -158,12 +158,6 @@ export default function NewItem() {
                     </button>
                 </div>
             </div>
-            <LocationPickerModal
-                isOpen={isLocationModalOpen}
-                onClose={() => setIsLocationModalOpen(false)}
-                onSave={handleLocationSave}
-                initialLocation={location}
-            />
         </div>
     );
 }

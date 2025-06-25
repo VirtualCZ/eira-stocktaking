@@ -1,34 +1,13 @@
 "use client"
-import { useEffect, useState } from "react";
-import { useGetLocation } from "@/hooks/useLocation";
+import React from "react";
 
-export default function LocationModalTrigger({ onClick }) {
-  const getLocation = useGetLocation();
-  const [location, setLocation] = useState(null);
-
-  useEffect(() => {
-    setLocation(getLocation());
-  }, [getLocation]);
-
+export default function LocationModalTrigger({ onClick, location, editMode = true }) {
   const budova = location?.budova || "-";
   const podlazi = location?.podlazi || "-";
   const mistnost = location?.mistnost || "-";
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        width: "100%",
-        textAlign: "left",
-        background: "none",
-        border: "none",
-        padding: 0,
-        cursor: "pointer"
-      }}
-    >
+  const content = (
+    <>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
         <div style={{ color: "#535353", fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
           Lokace:
@@ -42,11 +21,40 @@ export default function LocationModalTrigger({ onClick }) {
           </span>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
-        <span className="material-icons-round" style={{ fontSize: 14, color: "#000" }}>
-          edit
-        </span>
-      </div>
-    </button>
+      {editMode && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
+          <span className="material-icons-round" style={{ fontSize: 14, color: "#000" }}>
+            edit
+          </span>
+        </div>
+      )}
+    </>
   );
+
+  if (editMode) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          textAlign: "left",
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer"
+        }}
+      >
+        {content}
+      </button>
+    );
+  } else {
+    return (
+      <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+        {content}
+      </div>
+    );
+  }
 } 

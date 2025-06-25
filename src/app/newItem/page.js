@@ -1,18 +1,14 @@
 "use client";
-import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useRef, useLayoutEffect } from "react";
 import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import EditableField from "@/components/EditableField";
-import Link from "next/link";
 import LocationPicker from "@/components/LocationPicker";
-import { useGetLocation } from "@/hooks/useLocation";
 
 export default function NewItem() {
-    const searchParams = useSearchParams();
-    const returnTo = searchParams.get("returnTo") || "/";
     const [newItem, setNewItem] = useState({
         name: "",
+        description: "",
         note: "",
         weight: "",
         size: "",
@@ -20,12 +16,8 @@ export default function NewItem() {
         image: "",
         location: null
     });
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [location, setLocationState] = useState(null);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
-
-    const getLocation = useGetLocation();
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -38,55 +30,15 @@ export default function NewItem() {
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
 
-    useEffect(() => {
-        const loc = getLocation();
-        if (loc) {
-            setLocationState(loc);
-            setNewItem(prev => ({ ...prev, location: loc }));
-        }
-    }, [getLocation]);
-
-    const handleLocationSave = (newLoc) => {
-        setLocationState(newLoc);
-        setNewItem(prev => ({ ...prev, location: newLoc }));
-        setIsLocationModalOpen(false);
-    };
-
     const handleSave = () => {
-        // Save logic here
-        alert('Item saved!');
+        console.log("New item: ", newItem);
     };
 
     return (
         <div className="relative min-h-screen flex flex-col" style={{}}>
-            {/* Floating nav button */}
             <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
                 <div className="flex flex-col container" style={{}}>
-                    <Link
-                        href={returnTo}
-                        style={{
-                            position: "absolute",
-                            marginTop: "1rem",
-                            marginLeft: "1rem",
-                            background: "#000",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 16,
-                            width: 38,
-                            height: 38,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 1100,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                            textDecoration: "none"
-                        }}
-                    >
-                        <span className="material-icons-round" style={{ fontSize: 16 }}>
-                            {returnTo === "/" ? "home" : "arrow_back"}
-                        </span>
-                    </Link>
-                    <PictureInput value={newItem.image || ""} onChange={img => setNewItem({ ...newItem, image: img })} editMode={true} />
+                    <PictureInput value={newItem.image || null} onChange={img => setNewItem({ ...newItem, image: img })} editMode={true} />
                     <div className="p-4 flex flex-col gap-4">
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -98,8 +50,8 @@ export default function NewItem() {
                                 />
                             </div>
                             <EditableField
-                                value={newItem.note}
-                                onChange={e => setNewItem({ ...newItem, note: e.target.value })}
+                                value={newItem.description}
+                                onChange={e => setNewItem({ ...newItem, description: e.target.value })}
                                 label={"Popisek"}
                                 placeholder="Popisek"
                             />
@@ -131,7 +83,6 @@ export default function NewItem() {
                     </div>
                 </div>
             </main>
-            {/* Bottom bar for save/cancel */}
             <div
                 ref={bottomBarRef}
                 className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"

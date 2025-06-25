@@ -12,7 +12,7 @@ import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
 import LocationPicker from "@/components/LocationPicker";
-import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
+import { useGetLocation } from "@/hooks/useLocation";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -66,12 +66,14 @@ export default function StocktakingDetail() {
         const updatePadding = () => {
             if (bottomBarRef.current) {
                 setBottomPadding(bottomBarRef.current.offsetHeight);
+            } else {
+                setBottomPadding(0);
             }
         };
         updatePadding();
         window.addEventListener("resize", updatePadding);
         return () => window.removeEventListener("resize", updatePadding);
-    }, []);
+    }, [editMode]);
 
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
     if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;

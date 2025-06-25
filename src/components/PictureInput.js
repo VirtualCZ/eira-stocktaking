@@ -1,18 +1,24 @@
 import React, { useRef, useState, useEffect } from "react";
 export default function PictureInput({ label, onChange, value, editMode = false }) {
-    const [preview, setPreview] = useState(value || null);
+    const [preview, setPreview] = useState(null);
     const [objectFit, setObjectFit] = useState("cover");
     const inputRef = useRef();
 
     useEffect(() => {
-        setPreview(value || null);
+        if (!value) {
+            setPreview(null);
+        } else if (typeof value === "string") {
+            setPreview(value);
+        } else if (value instanceof File) {
+            const url = URL.createObjectURL(value);
+            setPreview(url);
+            return () => URL.revokeObjectURL(url);
+        }
     }, [value]);
 
     const handleFile = e => {
         const file = e.target.files[0];
         if (file) {
-            const url = URL.createObjectURL(file);
-            setPreview(url);
             onChange && onChange(file);
         }
     };
@@ -38,7 +44,7 @@ export default function PictureInput({ label, onChange, value, editMode = false 
                 overflow: "hidden"
             }}>
                 {preview ? (
-                    <img src={typeof preview === 'string' ? preview : ''} alt="preview" style={{ width: "100%", height: "100%", objectFit, borderRadius: 12 }} />
+                    <img src={preview} alt="preview" style={{ width: "100%", height: "100%", objectFit, borderRadius: 12 }} />
                 ) : (
                     <span style={{ color: "#000", opacity: "50%", fontSize: 32 }} className="material-icons-round">broken_image</span>
                 )}

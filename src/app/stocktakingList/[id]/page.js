@@ -7,9 +7,8 @@ import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
 import TextInput from "@/components/TextInput";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
-import LocationModalTrigger from "@/components/LocationModalTrigger";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
 import SortOptionsModal from "@/components/SortOptionsModal";
@@ -29,9 +28,10 @@ const sortOptions = [
 ];
 
 export default function StocktakingList() {
-    const searchParams = useSearchParams();
-    const pathname = usePathname();
+
     const router = useRouter();
+    const params = useParams();
+    const stocktakingId = params.id;
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [items, setItems] = useState([]);
@@ -218,7 +218,7 @@ export default function StocktakingList() {
                                 {sorted.map(item => (
                                     <Link
                                         key={item.id}
-                                        href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                        href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                         style={{ textDecoration: "none" }}
                                     >
                                         <div className="flex flex-col rounded-2xl overflow-visible bg-[#f0f1f3] h-full">
@@ -238,7 +238,7 @@ export default function StocktakingList() {
                                                             <ContextRow
                                                                 icon="edit"
                                                                 label="Edit"
-                                                                action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                                action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                             />
                                                             <ContextRow
                                                                 icon="visibility"
@@ -273,7 +273,7 @@ export default function StocktakingList() {
                             sorted.map(item => (
                                 <Link
                                     key={item.id}
-                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
                                     <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
@@ -293,7 +293,7 @@ export default function StocktakingList() {
                                                         <ContextRow
                                                             icon="edit"
                                                             label="Edit"
-                                                            action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                            action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                         />
                                                         <ContextRow
                                                             icon="swap_horiz"
@@ -323,7 +323,7 @@ export default function StocktakingList() {
                             sorted.map(item => (
                                 <Link
                                     key={item.id}
-                                    href={`/stocktakingDetail/${item.id}?returnTo=${encodeURIComponent(`${pathname}${searchParams.has('returnTo') ? `?returnTo=${encodeURIComponent(searchParams.get('returnTo'))}` : ''}`)}`}
+                                    href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
                                     <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
@@ -337,7 +337,7 @@ export default function StocktakingList() {
                                                         <ContextRow
                                                             icon="edit"
                                                             label="Edit"
-                                                            action={() => router.push(`/stocktakingDetail/${item.id}?edit=1`)}
+                                                            action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                         />
                                                         <ContextRow
                                                             icon="content_copy"
@@ -591,7 +591,7 @@ export default function StocktakingList() {
                                             }}
                                         />
                                         <Button
-                                            onClick={() => router.push(`/stocktakingDetail/${scannedItem.id}`)}
+                                            onClick={() => router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`)}
                                         >
                                             Editovat
                                         </Button>
@@ -643,7 +643,7 @@ export default function StocktakingList() {
                                         }}
                                         onClick={() => {
                                             router.push(
-                                                `/stocktakingDetail/new?preloadId=${scannedItem.id}`
+                                                `/stocktakingList/${stocktakingId}/new?preloadId=${scannedItem.id}`
                                             );
                                             setIsPreviewModalOpen(false);
                                         }}

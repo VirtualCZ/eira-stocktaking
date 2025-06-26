@@ -6,7 +6,7 @@ import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
-import EditableField from "@/components/EditableField";
+import TextInput from "@/components/TextInput";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
@@ -109,14 +109,14 @@ export default function ItemListDetail() {
                             <div className="p-4 flex flex-col gap-4">
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <EditableField
+                                        <TextInput
                                             value={editItem.name}
                                             onChange={e => setEditItem({ ...editItem, name: e.target.value })}
                                             label={"Název"}
                                             placeholder="Název"
                                         />
                                     </div>
-                                    <EditableField
+                                    <TextInput
                                         value={editItem.note}
                                         onChange={e => setEditItem({ ...editItem, note: e.target.value })}
                                         label={"Popisek"}
@@ -124,7 +124,7 @@ export default function ItemListDetail() {
                                 </div>
                                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                    <EditableField
+                                    <TextInput
                                         value={editItem.note}
                                         onChange={e => setEditItem({ ...editItem, note: e.target.value })}
                                         label={"Poznámka"}
@@ -138,9 +138,9 @@ export default function ItemListDetail() {
                                     editMode={true}
                                 />
                                 <CardContainer>
-                                    <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                                    <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                                    <EditableField value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                                    <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                                    <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                                    <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
                                 </CardContainer>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                                     <div>Poslední úprava {item.lastCheck}</div>

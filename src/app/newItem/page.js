@@ -2,7 +2,7 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
-import EditableField from "@/components/EditableField";
+import TextInput from "@/components/TextInput";
 import LocationPicker from "@/components/LocationPicker";
 import QRCodeInput from "@/components/QRCodeInput";
 
@@ -44,14 +44,14 @@ export default function NewItem() {
                     <div className="p-4 flex flex-col gap-4">
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <EditableField
+                                <TextInput
                                     value={newItem.name}
                                     onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                                     label={"Název"}
                                     placeholder="Název"
                                 />
                             </div>
-                            <EditableField
+                            <TextInput
                                 value={newItem.description}
                                 onChange={e => setNewItem({ ...newItem, description: e.target.value })}
                                 label={"Popisek"}
@@ -60,7 +60,7 @@ export default function NewItem() {
                         </div>
                         <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                            <EditableField
+                            <TextInput
                                 value={newItem.note}
                                 onChange={e => setNewItem({ ...newItem, note: e.target.value })}
                                 label={"Poznámka"}
@@ -82,9 +82,9 @@ export default function NewItem() {
                             editMode={true}
                         />
                         <CardContainer>
-                            <EditableField value={newItem.weight || ''} onChange={e => setNewItem({ ...newItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                            <EditableField value={newItem.size || ''} onChange={e => setNewItem({ ...newItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                            <EditableField value={newItem.price || ''} onChange={e => setNewItem({ ...newItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                            <TextInput value={newItem.weight || ''} onChange={e => setNewItem({ ...newItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                            <TextInput value={newItem.size || ''} onChange={e => setNewItem({ ...newItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                            <TextInput value={newItem.price || ''} onChange={e => setNewItem({ ...newItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
                         </CardContainer>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                             <div>Nový předmět</div>

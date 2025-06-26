@@ -6,13 +6,13 @@ import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
-import EditableField from "@/components/EditableField";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
 import LocationPicker from "@/components/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 import QRCodeInput from "@/components/QRCodeInput";
+import TextInput from "@/components/TextInput";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
@@ -111,14 +111,14 @@ export default function StocktakingListItemDetail() {
                             <div className="p-4 flex flex-col gap-4">
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <EditableField
+                                        <TextInput
                                             value={editItem.name}
                                             onChange={e => setEditItem({ ...editItem, name: e.target.value })}
                                             label={"Název"}
                                             placeholder="Název"
                                         />
                                     </div>
-                                    <EditableField
+                                    <TextInput
                                         value={editItem.note}
                                         onChange={e => setEditItem({ ...editItem, note: e.target.value })}
                                         label={"Popisek"}
@@ -126,7 +126,7 @@ export default function StocktakingListItemDetail() {
                                 </div>
                                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                    <EditableField
+                                    <TextInput
                                         value={editItem.note}
                                         onChange={e => setEditItem({ ...editItem, note: e.target.value })}
                                         label={"Poznámka"}
@@ -148,9 +148,9 @@ export default function StocktakingListItemDetail() {
                                     editMode={true}
                                 />
                                 <CardContainer>
-                                    <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                                    <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                                    <EditableField value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                                    <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                                    <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                                    <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
                                 </CardContainer>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                                     <div>Poslední úprava {item.lastCheck}</div>

@@ -1,7 +1,6 @@
 "use client"
-
-import Card from "./Card";
 import { useState } from "react";
+import CardContainer from "./CardContainer";
 
 export default function DropdownCard({ label, options = [], onSelect, selected, disabled = false }) {
     const [open, setOpen] = useState(false);
@@ -9,7 +8,7 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
         if (!disabled) setOpen((v) => !v);
     };
     return (
-        <Card style={{ padding: 0, gap: 0, opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? "auto" : "auto" }}>
+        <CardContainer className="p-0">
             <button
                 className=""
                 style={{
@@ -59,6 +58,6 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
                     ))}
                 </ul>
             )}
-        </Card>
+        </CardContainer>
     );
 }

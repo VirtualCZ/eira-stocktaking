@@ -2,11 +2,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { fetchStocktaking } from "@/mockApi";
 import Link from "next/link";
-import Card from "@/components/Card";
-import Modal from "@/components/Modal";
-import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
-import TextInput from "@/components/inputs/TextInput";
 import { useRouter, useParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
@@ -104,7 +100,7 @@ export default function StocktakingList() {
     // Filter items based on search term
     const filteredItems = items.filter(item => {
         if (!searchTerm.trim()) return true;
-        
+
         const searchLower = searchTerm.toLowerCase();
         return (
             item.id.toString().includes(searchLower) ||
@@ -175,6 +171,20 @@ export default function StocktakingList() {
                         },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
                         { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
+                        {
+                            icon: "visibility",
+                            onClick: () => {
+                                // Use a mock item for preview
+                                setScannedItem({
+                                    id: 999,
+                                    name: "Mockovaná židle",
+                                    note: "Toto je ukázková položka pro náhled.",
+                                    image: "/file.svg"
+                                });
+                                setIsPreviewModalOpen(true);
+                            },
+                            title: "Zobrazit ukázkovou položku"
+                        },
                         { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
                     ]}
                 />
@@ -405,7 +415,7 @@ export default function StocktakingList() {
                     }}
                 />
                 <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
-                    <div style={{ display: "flex", flexDirection: "column", gap:"1rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
                             Položka nalezena v jiné místnosti
                         </div>
@@ -432,9 +442,9 @@ export default function StocktakingList() {
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                            <LocationPicker getter={() => currentLocation} setter={() => {}} editMode={false} />
+                            <LocationPicker getter={() => currentLocation} setter={() => { }} editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationPicker getter={() => newLocation} setter={() => {}} editMode={false} />
+                            <LocationPicker getter={() => newLocation} setter={() => { }} editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button
@@ -523,104 +533,108 @@ export default function StocktakingList() {
                         </div>
                     </div>
                 </CenteredModal>
-                <Modal
+                <CenteredModal
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}
-                    title="Náhled položky"
-                    contentStyle={{
-                        gap: "1rem",
-                        display: "flex",
-                        flexDirection: "column",
-                    }}
+                    title="Náhled naskenované položky"
                 >
                     {scannedItem && (
-                        <>
-                            {scannedItem.name ? (
-                                <>
-                                    <Card>
-                                        <div
-                                            style={{
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            {scannedItem.name}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <div style={{
+                                borderRadius: 16,
+                                background: "#f0f1f3",
+                                overflow: "hidden",
+                                display: "flex",
+                                flexDirection: "column",
+                                width: "100%"
+                            }}>
+                                {/* Top: Image */}
+                                <img
+                                    src={scannedItem.image}
+                                    alt={scannedItem.name}
+                                    style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                                />
+                                {/* Bottom: Content */}
+                                <div className="p-4 gap-4 flex flex-col">
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{scannedItem.name}</span>
                                         </div>
-                                        <img
-                                            src={scannedItem.image}
-                                            alt={scannedItem.name}
-                                            style={{
-                                                width: "100%",
-                                                maxHeight: 150,
-                                                objectFit: "contain",
-                                                borderRadius: "1rem",
-                                            }}
-                                        />
-                                        <Button
-                                            onClick={() => router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`)}
-                                        >
-                                            Editovat
-                                        </Button>
-                                    </Card>
-
-                                    {editItem && (
-                                        <>
-                                            <TextInput
-                                                label="Poznámka"
-                                                value={editItem.note}
-                                                onChange={(e) => setEditItem({ ...editItem, note: e.target.value })}
-                                            />
-                                        </>
-                                    )}
-
-                                    <Button
-                                        onClick={() => {
-                                            if (!editItem) return;
-                                            const now = new Date().toISOString();
-                                            setItems((prevItems) => prevItems.map(item =>
-                                                item.id === editItem.id ? { ...item, lastCheck: now, note: editItem.note } : item
-                                            ));
-                                            setEditItem({ ...editItem, lastCheck: now });
-                                            setIsPreviewModalOpen(false);
-                                        }}
-                                    >
-                                        OK
-                                    </Button>
-
-                                    <Button onClick={() => setIsPreviewModalOpen(false)}>
-                                        Zavřít
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-                                    <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
-                                        Položka s ID {scannedItem.id} nebyla nalezena.
+                                        <div style={{ fontSize: 12, color: "#535353" }}>{scannedItem.note}</div>
                                     </div>
-                                    <Button
-                                        style={{
-                                            margin: 8,
-                                            padding: "8px 16px",
-                                            background: "#b640ff",
-                                            color: "#fff",
-                                            border: "none",
-                                            borderRadius: 8,
-                                            fontWeight: 600,
-                                            cursor: "pointer",
-                                        }}
-                                        onClick={() => {
-                                            router.push(
-                                                `/stocktakingList/${stocktakingId}/new?preloadId=${scannedItem.id}`
-                                            );
-                                            setIsPreviewModalOpen(false);
-                                        }}
-                                    >
-                                        Přidat novou položku
-                                    </Button>
-                                    <Button onClick={() => setIsPreviewModalOpen(false)}>Zavřít</Button>
-                                </>
-                            )}
-                        </>
+                                    <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                        {/* You can add more info here if needed */}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        // Go to edit page for this item
+                                        router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
+                                    }}
+                                >
+                                    Editovat
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>edit</span>
+                                </button>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        // OK logic (e.g., mark as checked, update state, etc.)
+                                        setIsPreviewModalOpen(false);
+                                    }}
+                                >
+                                    OK
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                                </button>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => setIsPreviewModalOpen(false)}
+                                >
+                                    Zavřít
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                                </button>
+                            </div>
+                        </div>
                     )}
-                </Modal>
+                </CenteredModal>
 
             </main>
         </div >

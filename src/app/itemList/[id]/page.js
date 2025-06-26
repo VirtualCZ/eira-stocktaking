@@ -137,7 +137,7 @@ export default function ItemListDetail() {
                                     setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
-                                <CardContainer>
+                                <CardContainer className="gap-2">
                                     <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                                     <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
                                     <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
@@ -186,7 +186,7 @@ export default function ItemListDetail() {
                                     setter={() => {}}
                                     editMode={false}
                                 />
-                                <CardContainer>
+                                <CardContainer className="gap-2">
                                     <DetailCardRow label="Váha:" value="2kg" />
                                     <DetailCardRow label="Velikost:" value="50x40x50cm" />
                                     <DetailCardRow label="Cena:" value="1 234,-" />

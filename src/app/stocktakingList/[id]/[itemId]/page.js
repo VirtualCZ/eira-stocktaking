@@ -9,10 +9,10 @@ import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
-import LocationPicker from "@/components/LocationPicker";
+import LocationPicker from "@/components/location/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 import QRCodeInput from "@/components/QRCodeInput";
-import TextInput from "@/components/TextInput";
+import TextInput from "@/components/inputs/TextInput";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();

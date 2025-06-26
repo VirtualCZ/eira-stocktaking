@@ -3,7 +3,7 @@ import { NavLink } from "@/components/NavCard";
 import HeadingCard from "@/components/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import UserLocationPicker from "@/components/UserLocationPicker";
+import UserLocationPicker from "@/components/location/UserLocationPicker";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();

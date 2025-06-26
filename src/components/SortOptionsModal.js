@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "./Modal";
 import Card from "./Card";
-import RadioButton from "./RadioButton";
+import RadioButton from "./inputs/RadioButton";
 
 export default function SortOptionsModal({
     isOpen,

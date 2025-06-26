@@ -6,15 +6,15 @@ import Card from "@/components/Card";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import QRScannerModal from "@/components/QRScannerModal";
-import TextInput from "@/components/TextInput";
+import TextInput from "@/components/inputs/TextInput";
 import { useRouter, useParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
-import LocationButtonCard from "@/components/LocationButtonCard";
-import UserLocationPicker from "@/components/UserLocationPicker";
+import LocationPicker from "@/components/location/LocationPicker";
+import UserLocationPicker from "@/components/location/UserLocationPicker";
 
 const PAGE_SIZE = 10;
 
@@ -432,9 +432,9 @@ export default function StocktakingList() {
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                            <LocationButtonCard location={currentLocation} editMode={false} />
+                            <LocationPicker getter={() => currentLocation} setter={() => {}} editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationButtonCard location={newLocation} editMode={false} />
+                            <LocationPicker getter={() => newLocation} setter={() => {}} editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button

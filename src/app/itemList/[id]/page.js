@@ -6,11 +6,11 @@ import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/ContextMenu";
-import TextInput from "@/components/TextInput";
+import TextInput from "@/components/inputs/TextInput";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
-import LocationPicker from "@/components/LocationPicker";
+import LocationPicker from "@/components/location/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 
 export default function ItemListDetail() {

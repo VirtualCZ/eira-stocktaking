@@ -14,8 +14,6 @@ import { Pagination } from "@/components/Pagination";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
 import LocationButtonCard from "@/components/LocationButtonCard";
-import LocationPickerModal from "@/components/LocationPickerModal";
-import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 import UserLocationPicker from "@/components/UserLocationPicker";
 
 const PAGE_SIZE = 10;
@@ -43,13 +41,8 @@ export default function StocktakingList() {
     const [editItem, setEditItem] = useState(null);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [location, setLocationState] = useState(null);
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
     const [searchTerm, setSearchTerm] = useState('');
-
-    const getLocation = useGetLocation();
-    const setLocation = useSetLocation();
 
     const [currentPage, setCurrentPage] = useState(0);
     const totalItems = 70; // Example total items
@@ -101,20 +94,6 @@ export default function StocktakingList() {
     }, []);
 
     useEffect(() => {
-        const loc = getLocation();
-        if (loc) {
-            setLocationState(loc);
-        }
-    }, [getLocation]);
-
-    const handleLocationSave = (newLoc) => {
-        setLocation(newLoc);
-        setLocationState(newLoc);
-        setIsLocationModalOpen(false);
-    }
-
-
-    useEffect(() => {
         setLoading(true);
         fetchStocktaking({ offset: currentPage * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
             setItems(res.items);
@@ -145,8 +124,6 @@ export default function StocktakingList() {
             compare = new Date(a.lastCheck) - new Date(b.lastCheck);
         } else if (sortBy === 'note') {
             compare = a.note.localeCompare(b.note);
-        } else if (sortBy === 'color') {
-            compare = a.color.localeCompare(b.color);
         }
         return sortOrder === 'asc' ? compare : -compare;
     });
@@ -203,14 +180,9 @@ export default function StocktakingList() {
                     ]}
                 />
 
-                <UserLocationPicker editMode={true} />
+                <UserLocationPicker />
 
                 {loading ? <div>Načítání...</div> : null}
-                {/* <Button
-                    onClick={() => setIsQRModalOpen(true)}
-                    aria-label="Open QR Scanner"
-                >Skenovat položku
-                </Button> */}
                 <div className="flex flex-col gap-2">
                     <>
                         {viewMode === 'grid' && (
@@ -552,12 +524,6 @@ export default function StocktakingList() {
                         </div>
                     </div>
                 </CenteredModal>
-                <LocationPickerModal
-                    isOpen={isLocationModalOpen}
-                    onClose={() => setIsLocationModalOpen(false)}
-                    onSave={handleLocationSave}
-                    initialLocation={location}
-                />
                 <Modal
                     isOpen={isPreviewModalOpen}
                     onClose={() => setIsPreviewModalOpen(false)}

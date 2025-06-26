@@ -1,7 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react";
 import CenteredModal from "./CenteredModal";
-import Button from "./Button";
 import { useBuildings } from "../hooks/useBuildings";
 import QRScannerModal from "./QRScannerModal";
 import DropdownCard from "./DropdownCard";

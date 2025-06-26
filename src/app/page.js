@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavCard";
 import HeadingCard from "@/components/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
+import UserLocationPicker from "@/components/UserLocationPicker";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
@@ -74,7 +75,7 @@ export default function Home() {
           // actions={[{ icon: "home", onClick: () => alert("Home") }]}
           extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
         />
-
+  <UserLocationPicker/>
         <nav className="flex flex-col gap-2">
           <NavLink
             text="Seznam inventur"

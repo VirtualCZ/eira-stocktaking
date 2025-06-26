@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 import LocationPicker from "./LocationPicker";

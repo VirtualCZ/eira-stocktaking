@@ -155,6 +155,27 @@ export default function StocktakingList() {
         }
     }
 
+    // Function to render item actions (context menu)
+    const renderItemActions = (item) => (
+        <ContextButton>
+            <ContextRow
+                icon="edit"
+                label="Upravit"
+                action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
+            />
+            <ContextRow
+                icon="swap_horiz"
+                label="Přesun"
+                action={() => alert('Přesun clicked')}
+            />
+            <ContextRow
+                icon="visibility"
+                label="Nalezeno"
+                action={() => alert('Nalezeno clicked')}
+            />
+        </ContextButton>
+    );
+
     return (
         <div className="relative min-h-screen flex flex-col items-center">
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
@@ -217,28 +238,7 @@ export default function StocktakingList() {
                                                 <div>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                         <CardItemName>{item.name}</CardItemName>
-                                                        <ContextButton>
-                                                            <ContextRow
-                                                                icon="edit"
-                                                                label="Upravit"
-                                                                action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
-                                                            />
-                                                            <ContextRow
-                                                                icon="visibility"
-                                                                label="Upravit"
-                                                                action={() => alert('Nalezeno clicked')}
-                                                            />
-                                                            <ContextRow
-                                                                icon="swap_horiz"
-                                                                label="Přesun"
-                                                                action={() => alert('Přesun clicked')}
-                                                            />
-                                                            <ContextRow
-                                                                icon="visibility"
-                                                                label="Nalezeno"
-                                                                action={() => alert('Nalezeno clicked')}
-                                                            />
-                                                        </ContextButton>
+                                                        {renderItemActions(item)}
                                                     </div>
                                                     <CardItemDescription>{item.description}</CardItemDescription>
                                                 </div>
@@ -272,23 +272,7 @@ export default function StocktakingList() {
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <CardItemName>{item.name}</CardItemName>
-                                                    <ContextButton>
-                                                        <ContextRow
-                                                            icon="edit"
-                                                            label="Upravit"
-                                                            action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
-                                                        />
-                                                        <ContextRow
-                                                            icon="swap_horiz"
-                                                            label="Přesun"
-                                                            action={() => alert('Přesun clicked')}
-                                                        />
-                                                        <ContextRow
-                                                            icon="visibility"
-                                                            label="Nalezeno"
-                                                            action={() => alert('Nalezeno clicked')}
-                                                        />
-                                                    </ContextButton>
+                                                    {renderItemActions(item)}
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>
@@ -316,24 +300,7 @@ export default function StocktakingList() {
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <CardItemName>{item.name}</CardItemName>
-                                                    <ContextButton>
-                                                        <ContextRow
-                                                            icon="edit"
-                                                            label="Upravit"
-                                                            action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
-                                                        />
-                                                        <ContextRow
-                                                            icon="content_copy"
-                                                            label="Duplicate"
-                                                            action={() => alert('Duplicate clicked')}
-                                                        />
-                                                        <ContextRow
-                                                            icon="delete"
-                                                            label="Delete"
-                                                            action={() => alert('Delete clicked')}
-                                                            color="#FF6262"
-                                                        />
-                                                    </ContextButton>
+                                                    {renderItemActions(item)}
                                                 </div>
                                                 <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
                                             </div>

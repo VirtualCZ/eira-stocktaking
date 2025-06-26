@@ -13,6 +13,7 @@ import SwipeToDelete from "@/components/SwipeToDelete";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 import TextInput from "@/components/inputs/TextInput";
+import CardItemName from "@/components/molecules/CardItemName";
 
 export default function StocktakingDetail() {
     const { id } = useParams();
@@ -206,6 +207,7 @@ export default function StocktakingDetail() {
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                        <CardItemName>{item.name}</CardItemName>
                                         <ContextButton>
                                             <ContextRow
                                                 icon="edit"

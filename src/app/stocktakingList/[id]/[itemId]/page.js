@@ -13,6 +13,9 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 import QRCodeInput from "@/components/QRCodeInput";
 import TextInput from "@/components/inputs/TextInput";
+import CardItemName from "@/components/molecules/CardItemName";
+import CardItemNote from "@/components/molecules/CardItemNote";
+import CardItemDescription from "@/components/molecules/CardItemDescription";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
@@ -164,21 +167,21 @@ export default function StocktakingListItemDetail() {
                             <div className="p-4 flex flex-col gap-4">
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                        <CardItemName>{item.name}</CardItemName>
                                         <ContextButton>
                                             <ContextRow
                                                 icon="edit"
-                                                label="Edit"
+                                                label="Upravit"
                                                 action={() => setEditMode(!editMode)}
                                             />
                                             <ContextRow
                                                 icon="content_copy"
-                                                label="Duplicate"
+                                                label="Duplikovat"
                                                 action={() => alert('Duplicate clicked')}
                                             />
                                             <ContextRow
                                                 icon="delete"
-                                                label="Delete"
+                                                label="Smazat"
                                                 action={() => setIsDeleteModalOpen(true)}
                                                 color="#FF6262"
                                             />
@@ -194,13 +197,10 @@ export default function StocktakingListItemDetail() {
                                             />
                                         </ContextButton>
                                     </div>
-                                    <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                    <CardItemDescription>{item.description}</CardItemDescription>
                                 </div>
                                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                    <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka:</div>
-                                    <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
-                                </div>
+                                <CardItemNote>{item.note}</CardItemNote>
                                 <LocationPicker
                                     getter={() => item.location}
                                     setter={() => {}}

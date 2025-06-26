@@ -11,6 +11,8 @@ import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
+import CardItemName from "@/components/molecules/CardItemName";
+import CardItemDescription from "@/components/molecules/CardItemDescription";
 
 const PAGE_SIZE = 10;
 
@@ -214,11 +216,11 @@ export default function StocktakingList() {
                                                 {/* First part */}
                                                 <div>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                        <CardItemName>{item.name}</CardItemName>
                                                         <ContextButton>
                                                             <ContextRow
                                                                 icon="edit"
-                                                                label="Edit"
+                                                                label="Upravit"
                                                                 action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                             />
                                                             <ContextRow
@@ -238,7 +240,7 @@ export default function StocktakingList() {
                                                             />
                                                         </ContextButton>
                                                     </div>
-                                                    <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                                    <CardItemDescription>{item.description}</CardItemDescription>
                                                 </div>
                                                 {/* Second part */}
                                                 <div className="italic text-xs text-[#535353] mt-2">
@@ -269,11 +271,11 @@ export default function StocktakingList() {
                                             {/* First part */}
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <CardItemName>{item.name}</CardItemName>
                                                     <ContextButton>
                                                         <ContextRow
                                                             icon="edit"
-                                                            label="Edit"
+                                                            label="Upravit"
                                                             action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                         />
                                                         <ContextRow
@@ -313,11 +315,11 @@ export default function StocktakingList() {
                                             {/* First part */}
                                             <div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>
+                                                    <CardItemName>{item.name}</CardItemName>
                                                     <ContextButton>
                                                         <ContextRow
                                                             icon="edit"
-                                                            label="Edit"
+                                                            label="Upravit"
                                                             action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
                                                         />
                                                         <ContextRow
@@ -430,9 +432,7 @@ export default function StocktakingList() {
                             <div className="p-4 gap-4 flex flex-col">
                                 {/* First part */}
                                 <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{foundItem.name}</span>
-                                    </div>
+                                    <CardItemName>{foundItem.name}</CardItemName>
                                     <div style={{ fontSize: 12, color: "#535353" }}>{foundItem.note}</div>
                                 </div>
                                 {/* Second part */}
@@ -488,7 +488,7 @@ export default function StocktakingList() {
                     </div>
                 </CenteredModal>
                 <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
                             Položka není součástí inventurního seznamu.
                         </div>
@@ -557,9 +557,7 @@ export default function StocktakingList() {
                                 {/* Bottom: Content */}
                                 <div className="p-4 gap-4 flex flex-col">
                                     <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{scannedItem.name}</span>
-                                        </div>
+                                        <CardItemName>{scannedItem.name}</CardItemName>
                                         <div style={{ fontSize: 12, color: "#535353" }}>{scannedItem.note}</div>
                                     </div>
                                     <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>

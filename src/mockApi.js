@@ -6,6 +6,7 @@ const HARDCODED_ITEMS = [
     id: 1,
     image: "/IMG_0517.webp",
     name: "ThinkPad T14 Gen1",
+    description: "Kancelářský notebook Lenovo",
     lastCheck: "2024-05-04",
     note: "Chybí napájecí adaptér",
     colors: ["black"],
@@ -15,6 +16,7 @@ const HARDCODED_ITEMS = [
     id: 2,
     image: "/globe.svg",
     name: "iMac 24 M1",
+    description: "All-in-one počítač Apple",
     lastCheck: "2024-05-08",
     note: "",
     colors: ["silver", "white"],
@@ -24,6 +26,7 @@ const HARDCODED_ITEMS = [
     id: 3,
     image: "/window.svg",
     name: "iPhone 13 Pro",
+    description: "Mobilní telefon Apple",
     lastCheck: "2024-05-10",
     note: "Poškrábaný povrch",
     colors: ["blue"],
@@ -33,6 +36,7 @@ const HARDCODED_ITEMS = [
     id: 4,
     image: "/vercel.svg",
     name: "Monitor LG 27UL500",
+    description: "4K monitor pro grafické práce",
     lastCheck: "2024-05-12",
     note: "",
     colors: ["white"],
@@ -42,6 +46,7 @@ const HARDCODED_ITEMS = [
     id: 5,
     image: "/file.svg",
     name: "MacBook Air M2",
+    description: "Ultrabook Apple s čipem M2",
     lastCheck: "2024-05-15",
     note: "Chybí napájecí adaptér",
     colors: ["gray"],
@@ -56,10 +61,24 @@ const DYNAMIC_ITEMS = Array.from({ length: 95 }, (_, i) => {
   // Cycle through all available locations
   const buildingList = buildings;
   const location = buildingList[i % buildingList.length];
+  
+  // Generate descriptions for dynamic items
+  const descriptions = [
+    "Kancelářské vybavení",
+    "Technické zařízení",
+    "Elektronické zařízení",
+    "Počítačové vybavení",
+    "Kancelářský nábytek",
+    "Multimediální zařízení",
+    "Síťové vybavení"
+  ];
+  const description = descriptions[i % descriptions.length];
+  
   return {
     id: idx,
     image: ["/file.svg", "/globe.svg", "/window.svg", "/vercel.svg"][i % 4],
     name: `Item ${idx}`,
+    description,
     lastCheck: `2024-05-${(i % 28 + 1).toString().padStart(2, "0")}`,
     note: i % 7 === 0 ? "Chybí napájecí adaptér" : i % 5 === 0 ? "Poškrábaný povrch" : "",
     colors: baseColor === "red" ? ["gray", "red"] : [baseColor],

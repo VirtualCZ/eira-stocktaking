@@ -4,6 +4,7 @@ import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import EditableField from "@/components/EditableField";
 import LocationPicker from "@/components/LocationPicker";
+import QRCodeInput from "@/components/QRCodeInput";
 
 export default function NewItem() {
     const [newItem, setNewItem] = useState({
@@ -14,7 +15,8 @@ export default function NewItem() {
         size: "",
         price: "",
         image: "",
-        location: null
+        location: null,
+        qrCode: null
     });
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
@@ -69,6 +71,14 @@ export default function NewItem() {
                         <LocationPicker
                             getter={() => newItem.location}
                             setter={loc => setNewItem(prev => ({ ...prev, location: loc }))}
+                            editMode={true}
+                        />
+                        <QRCodeInput
+                            value={newItem.qrCode}
+                            onChange={code => {
+                                console.log('Scanned QR code:', code);
+                                setNewItem(prev => ({ ...prev, qrCode: code }));
+                            }}
                             editMode={true}
                         />
                         <CardContainer>

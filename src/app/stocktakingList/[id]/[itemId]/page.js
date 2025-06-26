@@ -12,6 +12,7 @@ import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
 import LocationPicker from "@/components/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
+import QRCodeInput from "@/components/QRCodeInput";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
@@ -138,6 +139,14 @@ export default function StocktakingListItemDetail() {
                                     setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
+                                <QRCodeInput
+                                    value={editItem.qrCode}
+                                    onChange={code => {
+                                        console.log('Scanned QR code:', code);
+                                        setEditItem(prev => ({ ...prev, qrCode: code }));
+                                    }}
+                                    editMode={true}
+                                />
                                 <CardContainer>
                                     <EditableField value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                                     <EditableField value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
@@ -193,8 +202,13 @@ export default function StocktakingListItemDetail() {
                                     <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
+                                    getter={() => item.location}
                                     setter={() => {}}
+                                    editMode={false}
+                                />
+                                <QRCodeInput
+                                    value={item.qrCode}
+                                    onChange={() => {}}
                                     editMode={false}
                                 />
                                 <CardContainer>

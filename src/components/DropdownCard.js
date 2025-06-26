@@ -46,7 +46,7 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
                         <li key={option.value}>
                             <button
                                 className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors"
-                                style={{ fontWeight: 500, fontSize: "1rem", color: "#000", border: "none", background: "none" }}
+                                style={{ fontWeight: 500, fontSize: "0.75rem", color: "#000", border: "none", background: "none" }}
                                 onClick={() => { setOpen(false); onSelect && onSelect(option); }}
                                 type="button"
                             >

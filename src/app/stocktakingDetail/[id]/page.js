@@ -10,7 +10,7 @@ import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
-import LocationPicker from "@/components/location/LocationPicker";
+import LocationPicker from "@/components/organisms/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
 import TextInput from "@/components/inputs/TextInput";
 

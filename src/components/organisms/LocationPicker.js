@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from "react";
-import LocationModalTrigger from "./LocationModalTrigger";
-import LocationPickerModal from "./LocationPickerModal";
+import LocationModalTrigger from "@/components/molecules/LocationModalTrigger";
+import LocationPickerModal from "@/components/organisms/LocationPickerModal";
 
 export default function LocationPicker({ getter, setter, editMode = true }) {
   const [location, setLocation] = useState(null);

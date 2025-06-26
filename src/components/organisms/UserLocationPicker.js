@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
-import LocationPicker from "./LocationPicker";
+import LocationPicker from "@/components/organisms/LocationPicker";
 
 export default function UserLocationPicker({ editMode = true }) {
   const getLocation = useGetLocation();

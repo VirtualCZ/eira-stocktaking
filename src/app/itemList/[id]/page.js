@@ -10,8 +10,8 @@ import TextInput from "@/components/inputs/TextInput";
 import Link from "next/link";
 import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
-import LocationPicker from "@/components/location/LocationPicker";
 import { useGetLocation } from "@/hooks/useLocation";
+import LocationPicker from "@/components/organisms/LocationPicker";
 
 export default function ItemListDetail() {
     const { id } = useParams();

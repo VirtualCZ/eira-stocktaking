@@ -3,7 +3,7 @@ import { useState, useRef, useLayoutEffect } from "react";
 import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import TextInput from "@/components/inputs/TextInput";
-import LocationPicker from "@/components/location/LocationPicker";
+import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/QRCodeInput";
 
 export default function NewItem() {

@@ -13,8 +13,8 @@ import { ContextButton, ContextRow } from "@/components/ContextMenu";
 import { Pagination } from "@/components/Pagination";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import CenteredModal from "@/components/CenteredModal";
-import LocationPicker from "@/components/location/LocationPicker";
-import UserLocationPicker from "@/components/location/UserLocationPicker";
+import LocationPicker from "@/components/organisms/LocationPicker";
+import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 
 const PAGE_SIZE = 10;
 

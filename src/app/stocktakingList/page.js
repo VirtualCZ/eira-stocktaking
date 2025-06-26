@@ -1,13 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Card from "@/components/Card";
 import { fetchStocktakingOperations } from "@/mockApi";
-import Modal from "@/components/Modal";
-import PageHeading from "@/components/PageHeading";
 import { usePathname, useSearchParams } from "next/navigation";
 import HeadingCard from "@/components/HeadingCard";
-import RadioButton from "@/components/RadioButton";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import { Pagination } from "@/components/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
@@ -74,7 +70,6 @@ export default function StocktakingOperationsList() {
     return (
         <div className="relative min-h-screen flex flex-col items-center">
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
-                {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
                     heading="Seznam inventur"
                     leftActions={[

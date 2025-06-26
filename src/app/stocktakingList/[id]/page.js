@@ -160,7 +160,6 @@ export default function StocktakingList() {
     return (
         <div className="relative min-h-screen flex flex-col items-center">
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
-                {/* <PageHeading heading="Seznam inventur" route="/" /> */}
                 <HeadingCard
                     heading="Seznam předmětů"
                     leftActions={[

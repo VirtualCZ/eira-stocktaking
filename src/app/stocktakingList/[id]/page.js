@@ -192,7 +192,7 @@ export default function StocktakingList() {
                                         href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                         style={{ textDecoration: "none" }}
                                     >
-                                        <div className="flex flex-col rounded-2xl overflow-visible bg-[#f0f1f3] h-full">
+                                        <div className="flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] h-full">
                                             {/* Image */}
                                             <img
                                                 src={item.image}
@@ -247,7 +247,7 @@ export default function StocktakingList() {
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                                         {/* Top: Image */}
                                         <img
                                             src={item.image}
@@ -297,7 +297,7 @@ export default function StocktakingList() {
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "visible", display: "flex", flexDirection: "column" }}>
+                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
                                         {/* Bottom: Content */}
                                         <div className="p-4 gap-4 flex flex-col">
                                             {/* First part */}

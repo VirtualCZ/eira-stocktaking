@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { fetchStocktakingOperations } from "@/mockApi";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useStocktakingLists } from "@/hooks/useStocktakingLists";
 import HeadingCard from "@/components/HeadingCard";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import { Pagination } from "@/components/Pagination";
@@ -17,41 +16,23 @@ const sortOptions = [
 ];
 
 export default function StocktakingOperationsList() {
-    const [operations, setOperations] = useState([]);
     const [sortBy, setSortBy] = useState("id");
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const returnTo = searchParams.get("returnTo") || "/";
     const [sortOrder, setSortOrder] = useState('asc');
-    const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
-    const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('grid'); // grid, detailed, compact
     const { selectInventura } = useSelectedInventura();
 
-    const viewModes = [
-        { mode: 'grid', icon: 'view_module' },
-        { mode: 'detailed', icon: 'view_list' },
-        { mode: 'compact', icon: 'view_agenda' }
-    ];
-    const currentViewIdx = viewModes.findIndex(vm => vm.mode === viewMode);
-    const nextViewMode = () => {
-        setViewMode(viewModes[(currentViewIdx + 1) % viewModes.length].mode);
-    };
+    const [operations, total, loading, error] = useStocktakingLists({ 
+        offset: page * PAGE_SIZE, 
+        limit: PAGE_SIZE 
+    });
+
+    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
     const handleInventuraClick = (op) => {
         selectInventura(op);
     };
-
-    useEffect(() => {
-        setLoading(true);
-        fetchStocktakingOperations({ offset: page * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
-            setOperations(res.operations);
-            setTotal(res.total);
-            setLoading(false);
-        });
-    }, [page]);
 
     const sorted = operations.slice().sort((a, b) => {
         let compare = 0;
@@ -64,8 +45,6 @@ export default function StocktakingOperationsList() {
         }
         return sortOrder === 'asc' ? compare : -compare;
     });
-
-    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
     return (
         <div className="relative min-h-screen flex flex-col items-center">
@@ -81,12 +60,14 @@ export default function StocktakingOperationsList() {
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) }
                     ]}
                 />
+
                 {loading ? <div>Načítání...</div> : null}
-                <div className="flex gap-2 flex-col">
+                {error ? <div>Chyba: {error.message}</div> : null}
+                <div className="flex flex-col gap-2">
                     {sorted.map(op => (
-                        <Link 
-                            key={op.id} 
-                            href={`/`} 
+                        <Link
+                            key={op.id}
+                            href={`/stocktakingList/${op.id}`}
                             style={{ textDecoration: "none" }}
                             onClick={() => handleInventuraClick(op)}
                         >

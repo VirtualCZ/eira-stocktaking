@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { fetchStocktaking } from "@/mockApi";
+import { useStocktakingItem } from "@/hooks/useStocktakingItems";
 import PictureInput from "@/components/PictureInput";
 import CardContainer from "@/components/CardContainer";
 import DetailCardRow from "@/components/DetailCardRow";
@@ -17,8 +17,6 @@ export default function ItemListDetail() {
     const { id } = useParams();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
-    const [item, setItem] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
 
     const [editItem, setEditItem] = useState(null);
@@ -29,23 +27,22 @@ export default function ItemListDetail() {
 
     const getLocation = useGetLocation();
 
+    const [fetchedItem, loading, error] = useStocktakingItem(id);
+
+    // Map API location fields to Czech field names and set item state
     useEffect(() => {
-        setLoading(true);
-        fetchStocktaking({ offset: Number(id) - 1, limit: 1 }).then(res => {
-            const fetched = res.items[0];
-            // Map API location fields to Czech field names
-            const mappedLoc = fetched.location
+        if (fetchedItem) {
+            const mappedLoc = fetchedItem.location
                 ? {
-                    budova: fetched.location.building,
-                    podlazi: fetched.location.story,
-                    mistnost: fetched.location.room,
+                    budova: fetchedItem.location.building,
+                    podlazi: fetchedItem.location.story,
+                    mistnost: fetchedItem.location.room,
                 }
                 : null;
-            setItem({ ...fetched, location: mappedLoc });
-            setEditItem({ ...fetched, location: mappedLoc });
-            setLoading(false);
-        });
-    }, [id]);
+            const itemWithMappedLocation = { ...fetchedItem, location: mappedLoc };
+            setEditItem(itemWithMappedLocation);
+        }
+    }, [fetchedItem]);
 
     useEffect(() => {
         if (searchParams.get('edit') === '1') {
@@ -73,10 +70,14 @@ export default function ItemListDetail() {
     }, [editMode, barRendered]);
 
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
-    if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+    if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
+    if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+
+    const item = { ...fetchedItem, location: editItem?.location };
 
     return (
         <div className="relative min-h-screen flex flex-col" style={{}}>
+            {/* Floating nav button */}
             <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
                 <div className="flex flex-col container" style={{}}>
                     <Link
@@ -120,7 +121,8 @@ export default function ItemListDetail() {
                                         value={editItem.note}
                                         onChange={e => setEditItem({ ...editItem, note: e.target.value })}
                                         label={"Popisek"}
-                                        placeholder="Popisek" />
+                                        placeholder="Popisek"
+                                    />
                                 </div>
                                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
@@ -137,7 +139,7 @@ export default function ItemListDetail() {
                                     onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
-                                <CardContainer className="gap-2">
+                                <CardContainer>
                                     <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
                                     <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
                                     <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
@@ -185,7 +187,7 @@ export default function ItemListDetail() {
                                     value={item.location}
                                     editMode={false}
                                 />
-                                <CardContainer className="gap-2">
+                                <CardContainer>
                                     <DetailCardRow label="Váha:" value="2kg" />
                                     <DetailCardRow label="Velikost:" value="50x40x50cm" />
                                     <DetailCardRow label="Cena:" value="1 234,-" />

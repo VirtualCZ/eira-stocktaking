@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { fetchStocktaking } from "@/mockApi";
+import { useStocktakingItems } from "@/hooks/useStocktakingItems";
 import Link from "next/link";
 import QRScannerModal from "@/components/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
@@ -30,8 +30,6 @@ export default function StocktakingList() {
     const stocktakingId = params.id;
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
@@ -43,9 +41,13 @@ export default function StocktakingList() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const [currentPage, setCurrentPage] = useState(0);
-    const totalItems = 70; // Example total items
-    const itemsPerPage = 10;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const [items, total, loading, error] = useStocktakingItems({ 
+        offset: currentPage * PAGE_SIZE, 
+        limit: PAGE_SIZE 
+    });
+
+    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
     const viewModes = [
         { mode: 'grid', icon: 'view_module' },
@@ -90,14 +92,6 @@ export default function StocktakingList() {
         window.addEventListener("resize", updatePadding);
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
-
-    useEffect(() => {
-        setLoading(true);
-        fetchStocktaking({ offset: currentPage * PAGE_SIZE, limit: PAGE_SIZE }).then(res => {
-            setItems(res.items);
-            setLoading(false);
-        });
-    }, [currentPage]);
 
     // Filter items based on search term
     const filteredItems = items.filter(item => {
@@ -215,6 +209,7 @@ export default function StocktakingList() {
                 <UserLocationPicker />
 
                 {loading ? <div>Načítání...</div> : null}
+                {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
                     <>
                         {viewMode === 'grid' && (

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { fetchStocktaking } from "@/mockApi";
+import { useStocktakingItem } from "@/hooks/useStocktakingItems";
 import PictureInput from "@/components/PictureInput";
 
 import CardContainer from "@/components/CardContainer";
@@ -19,8 +19,6 @@ export default function StocktakingDetail() {
     const { id } = useParams();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
-    const [item, setItem] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
 
     const [editItem, setEditItem] = useState(null);
@@ -32,23 +30,22 @@ export default function StocktakingDetail() {
 
     const getLocation = useGetLocation();
 
+    const [fetchedItem, loading, error] = useStocktakingItem(id);
+
+    // Map API location fields to Czech field names and set item state
     useEffect(() => {
-        setLoading(true);
-        fetchStocktaking({ offset: Number(id) - 1, limit: 1 }).then(res => {
-            const fetched = res.items[0];
-            // Map API location fields to Czech field names
-            const mappedLoc = fetched.location
+        if (fetchedItem) {
+            const mappedLoc = fetchedItem.location
                 ? {
-                    budova: fetched.location.building,
-                    podlazi: fetched.location.story,
-                    mistnost: fetched.location.room,
+                    budova: fetchedItem.location.building,
+                    podlazi: fetchedItem.location.story,
+                    mistnost: fetchedItem.location.room,
                 }
                 : null;
-            setItem({ ...fetched, location: mappedLoc });
-            setEditItem({ ...fetched, location: mappedLoc });
-            setLoading(false);
-        });
-    }, [id]);
+            const itemWithMappedLocation = { ...fetchedItem, location: mappedLoc };
+            setEditItem(itemWithMappedLocation);
+        }
+    }, [fetchedItem]);
 
     useEffect(() => {
         if (searchParams.get('edit') === '1') {
@@ -123,7 +120,10 @@ export default function StocktakingDetail() {
     }, [editMode]);
 
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
-    if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+    if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
+    if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+
+    const item = { ...fetchedItem, location: editItem?.location };
 
     return (
         <div className="relative min-h-screen flex flex-col" style={{}}>

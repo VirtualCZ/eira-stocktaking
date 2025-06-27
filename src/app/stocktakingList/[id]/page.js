@@ -68,15 +68,15 @@ export default function StocktakingList() {
     };
 
     const currentLocation = {
-        budova: "A",
-        podlazi: "1",
-        mistnost: "101",
+        budova: 1,
+        podlazi: 1,
+        mistnost: 101,
     };
 
     const newLocation = {
-        budova: "B",
-        podlazi: "2",
-        mistnost: "202",
+        budova: 2,
+        podlazi: 3,
+        mistnost: 302,
     };
 
     useLayoutEffect(() => {

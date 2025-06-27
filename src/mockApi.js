@@ -1,4 +1,16 @@
-import { buildings } from "./hooks/useBuildings";
+// Removed import of buildings
+
+// Define valid locations as per new mapping
+const VALID_LOCATIONS = [
+  { building: 1, story: 1, room: 101 },
+  { building: 1, story: 1, room: 102 },
+  { building: 1, story: 2, room: 201 },
+  { building: 1, story: 2, room: 202 },
+  { building: 2, story: 1, room: 103 },
+  { building: 2, story: 1, room: 104 },
+  { building: 2, story: 3, room: 301 },
+  { building: 2, story: 3, room: 302 },
+];
 
 // First, define the 5 hardcoded items
 const HARDCODED_ITEMS = [
@@ -9,8 +21,7 @@ const HARDCODED_ITEMS = [
     description: "Kancelářský notebook Lenovo",
     lastCheck: "2024-05-04",
     note: "Chybí napájecí adaptér",
-    colors: ["black"],
-    location: { building: "A", story: "1", room: "101" }
+    location: { building: 1, story: 1, room: 101 }
   },
   {
     id: 2,
@@ -19,8 +30,7 @@ const HARDCODED_ITEMS = [
     description: "All-in-one počítač Apple",
     lastCheck: "2024-05-08",
     note: "",
-    colors: ["silver", "white"],
-    location: { building: "A", story: "1", room: "102" }
+    location: { building: 1, story: 1, room: 102 }
   },
   {
     id: 3,
@@ -29,8 +39,7 @@ const HARDCODED_ITEMS = [
     description: "Mobilní telefon Apple",
     lastCheck: "2024-05-10",
     note: "Poškrábaný povrch",
-    colors: ["blue"],
-    location: { building: "A", story: "2", room: "201" }
+    location: { building: 1, story: 2, room: 201 }
   },
   {
     id: 4,
@@ -39,8 +48,7 @@ const HARDCODED_ITEMS = [
     description: "4K monitor pro grafické práce",
     lastCheck: "2024-05-12",
     note: "",
-    colors: ["white"],
-    location: { building: "A", story: "2", room: "202" }
+    location: { building: 1, story: 2, room: 202 }
   },
   {
     id: 5,
@@ -49,19 +57,16 @@ const HARDCODED_ITEMS = [
     description: "Ultrabook Apple s čipem M2",
     lastCheck: "2024-05-15",
     note: "Chybí napájecí adaptér",
-    colors: ["gray"],
-    location: { building: "B", story: "1", room: "103" }
+    location: { building: 2, story: 1, room: 103 }
   }
 ];
 
 // Then generate the rest starting from id 6
 const DYNAMIC_ITEMS = Array.from({ length: 95 }, (_, i) => {
   const idx = i + 5 + 1; // +5 to account for hardcoded items, +1 to start from id 6
-  const baseColor = ["blue", "silver", "white", "black", "gray", "red"][i % 6];
-  // Cycle through all available locations
-  const buildingList = buildings;
-  const location = buildingList[i % buildingList.length];
-  
+  // Cycle through all available valid locations
+  const location = VALID_LOCATIONS[i % VALID_LOCATIONS.length];
+
   // Generate descriptions for dynamic items
   const descriptions = [
     "Kancelářské vybavení",
@@ -73,7 +78,7 @@ const DYNAMIC_ITEMS = Array.from({ length: 95 }, (_, i) => {
     "Síťové vybavení"
   ];
   const description = descriptions[i % descriptions.length];
-  
+
   return {
     id: idx,
     image: ["/file.svg", "/globe.svg", "/window.svg", "/vercel.svg"][i % 4],
@@ -81,7 +86,6 @@ const DYNAMIC_ITEMS = Array.from({ length: 95 }, (_, i) => {
     description,
     lastCheck: `2024-05-${(i % 28 + 1).toString().padStart(2, "0")}`,
     note: i % 7 === 0 ? "Chybí napájecí adaptér" : i % 5 === 0 ? "Poškrábaný povrch" : "",
-    colors: baseColor === "red" ? ["gray", "red"] : [baseColor],
     location
   };
 });
@@ -111,7 +115,6 @@ export async function fetchStocktakingOperations() {
     operations: MOCK_OPERATIONS
   };
 }
-
 
 export async function createStocktaking() {
   await new Promise(res => setTimeout(res, 1000)); // Simulate 1 second delay

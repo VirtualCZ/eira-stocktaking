@@ -12,7 +12,7 @@ import CenteredModal from "@/components/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/molecules/CardItemName";
-import CardItemDescription from "@/components/molecules/CardItemDescription";
+import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 
 const PAGE_SIZE = 10;
 
@@ -42,8 +42,8 @@ export default function StocktakingList() {
 
     const [currentPage, setCurrentPage] = useState(0);
 
-    const [items, total, loading, error] = useStocktakingItems({ 
-        offset: currentPage * PAGE_SIZE, 
+    const [items, total, loading, error] = useStocktakingItems({
+        offset: currentPage * PAGE_SIZE,
         limit: PAGE_SIZE,
         sortBy: sortBy,
         sortOrder: sortOrder,
@@ -196,29 +196,7 @@ export default function StocktakingList() {
                                         href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                         style={{ textDecoration: "none" }}
                                     >
-                                        <div className="flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] h-full">
-                                            {/* Image */}
-                                            <img
-                                                src={item.image}
-                                                alt={item.name}
-                                                style={{ width: "100%", height: 100, objectFit: "cover", display: "block" }}
-                                            />
-                                            {/* Content */}
-                                            <div className="p-4 flex flex-col justify-between flex-grow">
-                                                {/* First part */}
-                                                <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <CardItemName>{item.name}</CardItemName>
-                                                        {renderItemActions(item)}
-                                                    </div>
-                                                    <CardItemDescription>{item.description}</CardItemDescription>
-                                                </div>
-                                                {/* Second part */}
-                                                <div className="italic text-xs text-[#535353] mt-2">
-                                                    Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
                                     </Link>
                                 ))}
                             </div>
@@ -230,29 +208,7 @@ export default function StocktakingList() {
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                                        {/* Top: Image */}
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
-                                        />
-                                        {/* Bottom: Content */}
-                                        <div className="p-4 gap-4 flex flex-col">
-                                            {/* First part */}
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <CardItemName>{item.name}</CardItemName>
-                                                    {renderItemActions(item)}
-                                                </div>
-                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
-                                            </div>
-                                            {/* Second part */}
-                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
                                 </Link>
                             ))
                         )}
@@ -264,29 +220,10 @@ export default function StocktakingList() {
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
                                     style={{ textDecoration: "none" }}
                                 >
-                                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                                        {/* Bottom: Content */}
-                                        <div className="p-4 gap-4 flex flex-col">
-                                            {/* First part */}
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    <CardItemName>{item.name}</CardItemName>
-                                                    {renderItemActions(item)}
-                                                </div>
-                                                <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
-                                            </div>
-                                            {/* Second part */}
-                                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                                Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
                                 </Link>
                             ))
-
                         )}
-
-
                     </>
                 </div>
                 <Pagination

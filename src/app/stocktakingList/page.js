@@ -6,6 +6,9 @@ import HeadingCard from "@/components/HeadingCard";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import { Pagination } from "@/components/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
+import CardItemName from "@/components/molecules/CardItemName";
+import CardItemDescription from "@/components/molecules/CardItemDescription";
+import CardItemDate from "@/components/molecules/CardItemDate";
 
 const PAGE_SIZE = 10;
 
@@ -64,14 +67,12 @@ export default function StocktakingOperationsList() {
                                 <div className="p-4 gap-4 flex flex-col">
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{op.name || `Inventura #${op.id}`}</span>
+                                            <CardItemName>{op.name || `Inventura #${op.id}`}</CardItemName>
                                             <span className="material-icons-round" style={{ fontSize: 18, color: '#000' }}>arrow_forward_ios</span>
                                         </div>
-                                        <div style={{ fontSize: 12, color: "#535353" }}>{op.note}</div>
+                                        <CardItemDescription>{op.note}</CardItemDescription>
                                     </div>
-                                    <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                        Datum: {op.date}
-                                    </div>
+                                    <CardItemDate>Datum: {op.date}</CardItemDate>
                                 </div>
                             </div>
                         </Link>

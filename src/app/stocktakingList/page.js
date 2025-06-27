@@ -9,6 +9,8 @@ import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import CardItemName from "@/components/molecules/CardItemName";
 import CardItemDescription from "@/components/molecules/CardItemDescription";
 import CardItemDate from "@/components/molecules/CardItemDate";
+import CardContainer from "@/components/CardContainer";
+import StocktakingListCard from "@/components/organisms/StocktakingListCard";
 
 const PAGE_SIZE = 10;
 
@@ -57,25 +59,12 @@ export default function StocktakingOperationsList() {
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
                     {operations.map(op => (
-                        <Link
+                        <StocktakingListCard
                             key={op.id}
+                            operation={op}
                             href={`/stocktakingList/${op.id}`}
-                            style={{ textDecoration: "none" }}
                             onClick={() => handleInventuraClick(op)}
-                        >
-                            <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                                <div className="p-4 gap-4 flex flex-col">
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <CardItemName>{op.name || `Inventura #${op.id}`}</CardItemName>
-                                            <span className="material-icons-round" style={{ fontSize: 18, color: '#000' }}>arrow_forward_ios</span>
-                                        </div>
-                                        <CardItemDescription>{op.note}</CardItemDescription>
-                                    </div>
-                                    <CardItemDate>Datum: {op.date}</CardItemDate>
-                                </div>
-                            </div>
-                        </Link>
+                        />
                     ))}
                 </div>
 

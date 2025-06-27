@@ -131,15 +131,13 @@ export default function StocktakingListItemDetail() {
                                             />
                                         </div>
                                         <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                            <TextInput
-                                                value={editItem.note}
-                                                onChange={e => setEditItem({ ...editItem, note: e.target.value })}
-                                                label={"Poznámka"}
-                                                placeholder="Poznámka"
-                                                multiline
-                                            />
-                                        </div>
+                                        <TextInput
+                                            value={editItem.note}
+                                            onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                            label={"Poznámka"}
+                                            placeholder="Poznámka"
+                                            multiline
+                                        />
                                         <LocationPicker
                                             value={editItem.location}
                                             onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
@@ -153,11 +151,88 @@ export default function StocktakingListItemDetail() {
                                             }}
                                             editMode={true}
                                         />
-                                        <CardContainer className="gap-2">
-                                            <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                                            <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                                            <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
-                                        </CardContainer>
+                                        {/* Dynamic properties editing */}
+                                        {editItem.properties && typeof editItem.properties === 'object' && (
+                                            <CardContainer className="gap-2">
+                                                {Object.entries(editItem.properties).map(([key, value], idx, arr) => (
+                                                    <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                                        <TextInput
+                                                            value={key}
+                                                            onChange={e => {
+                                                                const newKey = e.target.value;
+                                                                const newProps = { ...editItem.properties };
+                                                                if (newKey !== key) {
+                                                                    if (newKey && !newProps[newKey]) {
+                                                                        newProps[newKey] = newProps[key];
+                                                                        delete newProps[key];
+                                                                    } else if (!newKey) {
+                                                                        delete newProps[key];
+                                                                        newProps[""] = value;
+                                                                    }
+                                                                    setEditItem({ ...editItem, properties: newProps });
+                                                                }
+                                                            }}
+                                                            label={idx === 0 ? "Vlastnost" : undefined}
+                                                            placeholder="Název"
+                                                        />
+                                                        <TextInput
+                                                            value={value}
+                                                            onChange={e => {
+                                                                const newProps = { ...editItem.properties, [key]: e.target.value };
+                                                                setEditItem({ ...editItem, properties: newProps });
+                                                            }}
+                                                            label={idx === 0 ? "Hodnota" : undefined}
+                                                            placeholder="Hodnota"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newProps = { ...editItem.properties };
+                                                                delete newProps[key];
+                                                                setEditItem({ ...editItem, properties: newProps });
+                                                            }}
+                                                            style={{
+                                                                borderRadius: "0.5rem",
+                                                                padding: "0.75rem",
+                                                                border: "none",
+                                                                background: "#FF6262",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                cursor: "pointer",
+                                                                marginTop: 8
+                                                            }}
+                                                            title="Odebrat"
+                                                            className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
+                                                        >
+                                                            <span className="material-icons-round" style={{ color: "#000", fontSize: 16 }}>delete</span>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        // Add a new empty property (find a unique key)
+                                                        let i = 1;
+                                                        let newKey = "";
+                                                        while (true) {
+                                                            newKey = `Vlastnost${i}`;
+                                                            if (!editItem.properties[newKey]) break;
+                                                            i++;
+                                                        }
+                                                        setEditItem({
+                                                            ...editItem,
+                                                            properties: { ...editItem.properties, [newKey]: "" }
+                                                        });
+                                                    }}
+                                                    className="flex items-center gap-2 rounded-lg bg-[#282828] p-3 text-white border-none cursor-pointer mt-2"
+                                                    style={{ fontSize: "0.75rem" }}
+                                                >
+                                                    <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>add</span>
+                                                    Přidat vlastnost
+                                                </button>
+                                            </CardContainer>
+                                        )}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                                             <div>Poslední úprava {item.lastCheck}</div>
                                             <div>ID {item.id}</div>
@@ -193,12 +268,12 @@ export default function StocktakingListItemDetail() {
                                             <ContextRow
                                                 icon="swap_horiz"
                                                 label="Přesun"
-                                                action={() => {}}
+                                                action={() => { }}
                                             />
                                             <ContextRow
                                                 icon="visibility"
                                                 label="Nalezeno"
-                                                action={() => {}}
+                                                action={() => { }}
                                             />
                                         </ContextButton>
                                     </div>
@@ -212,14 +287,16 @@ export default function StocktakingListItemDetail() {
                                 />
                                 <QRCodeInput
                                     value={item.qrCode}
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                     editMode={false}
                                 />
-                                <CardContainer className="gap-2">
-                                    <DetailCardRow label="Váha:" value="2kg" />
-                                    <DetailCardRow label="Velikost:" value="50x40x50cm" />
-                                    <DetailCardRow label="Cena:" value="1 234,-" />
-                                </CardContainer>
+                                {item.properties && typeof item.properties === 'object' && (
+                                    <CardContainer className="gap-2">
+                                        {Object.entries(item.properties).map(([key, value]) => (
+                                            <DetailCardRow key={key} label={key + ':'} value={value} />
+                                        ))}
+                                    </CardContainer>
+                                )}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                                     <div>Poslední úprava {item.lastCheck}</div>
                                     <div>ID {item.id}</div>

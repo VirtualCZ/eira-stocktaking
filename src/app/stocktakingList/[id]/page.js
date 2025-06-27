@@ -44,7 +44,10 @@ export default function StocktakingList() {
 
     const [items, total, loading, error] = useStocktakingItems({ 
         offset: currentPage * PAGE_SIZE, 
-        limit: PAGE_SIZE 
+        limit: PAGE_SIZE,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+        search: searchTerm
     });
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
@@ -92,33 +95,6 @@ export default function StocktakingList() {
         window.addEventListener("resize", updatePadding);
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
-
-    // Filter items based on search term
-    const filteredItems = items.filter(item => {
-        if (!searchTerm.trim()) return true;
-
-        const searchLower = searchTerm.toLowerCase();
-        return (
-            item.id.toString().includes(searchLower) ||
-            (item.name && item.name.toLowerCase().includes(searchLower)) ||
-            (item.note && item.note.toLowerCase().includes(searchLower))
-        );
-    });
-
-    // Sorting (client-side for demo)
-    const sorted = filteredItems.slice().sort((a, b) => {
-        let compare = 0;
-        if (sortBy === 'id') {
-            compare = a.id - b.id;
-        } else if (sortBy === 'id') {
-            compare = a.name.localeCompare(b.name);
-        } else if (sortBy === 'lastCheck') {
-            compare = new Date(a.lastCheck) - new Date(b.lastCheck);
-        } else if (sortBy === 'note') {
-            compare = a.note.localeCompare(b.note);
-        }
-        return sortOrder === 'asc' ? compare : -compare;
-    });
 
     function handleScan(dataString) {
         let parsed;
@@ -214,7 +190,7 @@ export default function StocktakingList() {
                     <>
                         {viewMode === 'grid' && (
                             <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                {sorted.map(item => (
+                                {items.map(item => (
                                     <Link
                                         key={item.id}
                                         href={`/stocktakingList/${stocktakingId}/${item.id}`}
@@ -248,7 +224,7 @@ export default function StocktakingList() {
                             </div>
                         )}
                         {viewMode === 'detailed' && (
-                            sorted.map(item => (
+                            items.map(item => (
                                 <Link
                                     key={item.id}
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
@@ -282,7 +258,7 @@ export default function StocktakingList() {
                         )}
 
                         {viewMode === 'compact' && (
-                            sorted.map(item => (
+                            items.map(item => (
                                 <Link
                                     key={item.id}
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
@@ -597,6 +573,6 @@ export default function StocktakingList() {
                 </CenteredModal>
 
             </main>
-        </div >
+        </div>
     );
 }

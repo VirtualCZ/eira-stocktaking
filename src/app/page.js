@@ -87,7 +87,7 @@ export default function Home() {
               text={selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
               size="big"
               icon="assignment"
-              href={selectedInventura ? `stocktakingList/${selectedInventura.id}?returnTo=/` : "stocktakingList"}
+              href={selectedInventura ? `stocktakingList/${selectedInventura.id}` : "stocktakingList"}
               variant="dark"
             />
             <NavLink

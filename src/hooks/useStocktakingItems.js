@@ -4,36 +4,48 @@ const username = process.env.NEXT_PUBLIC_API_USERNAME;
 const password = process.env.NEXT_PUBLIC_API_PASSWORD;
 const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
 
-export function useStocktakingItems({ offset = 0, limit = 10 } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '' } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Debounced search effect
   useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams({
-      offset: offset.toString(),
-      limit: limit.toString()
-    });
+    const timeoutId = setTimeout(() => {
+      setLoading(true);
+      const params = new URLSearchParams({
+        offset: offset.toString(),
+        limit: limit.toString(),
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
 
-    fetch(`/api/create/stocktaking?${params}`, {
-      headers: {
-        "Authorization": basicAuth
+      // Only add search parameter if it's not empty
+      if (search.trim()) {
+        params.append('search', search.trim());
       }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch stocktaking items");
-        return res.json();
+
+      fetch(`/api/create/stocktaking?${params}`, {
+        headers: {
+          "Authorization": basicAuth
+        }
       })
-      .then((data) => {
-        setItems(Array.isArray(data.items) ? data.items : []);
-        setTotal(data.total || 0);
-        setError(null);
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
-  }, [offset, limit]);
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch stocktaking items");
+          return res.json();
+        })
+        .then((data) => {
+          setItems(Array.isArray(data.items) ? data.items : []);
+          setTotal(data.total || 0);
+          setError(null);
+        })
+        .catch((err) => setError(err))
+        .finally(() => setLoading(false));
+    }, search ? 500 : 0); // 500ms delay for search, no delay for other changes
+
+    return () => clearTimeout(timeoutId);
+  }, [offset, limit, sortBy, sortOrder, search]);
 
   return [items, total, loading, error];
 }

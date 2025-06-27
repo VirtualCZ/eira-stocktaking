@@ -110,57 +110,61 @@ export default function StocktakingListItemDetail() {
                     </Link>
                     {editMode ? (
                         <>
-                            <PictureInput value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} editMode={true} />
-                            <div className="p-4 flex flex-col gap-4">
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <TextInput
-                                            value={editItem.name}
-                                            onChange={e => setEditItem({ ...editItem, name: e.target.value })}
-                                            label={"Název"}
-                                            placeholder="Název"
+                            {editItem && (
+                                <>
+                                    <PictureInput value={editItem.image || ""} onChange={img => setEditItem({ ...editItem, image: img })} editMode={true} />
+                                    <div className="p-4 flex flex-col gap-4">
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <TextInput
+                                                    value={editItem.name}
+                                                    onChange={e => setEditItem({ ...editItem, name: e.target.value })}
+                                                    label={"Název"}
+                                                    placeholder="Název"
+                                                />
+                                            </div>
+                                            <TextInput
+                                                value={editItem.note}
+                                                onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                                label={"Popisek"}
+                                                placeholder="Popisek"
+                                            />
+                                        </div>
+                                        <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
+                                            <TextInput
+                                                value={editItem.note}
+                                                onChange={e => setEditItem({ ...editItem, note: e.target.value })}
+                                                label={"Poznámka"}
+                                                placeholder="Poznámka"
+                                                multiline
+                                            />
+                                        </div>
+                                        <LocationPicker
+                                            value={editItem.location}
+                                            onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
+                                            editMode={true}
                                         />
+                                        <QRCodeInput
+                                            value={editItem.qrCode}
+                                            onChange={code => {
+                                                console.log('Scanned QR code:', code);
+                                                setEditItem(prev => ({ ...prev, qrCode: code }));
+                                            }}
+                                            editMode={true}
+                                        />
+                                        <CardContainer className="gap-2">
+                                            <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
+                                            <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
+                                            <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
+                                        </CardContainer>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
+                                            <div>Poslední úprava {item.lastCheck}</div>
+                                            <div>ID {item.id}</div>
+                                        </div>
                                     </div>
-                                    <TextInput
-                                        value={editItem.note}
-                                        onChange={e => setEditItem({ ...editItem, note: e.target.value })}
-                                        label={"Popisek"}
-                                        placeholder="Popisek"
-                                    />
-                                </div>
-                                <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                                    <TextInput
-                                        value={editItem.note}
-                                        onChange={e => setEditItem({ ...editItem, note: e.target.value })}
-                                        label={"Poznámka"}
-                                        placeholder="Poznámka"
-                                        multiline
-                                    />
-                                </div>
-                                <LocationPicker
-                                    value={editItem.location}
-                                    onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
-                                    editMode={true}
-                                />
-                                <QRCodeInput
-                                    value={editItem.qrCode}
-                                    onChange={code => {
-                                        console.log('Scanned QR code:', code);
-                                        setEditItem(prev => ({ ...prev, qrCode: code }));
-                                    }}
-                                    editMode={true}
-                                />
-                                <CardContainer className="gap-2">
-                                    <TextInput value={editItem.weight || ''} onChange={e => setEditItem({ ...editItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                                    <TextInput value={editItem.size || ''} onChange={e => setEditItem({ ...editItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                                    <TextInput value={editItem.price || ''} onChange={e => setEditItem({ ...editItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
-                                </CardContainer>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                                    <div>Poslední úprava {item.lastCheck}</div>
-                                    <div>ID {item.id}</div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </>
                     ) : (
                         <>

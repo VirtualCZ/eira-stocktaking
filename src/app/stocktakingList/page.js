@@ -20,12 +20,13 @@ export default function StocktakingOperationsList() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [page, setPage] = useState(0);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
-    const [viewMode, setViewMode] = useState('grid'); // grid, detailed, compact
     const { selectInventura } = useSelectedInventura();
 
     const [operations, total, loading, error] = useStocktakingLists({ 
         offset: page * PAGE_SIZE, 
-        limit: PAGE_SIZE 
+        limit: PAGE_SIZE,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
     });
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
@@ -33,18 +34,6 @@ export default function StocktakingOperationsList() {
     const handleInventuraClick = (op) => {
         selectInventura(op);
     };
-
-    const sorted = operations.slice().sort((a, b) => {
-        let compare = 0;
-        if (sortBy === 'id') {
-            compare = a.id - b.id;
-        } else if (sortBy === 'date') {
-            compare = new Date(a.date) - new Date(b.date);
-        } else if (sortBy === 'note') {
-            compare = a.note.localeCompare(b.note);
-        }
-        return sortOrder === 'asc' ? compare : -compare;
-    });
 
     return (
         <div className="relative min-h-screen flex flex-col items-center">
@@ -64,7 +53,7 @@ export default function StocktakingOperationsList() {
                 {loading ? <div>Načítání...</div> : null}
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    {sorted.map(op => (
+                    {operations.map(op => (
                         <Link
                             key={op.id}
                             href={`/stocktakingList/${op.id}`}
@@ -107,6 +96,7 @@ export default function StocktakingOperationsList() {
                     onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
                         setSortBy(newSortBy);
                         setSortOrder(newSortOrder);
+                        setPage(0); // Reset to first page when sorting changes
                     }}
                 />
             </main>

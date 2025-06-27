@@ -409,9 +409,9 @@ export default function StocktakingList() {
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                            <LocationPicker getter={() => currentLocation} setter={() => { }} editMode={false} />
+                            <LocationPicker value={currentLocation} label="Aktuální lokace:" editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationPicker getter={() => newLocation} setter={() => { }} editMode={false} />
+                            <LocationPicker value={newLocation} label="Nová lokace:" editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button

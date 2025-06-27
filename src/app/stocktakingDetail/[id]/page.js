@@ -185,8 +185,8 @@ export default function StocktakingDetail() {
                                     />
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
-                                    setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
+                                    value={editItem.location}
+                                    onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
                                 <CardContainer>
@@ -235,8 +235,7 @@ export default function StocktakingDetail() {
                                     <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
-                                    setter={() => {}}
+                                    value={item.location}
                                     editMode={false}
                                 />
                                 <CardContainer>

@@ -138,8 +138,8 @@ export default function StocktakingListItemDetail() {
                                     />
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
-                                    setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
+                                    value={editItem.location}
+                                    onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
                                 <QRCodeInput
@@ -202,8 +202,7 @@ export default function StocktakingListItemDetail() {
                                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                                 <CardItemNote>{item.note}</CardItemNote>
                                 <LocationPicker
-                                    getter={() => item.location}
-                                    setter={() => {}}
+                                    value={item.location}
                                     editMode={false}
                                 />
                                 <QRCodeInput

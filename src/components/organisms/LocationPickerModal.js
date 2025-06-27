@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useBuildings, useStories, useRooms } from "../../hooks/useBuildings";
 import QRScannerModal from "../QRScannerModal";
 import DropdownCard from "../DropdownCard";
@@ -12,17 +12,26 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
     const [selectedMistnost, setSelectedMistnost] = useState(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
 
+    const prevIsOpen = useRef(isOpen);
+
     const [stories] = useStories(selectedBudova);
     const [rooms] = useRooms(selectedBudova, selectedPodlazi);
 
     useEffect(() => {
-        if (initialLocation) {
-            const { budova, podlazi, mistnost } = initialLocation;
-            setSelectedBudova(budova ?? null);
-            setSelectedPodlazi(podlazi ?? null);
-            setSelectedMistnost(mistnost ? { id: mistnost } : null);
+        if (isOpen && !prevIsOpen.current) {
+            if (initialLocation) {
+                const { budova, podlazi, mistnost } = initialLocation;
+                setSelectedBudova(budova ?? null);
+                setSelectedPodlazi(podlazi ?? null);
+                setSelectedMistnost(mistnost ? { id: mistnost } : null);
+            } else {
+                setSelectedBudova(null);
+                setSelectedPodlazi(null);
+                setSelectedMistnost(null);
+            }
         }
-    }, [initialLocation]);
+        prevIsOpen.current = isOpen;
+    }, [isOpen, initialLocation]);
 
     const handleQRScan = (scannedValue) => {
         if (scannedValue) {

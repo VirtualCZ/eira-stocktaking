@@ -133,8 +133,8 @@ export default function ItemListDetail() {
                                     />
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
-                                    setter={loc => setEditItem(prev => ({ ...prev, location: loc }))}
+                                    value={editItem.location}
+                                    onChange={loc => setEditItem(prev => ({ ...prev, location: loc }))}
                                     editMode={true}
                                 />
                                 <CardContainer className="gap-2">
@@ -182,8 +182,7 @@ export default function ItemListDetail() {
                                     <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
                                 </div>
                                 <LocationPicker
-                                    getter={() => editItem.location}
-                                    setter={() => {}}
+                                    value={item.location}
                                     editMode={false}
                                 />
                                 <CardContainer className="gap-2">

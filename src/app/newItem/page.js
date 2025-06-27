@@ -69,8 +69,8 @@ export default function NewItem() {
                             />
                         </div>
                         <LocationPicker
-                            getter={() => newItem.location}
-                            setter={loc => setNewItem(prev => ({ ...prev, location: loc }))}
+                            value={newItem.location}
+                            onChange={loc => setNewItem(prev => ({ ...prev, location: loc }))}
                             editMode={true}
                         />
                         <QRCodeInput

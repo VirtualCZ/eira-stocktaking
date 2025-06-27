@@ -1,29 +1,21 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import LocationModalTrigger from "@/components/molecules/LocationModalTrigger";
 import LocationPickerModal from "@/components/organisms/LocationPickerModal";
 
-export default function LocationPicker({ getter, setter, editMode = true }) {
-  const [location, setLocation] = useState(null);
+export default function LocationPicker({ 
+  value = null, 
+  onChange, 
+  editMode = true, 
+  label = "Lokace:" 
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Update location on mount
-  useEffect(() => {
-    setLocation(getter());
-    // eslint-disable-next-line
-  }, [getter]);
-
-  // Update location whenever modal closes (after possible change)
-  useEffect(() => {
-    if (!isModalOpen) {
-      setLocation(getter());
-    }
-    // eslint-disable-next-line
-  }, [isModalOpen, getter]);
 
   // Editable mode
   const handleSave = (newLoc) => {
-    setter(newLoc);
+    if (onChange) {
+      onChange(newLoc);
+    }
     setIsModalOpen(false);
   };
 
@@ -31,14 +23,15 @@ export default function LocationPicker({ getter, setter, editMode = true }) {
     <>
       <LocationModalTrigger
         onClick={() => setIsModalOpen(true)}
-        location={location}
+        location={value}
         editMode={editMode}
+        label={label}
       />
       <LocationPickerModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
-        initialLocation={location}
+        initialLocation={value}
       />
     </>
   );

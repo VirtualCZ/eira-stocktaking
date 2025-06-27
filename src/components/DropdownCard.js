@@ -8,7 +8,7 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
         if (!disabled) setOpen((v) => !v);
     };
     return (
-        <CardContainer className="p-0">
+        <CardContainer style={{ padding: "0" }}>
             <button
                 className=""
                 style={{
@@ -17,8 +17,8 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    padding: "0.5rem",
                     gap: "0.5rem",
+                    padding: "0.75rem",
                     fontWeight: 600,
                     fontSize: "0.75rem",
                     transition: "background 0.15s",
@@ -34,7 +34,7 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
             >
                 <span>{selected ? selected.text : label}</span>
                 <span className="material-icons-round"
-                    style={{ fontSize: "2rem", color: "#000", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : undefined }}
+                    style={{ fontSize: "20px", color: "#000", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : undefined }}
                 >
                     expand_more
                 </span>
@@ -44,8 +44,8 @@ export default function DropdownCard({ label, options = [], onSelect, selected, 
                     {options.map((option, idx) => (
                         <li key={option.value}>
                             <button
-                                className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors"
-                                style={{ fontWeight: 500, fontSize: "0.75rem", color: "#000", border: "none", background: "none" }}
+                                className="w-full text-left hover:bg-gray-100 transition-colors"
+                                style={{ fontWeight: 500, fontSize: "0.75rem", color: "#000", border: "none", background: "none", padding: "0.75rem" }}
                                 onClick={() => { setOpen(false); onSelect && onSelect(option); }}
                                 type="button"
                             >

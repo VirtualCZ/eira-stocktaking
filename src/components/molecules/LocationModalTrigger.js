@@ -2,7 +2,7 @@
 import React from "react";
 import { useBuildings, useStories, useRooms } from "@/hooks/useBuildings";
 
-export default function LocationModalTrigger({ onClick, location, editMode = true }) {
+export default function LocationModalTrigger({ onClick, location, editMode = true, label = "Lokace:" }) {
   const [buildings] = useBuildings();
   const building = buildings.find(b => b.id === location?.budova);
   const [stories] = useStories(location?.budova);
@@ -18,7 +18,7 @@ export default function LocationModalTrigger({ onClick, location, editMode = tru
     <>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
         <div style={{ color: "#535353", fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
-          Lokace:
+          {label}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span className="material-icons-round" style={{ fontSize: 14, color: "#000" }}>

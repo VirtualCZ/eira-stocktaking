@@ -23,16 +23,37 @@ export default function RadioButton({
                 border: 'none',
                 ...style
             }}
+            aria-pressed={checked}
         >
             <span>{label}</span>
-            <input
-                type="radio"
-                name={name}
-                checked={checked}
-                onChange={() => onChange(value)}
-                onClick={e => e.stopPropagation()}
-                style={{ accentColor: '#000', width: 14, height: 14, ...radioStyle }}
-            />
+            <span
+                style={{
+                    display: 'inline-block',
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    background: '#000',
+                    position: 'relative',
+                    marginLeft: 12,
+                    ...radioStyle
+                }}
+                aria-hidden="true"
+            >
+                <span
+                    style={{
+                        display: 'block',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: checked ? 6 : 10,
+                        height: checked ? 6 : 10,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        transition: 'width 0.15s, height 0.15s',
+                    }}
+                />
+            </span>
         </button>
     );
 } 

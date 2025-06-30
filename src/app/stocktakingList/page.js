@@ -1,15 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useStocktakingLists } from "@/hooks/useStocktakingLists";
 import HeadingCard from "@/components/HeadingCard";
 import SortOptionsModal from "@/components/SortOptionsModal";
 import { Pagination } from "@/components/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import CardItemName from "@/components/molecules/CardItemName";
-import CardItemDescription from "@/components/molecules/CardItemDescription";
-import CardItemDate from "@/components/molecules/CardItemDate";
-import CardContainer from "@/components/CardContainer";
 import StocktakingListCard from "@/components/organisms/StocktakingListCard";
 
 const PAGE_SIZE = 10;
@@ -62,7 +57,7 @@ export default function StocktakingOperationsList() {
                         <StocktakingListCard
                             key={op.id}
                             operation={op}
-                            href={`/stocktakingList/${op.id}`}
+                            href={`/`}
                             onClick={() => handleInventuraClick(op)}
                         />
                     ))}

@@ -19,14 +19,8 @@ export default function SortOptionsModal({
     const [sortOrder, setSortOrder] = useState(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
     const prevIsOpen = useRef(isOpen);
 
+    // Reset local state to initial values when opening
     useEffect(() => {
-        if (onChange) {
-            onChange({ sortBy, sortOrder });
-        }
-    }, [sortBy, sortOrder]);
-
-    useEffect(() => {
-        // Only reset when opening
         if (!prevIsOpen.current && isOpen) {
             setSortBy(initialSortBy || (sortOptions[0] && sortOptions[0].value));
             setSortOrder(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
@@ -34,11 +28,25 @@ export default function SortOptionsModal({
         prevIsOpen.current = isOpen;
     }, [isOpen, initialSortBy, initialSortOrder, sortOptions, orderOptions]);
 
+    const handleOk = () => {
+        if (onChange) {
+            onChange({ sortBy, sortOrder });
+        }
+        onClose();
+    };
+
+    const handleCancel = () => {
+        // Reset to initial values
+        setSortBy(initialSortBy || (sortOptions[0] && sortOptions[0].value));
+        setSortOrder(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
+        onClose();
+    };
+
     return (
-        <CenteredModal title="Možnosti zobrazení" isOpen={isOpen} onClose={onClose} height="auto">
+        <CenteredModal title="Možnosti zobrazení" isOpen={isOpen} onClose={handleCancel} height="auto">
             <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
                 <CardContainer className="gap-2">
-                    {sortOptions.map((opt, idx, arr) => (
+                    {sortOptions.map((opt) => (
                         <RadioButton
                             key={opt.value}
                             label={opt.label}
@@ -50,7 +58,7 @@ export default function SortOptionsModal({
                     ))}
                 </CardContainer>
                 <CardContainer className="gap-2">
-                    {orderOptions.map((opt, idx, arr) => (
+                    {orderOptions.map((opt) => (
                         <RadioButton
                             key={opt.value}
                             label={opt.label}
@@ -61,6 +69,27 @@ export default function SortOptionsModal({
                         />
                     ))}
                 </CardContainer>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end'}}>
+                    <button
+                        onClick={handleOk}
+                        style={{
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            background: "#282828",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "1rem",
+                            padding: "0.75rem",
+                            fontSize: "0.75rem",
+                            cursor: "pointer"
+                        }}
+                    >
+                        OK
+                        <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                    </button>
+                </div>
             </div>
         </CenteredModal>
     );

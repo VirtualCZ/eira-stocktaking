@@ -149,51 +149,69 @@ export default function StocktakingList() {
         </ContextButton>
     );
 
+    // Reset page to 0 when search or filters change
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [searchTerm, filterState]);
+
     return (
-        <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
-            <HeadingCard
-                heading="Seznam předmětů"
-                leftActions={[
-                    {
-                        icon: "home", href: "/"
-                    }
-                ]}
-                rightActions={[
-                    {
-                        icon: viewModes[currentViewIdx].icon,
-                        onClick: nextViewMode,
-                        title: 'Změnit zobrazení'
-                    },
-                    { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
-                    { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
-                    { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
-                    {
-                        icon: "visibility",
-                        onClick: () => {
-                            // Use a mock item for preview
-                            setScannedItem({
-                                id: 999,
-                                name: "Mockovaná židle",
-                                note: "Toto je ukázková položka pro náhled.",
-                                image: "/file.svg"
-                            });
-                            setIsPreviewModalOpen(true);
+        <main className="relative min-h-screen flex flex-col items-center">
+            <div className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
+                <HeadingCard
+                    heading="Seznam předmětů"
+                    leftActions={[
+                        {
+                            icon: "home", href: "/"
+                        }
+                    ]}
+                    rightActions={[
+                        {
+                            icon: viewModes[currentViewIdx].icon,
+                            onClick: nextViewMode,
+                            title: 'Změnit zobrazení'
                         },
-                        title: "Zobrazit ukázkovou položku"
-                    },
-                    { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
-                ]}
-            />
+                        { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
+                        { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
+                        { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
+                        {
+                            icon: "visibility",
+                            onClick: () => {
+                                // Use a mock item for preview
+                                setScannedItem({
+                                    id: 999,
+                                    name: "Mockovaná židle",
+                                    note: "Toto je ukázková položka pro náhled.",
+                                    image: "/file.svg"
+                                });
+                                setIsPreviewModalOpen(true);
+                            },
+                            title: "Zobrazit ukázkovou položku"
+                        },
+                        { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
+                    ]}
+                />
 
-            <UserLocationPicker />
+                <UserLocationPicker onChange={() => setCurrentPage(0)} />
 
-            {loading ? <div>Načítání...</div> : null}
-            {error ? <div>Chyba: {error.message}</div> : null}
-            <div className="flex flex-col gap-2">
-                <>
-                    {viewMode === 'grid' && (
-                        <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                            {items.map(item => (
+                {loading ? <div>Načítání...</div> : null}
+                {error ? <div>Chyba: {error.message}</div> : null}
+                <div className="flex flex-col gap-2">
+                    <>
+                        {viewMode === 'grid' && (
+                            <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                                {items.map(item => (
+                                    <Link
+                                        key={item.id}
+                                        href={`/stocktakingList/${stocktakingId}/${item.id}`}
+                                        style={{ textDecoration: "none" }}
+                                    >
+                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                        {viewMode === 'detailed' && (
+                            items.map(item => (
                                 <Link
                                     key={item.id}
                                     href={`/stocktakingList/${stocktakingId}/${item.id}`}
@@ -201,256 +219,126 @@ export default function StocktakingList() {
                                 >
                                     <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
                                 </Link>
-                            ))}
-                        </div>
-                    )}
-                    {viewMode === 'detailed' && (
-                        items.map(item => (
-                            <Link
-                                key={item.id}
-                                href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                style={{ textDecoration: "none" }}
-                            >
-                                <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
-                            </Link>
-                        ))
-                    )}
+                            ))
+                        )}
 
-                    {viewMode === 'compact' && (
-                        items.map(item => (
-                            <Link
-                                key={item.id}
-                                href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                style={{ textDecoration: "none" }}
-                            >
-                                <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
-                            </Link>
-                        ))
-                    )}
-                </>
-            </div>
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(newPage) => {
-                    setCurrentPage(newPage);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-            />
-            {/* Fixed bottom bar with search and QR button */}
-            <div
-                ref={bottomBarRef}
-                className="fixed left-0 right-0 bottom-0 z-[100] flex justify-center backdrop-blur-md"
-                style={{
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%, rgba(0,0,0,0.25) 100%)',
-                }}
-            >
-                <div className="container flex items-center gap-2 p-4">
-                    {/* Search input */}
-                    <div className="flex flex-1 items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white">
-                        <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>search</span>
-                        <input
-                            type="text"
-                            placeholder="Hledat..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 bg-transparent border-none outline-none text-white h-4"
-                            style={{ fontSize: "16px" }}
-                        />
-                    </div>
-
-                    {/* QR Button */}
-                    <button
-                        className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
-                        onClick={() => setIsQRModalOpen(true)}
-                    >
-                        <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>qr_code</span>
-                    </button>
+                        {viewMode === 'compact' && (
+                            items.map(item => (
+                                <Link
+                                    key={item.id}
+                                    href={`/stocktakingList/${stocktakingId}/${item.id}`}
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
+                                </Link>
+                            ))
+                        )}
+                    </>
                 </div>
-            </div>
-            <SortOptionsModal
-                isOpen={isOptionsModalOpen}
-                onClose={() => setIsOptionsModalOpen(false)}
-                sortOptions={sortOptions}
-                initialSortBy={sortBy}
-                initialSortOrder={sortOrder}
-                onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
-                    setSortBy(newSortBy);
-                    setSortOrder(newSortOrder);
-                }}
-            />
-            <FilterOptionsModal
-                isOpen={isFilterModalOpen}
-                onClose={() => setIsFilterModalOpen(false)}
-                initialState={filterState.state}
-                initialHasNote={filterState.hasNote}
-                onChange={({ state, hasNote }) => {
-                    setFilterState({ state, hasNote });
-                }}
-            />
-            <QRScannerModal
-                isOpen={isQRModalOpen}
-                onClose={() => setIsQRModalOpen(false)}
-                onScan={handleScan}
-                validate={parsed => {
-                    if (parsed.type === "item" && parsed.data && typeof parsed.data.id === "number") {
-                        return {
-                            valid: true,
-                            message: `Naskenováno ID položky: ${parsed.data.id}`,
-                            data: parsed.data
-                        };
-                    }
-                    return { valid: false, message: "QR kód neobsahuje platnou položku." };
-                }}
-            />
-            <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div style={{ color: "#FF6262", fontWeight: 600 }}>
-                        Položka nalezena v jiné místnosti
-                    </div>
-                    <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
-                        {/* Top: Image */}
-                        <img
-                            src={foundItem.image}
-                            alt={foundItem.name}
-                            style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
-                        />
-                        {/* Bottom: Content */}
-                        <div className="p-4 gap-4 flex flex-col">
-                            {/* First part */}
-                            <div>
-                                <CardItemName>{foundItem.name}</CardItemName>
-                                <div style={{ fontSize: 12, color: "#535353" }}>{foundItem.note}</div>
-                            </div>
-                            {/* Second part */}
-                            <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                Poslední kontrola 12.4.2024
-                            </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => {
+                        setCurrentPage(newPage);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
+                {/* Fixed bottom bar with search and QR button */}
+                <div
+                    ref={bottomBarRef}
+                    className="fixed left-0 right-0 bottom-0 z-[100] flex justify-center backdrop-blur-md"
+                    style={{
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%, rgba(0,0,0,0.25) 100%)',
+                    }}
+                >
+                    <div className="container flex items-center gap-2 p-4">
+                        {/* Search input */}
+                        <div className="flex flex-1 items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white">
+                            <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>search</span>
+                            <input
+                                type="text"
+                                placeholder="Hledat..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="flex-1 bg-transparent border-none outline-none text-white h-4"
+                                style={{ fontSize: "16px" }}
+                            />
                         </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                        <LocationPicker value={currentLocation} label="Aktuální lokace:" editMode={false} />
-                        <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                        <LocationPicker value={newLocation} label="Nová lokace:" editMode={false} />
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+
+                        {/* QR Button */}
                         <button
-                            style={{
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                background: "#282828",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "1rem",
-                                padding: "0.75rem",
-                                fontSize: "0.75rem",
-                                cursor: "pointer"
-                            }}
+                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
+                            onClick={() => setIsQRModalOpen(true)}
                         >
-                            Potvrdit změnu lokace
-                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
-                        </button>
-                        <button
-                            style={{
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                background: "#282828",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "1rem",
-                                padding: "0.75rem",
-                                fontSize: "0.75rem",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setIsQrModalOpen(false)}
-                        >
-                            Storno
-                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                            <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>qr_code</span>
                         </button>
                     </div>
                 </div>
-            </CenteredModal>
-            <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div style={{ color: "#FF6262", fontWeight: 600 }}>
-                        Položka není součástí inventurního seznamu.
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                        <button
-                            style={{
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                background: "#282828",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "1rem",
-                                padding: "0.75rem",
-                                fontSize: "0.75rem",
-                                cursor: "pointer"
-                            }}
-                        >
-                            Založit novou položku
-                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>add</span>
-                        </button>
-                        <button
-                            style={{
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                background: "#282828",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "1rem",
-                                padding: "0.75rem",
-                                fontSize: "0.75rem",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setIsNotInInventoryModalOpen(false)}
-                        >
-                            Storno
-                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
-                        </button>
-                    </div>
-                </div>
-            </CenteredModal>
-            <CenteredModal
-                isOpen={isPreviewModalOpen}
-                onClose={() => setIsPreviewModalOpen(false)}
-                title="Náhled naskenované položky"
-            >
-                {scannedItem && (
+                <SortOptionsModal
+                    isOpen={isOptionsModalOpen}
+                    onClose={() => setIsOptionsModalOpen(false)}
+                    sortOptions={sortOptions}
+                    initialSortBy={sortBy}
+                    initialSortOrder={sortOrder}
+                    onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                        setCurrentPage(0);
+                    }}
+                />
+                <FilterOptionsModal
+                    isOpen={isFilterModalOpen}
+                    onClose={() => setIsFilterModalOpen(false)}
+                    initialState={filterState.state}
+                    initialHasNote={filterState.hasNote}
+                    onChange={({ state, hasNote }) => {
+                        setFilterState({ state, hasNote });
+                    }}
+                />
+                <QRScannerModal
+                    isOpen={isQRModalOpen}
+                    onClose={() => setIsQRModalOpen(false)}
+                    onScan={handleScan}
+                    validate={parsed => {
+                        if (parsed.type === "item" && parsed.data && typeof parsed.data.id === "number") {
+                            return {
+                                valid: true,
+                                message: `Naskenováno ID položky: ${parsed.data.id}`,
+                                data: parsed.data
+                            };
+                        }
+                        return { valid: false, message: "QR kód neobsahuje platnou položku." };
+                    }}
+                />
+                <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                        <div style={{
-                            borderRadius: 16,
-                            background: "#f0f1f3",
-                            overflow: "hidden",
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "100%"
-                        }}>
+                        <div style={{ color: "#FF6262", fontWeight: 600 }}>
+                            Položka nalezena v jiné místnosti
+                        </div>
+                        <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
                             {/* Top: Image */}
                             <img
-                                src={scannedItem.image}
-                                alt={scannedItem.name}
+                                src={foundItem.image}
+                                alt={foundItem.name}
                                 style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
                             />
                             {/* Bottom: Content */}
                             <div className="p-4 gap-4 flex flex-col">
+                                {/* First part */}
                                 <div>
-                                    <CardItemName>{scannedItem.name}</CardItemName>
-                                    <div style={{ fontSize: 12, color: "#535353" }}>{scannedItem.note}</div>
+                                    <CardItemName>{foundItem.name}</CardItemName>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{foundItem.note}</div>
                                 </div>
+                                {/* Second part */}
                                 <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                    {/* You can add more info here if needed */}
+                                    Poslední kontrola 12.4.2024
                                 </div>
                             </div>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
+                            <LocationPicker value={currentLocation} label="Aktuální lokace:" editMode={false} />
+                            <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
+                            <LocationPicker value={newLocation} label="Nová lokace:" editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <button
@@ -467,34 +355,8 @@ export default function StocktakingList() {
                                     fontSize: "0.75rem",
                                     cursor: "pointer"
                                 }}
-                                onClick={() => {
-                                    // Go to edit page for this item
-                                    router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
-                                }}
                             >
-                                Editovat
-                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>edit</span>
-                            </button>
-                            <button
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#282828",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    fontSize: "0.75rem",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => {
-                                    // OK logic (e.g., mark as checked, update state, etc.)
-                                    setIsPreviewModalOpen(false);
-                                }}
-                            >
-                                OK
+                                Potvrdit změnu lokace
                                 <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
                             </button>
                             <button
@@ -511,16 +373,162 @@ export default function StocktakingList() {
                                     fontSize: "0.75rem",
                                     cursor: "pointer"
                                 }}
-                                onClick={() => setIsPreviewModalOpen(false)}
+                                onClick={() => setIsQrModalOpen(false)}
                             >
-                                Zavřít
+                                Storno
                                 <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
                             </button>
                         </div>
                     </div>
-                )}
-            </CenteredModal>
+                </CenteredModal>
+                <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div style={{ color: "#FF6262", fontWeight: 600 }}>
+                            Položka není součástí inventurního seznamu.
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Založit novou položku
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>add</span>
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    background: "#282828",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "1rem",
+                                    padding: "0.75rem",
+                                    fontSize: "0.75rem",
+                                    cursor: "pointer"
+                                }}
+                                onClick={() => setIsNotInInventoryModalOpen(false)}
+                            >
+                                Storno
+                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                            </button>
+                        </div>
+                    </div>
+                </CenteredModal>
+                <CenteredModal
+                    isOpen={isPreviewModalOpen}
+                    onClose={() => setIsPreviewModalOpen(false)}
+                    title="Náhled naskenované položky"
+                >
+                    {scannedItem && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <div style={{
+                                borderRadius: 16,
+                                background: "#f0f1f3",
+                                overflow: "hidden",
+                                display: "flex",
+                                flexDirection: "column",
+                                width: "100%"
+                            }}>
+                                {/* Top: Image */}
+                                <img
+                                    src={scannedItem.image}
+                                    alt={scannedItem.name}
+                                    style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                                />
+                                {/* Bottom: Content */}
+                                <div className="p-4 gap-4 flex flex-col">
+                                    <div>
+                                        <CardItemName>{scannedItem.name}</CardItemName>
+                                        <div style={{ fontSize: 12, color: "#535353" }}>{scannedItem.note}</div>
+                                    </div>
+                                    <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                        {/* You can add more info here if needed */}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        // Go to edit page for this item
+                                        router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
+                                    }}
+                                >
+                                    Editovat
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>edit</span>
+                                </button>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        // OK logic (e.g., mark as checked, update state, etc.)
+                                        setIsPreviewModalOpen(false);
+                                    }}
+                                >
+                                    OK
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                                </button>
+                                <button
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background: "#282828",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: "1rem",
+                                        padding: "0.75rem",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => setIsPreviewModalOpen(false)}
+                                >
+                                    Zavřít
+                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </CenteredModal>
 
+            </div>
         </main>
     );
 }

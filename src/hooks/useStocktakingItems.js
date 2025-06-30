@@ -14,22 +14,23 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setLoading(true);
-      const params = new URLSearchParams({
-        offset: offset.toString(),
-        limit: limit.toString(),
-        sortBy: sortBy,
-        sortOrder: sortOrder
-      });
-
-      // Only add search parameter if it's not empty
+      const body = {
+        offset,
+        limit,
+        sortBy,
+        sortOrder,
+      };
       if (search.trim()) {
-        params.append('search', search.trim());
+        body.search = search.trim();
       }
 
-      fetch(`/api/objects?${params}`, {
+      fetch(`/api/objects`, {
+        method: 'POST',
         headers: {
-          "Authorization": basicAuth
-        }
+          "Authorization": basicAuth,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
       })
         .then((res) => {
           if (!res.ok) throw new Error("Failed to fetch stocktaking items");
@@ -57,19 +58,21 @@ export function useStocktakingItem(id) {
 
   useEffect(() => {
     if (!id) return;
-    
     setLoading(true);
     // Fetch a single item by calculating the offset
     const offset = Number(id) - 1;
-    const params = new URLSearchParams({
-      offset: offset.toString(),
-      limit: "1"
-    });
+    const body = {
+      offset,
+      limit: 1
+    };
 
-    fetch(`/api/objects?${params}`, {
+    fetch(`/api/objects`, {
+      method: 'POST',
       headers: {
-        "Authorization": basicAuth
-      }
+        "Authorization": basicAuth,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch stocktaking item");

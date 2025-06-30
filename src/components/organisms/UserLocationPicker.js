@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 import LocationPicker from "@/components/organisms/LocationPicker";
 
-export default function UserLocationPicker({ editMode = true }) {
+export default function UserLocationPicker({ editMode = true, onChange }) {
   const getLocation = useGetLocation();
   const setLocationStorage = useSetLocation();
   const [location, setLocation] = useState(null);
@@ -23,6 +23,7 @@ export default function UserLocationPicker({ editMode = true }) {
   const handleChange = (loc) => {
     setLocation(loc);
     setLocationStorage(loc);
+    if (onChange) onChange(loc);
   };
 
   return (

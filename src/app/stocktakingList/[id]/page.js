@@ -13,6 +13,7 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/molecules/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
+import FilterOptionsModal from "@/components/FilterOptionsModal";
 
 const PAGE_SIZE = 10;
 
@@ -39,6 +40,8 @@ export default function StocktakingList() {
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
     const [searchTerm, setSearchTerm] = useState('');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filterState, setFilterState] = useState({ state: "", hasNote: "" });
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -162,6 +165,7 @@ export default function StocktakingList() {
                         title: 'Změnit zobrazení'
                     },
                     { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
+                    { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
                     { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
                     {
                         icon: "visibility",
@@ -273,6 +277,15 @@ export default function StocktakingList() {
                 onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
                     setSortBy(newSortBy);
                     setSortOrder(newSortOrder);
+                }}
+            />
+            <FilterOptionsModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                initialState={filterState.state}
+                initialHasNote={filterState.hasNote}
+                onChange={({ state, hasNote }) => {
+                    setFilterState({ state, hasNote });
                 }}
             />
             <QRScannerModal

@@ -5,7 +5,6 @@ export default function RadioButton({
     value,
     checked,
     onChange,
-    name,
     style = {},
     radioStyle = {},
     onClick

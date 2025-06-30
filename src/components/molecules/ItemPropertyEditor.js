@@ -53,6 +53,7 @@ export default function ItemPropertyEditor({ properties = {}, onChange }) {
           <button
             type="button"
             onClick={() => handleDelete(key)}
+            className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
             style={{
               borderRadius: "0.5rem",
               padding: "0.75rem",
@@ -60,31 +61,24 @@ export default function ItemPropertyEditor({ properties = {}, onChange }) {
               background: "#FF6262",
               display: "flex",
               alignItems: "center",
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer"
+              justifyContent: "center",
+              cursor: "pointer",
+              marginTop: 8
             }}
-            title="Smazat vlastnost"
+            title="Odebrat"
           >
-            ×
+            <span className="material-icons-round" style={{ color: "#000", fontSize: 16 }}>delete</span>
           </button>
         </div>
       ))}
       <button
         type="button"
         onClick={handleAdd}
-        style={{
-          borderRadius: "0.5rem",
-          padding: "0.75rem",
-          border: "none",
-          background: "#1976d2",
-          color: "#fff",
-          fontWeight: 700,
-          cursor: "pointer",
-          marginTop: 8
-        }}
+        className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
+        style={{ fontSize: "0.75rem" }}
       >
         Přidat vlastnost
+        <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>add</span>
       </button>
     </CardContainer>
   );

@@ -172,11 +172,13 @@ export default function StocktakingItemDetailTemplate({
                   value={item.location}
                   editMode={false}
                 />
-                <CardContainer>
-                  <DetailCardRow label="Váha:" value={item.weight || "2kg"} />
-                  <DetailCardRow label="Velikost:" value={item.size || "50x40x50cm"} />
-                  <DetailCardRow label="Cena:" value={item.price || "1 234,-"} />
-                </CardContainer>
+                {item.properties && typeof item.properties === 'object' && (
+                  <CardContainer className="gap-2">
+                    {Object.entries(item.properties).map(([key, value]) => (
+                      <DetailCardRow key={key} label={key + ':'} value={value} />
+                    ))}
+                  </CardContainer>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                   <div>Poslední úprava {item.lastCheck}</div>
                   <div>ID {item.id}</div>

@@ -26,7 +26,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
         params.append('search', search.trim());
       }
 
-      fetch(`/api/create/stocktaking?${params}`, {
+      fetch(`/api/objects?${params}`, {
         headers: {
           "Authorization": basicAuth
         }
@@ -66,7 +66,7 @@ export function useStocktakingItem(id) {
       limit: "1"
     });
 
-    fetch(`/api/create/stocktaking?${params}`, {
+    fetch(`/api/objects?${params}`, {
       headers: {
         "Authorization": basicAuth
       }

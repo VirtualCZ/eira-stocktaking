@@ -11,7 +11,7 @@ export function useBuildings() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/create/buildings", {
+    fetch("/api/buildings", {
       headers: {
         "Authorization": basicAuth
       }
@@ -39,7 +39,7 @@ export function useStories(buildingId) {
   useEffect(() => {
     if (!buildingId) return;
     setLoading(true);
-    fetch(`/api/create/buildings/${buildingId}/stories`, {
+    fetch(`/api/buildings/${buildingId}/storeys`, {
       headers: {
         "Authorization": basicAuth
       }
@@ -67,7 +67,7 @@ export function useRooms(buildingId, storyId) {
   useEffect(() => {
     if (!buildingId || !storyId) return;
     setLoading(true);
-    fetch(`/api/create/buildings/${buildingId}/stories/${storyId}/rooms`, {
+    fetch(`/api/buildings/${buildingId}/storeys/${storyId}/rooms`, {
       headers: {
         "Authorization": basicAuth
       }

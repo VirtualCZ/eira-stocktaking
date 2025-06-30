@@ -17,7 +17,7 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
       limit: limit.toString()
     });
 
-    fetch(`/api/create/stocktaking-lists?${params}`, {
+    fetch(`/api/events?${params}`, {
       headers: {
         "Authorization": basicAuth
       }

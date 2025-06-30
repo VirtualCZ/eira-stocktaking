@@ -8,8 +8,8 @@ export default function SortOptionsModal({
     onClose,
     sortOptions = [],
     orderOptions = [
-        { label: 'Ascending', value: 'asc' },
-        { label: 'Descending', value: 'desc' }
+        { label: 'Vzestupně', value: 'asc' },
+        { label: 'Sestupně', value: 'desc' }
     ],
     initialSortBy,
     initialSortOrder,

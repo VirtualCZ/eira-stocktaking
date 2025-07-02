@@ -79,7 +79,7 @@ export default function ItemListDetail() {
                 onEditModeChange={() => setEditMode(!editMode)}
                 onDelete={() => setIsDeleteModalOpen(true)}
                 onDuplicate={() => alert('Duplicate clicked')}
-                onSave={() => {/* Save logic here */}}
+                onSave={() => {/* Save logic here */ }}
                 showMove={false}
                 showFound={false}
                 loading={loading}
@@ -116,22 +116,12 @@ export default function ItemListDetail() {
                     }}
                 >
                     <div className="container flex items-center gap-2 p-4 justify-center">
-                        <button
-                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
-                            style={{ fontSize: "0.75rem" }}
-                            onClick={() => setEditMode(false)}
-                        >
+                        <Button variant="secondary" icon="close" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={() => setEditMode(false)}>
                             Zrušit úpravy
-                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>close</span>
-                        </button>
-                        <button
-                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
-                            onClick={() => { /* Save logic here */ }}
-                            style={{ fontSize: "0.75rem" }}
-                        >
+                        </Button>
+                        <Button icon="check" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={() => { /* Save logic here */ }}>
                             Uložit změny
-                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>check</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

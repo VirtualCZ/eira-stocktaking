@@ -14,6 +14,7 @@ import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/molecules/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import FilterOptionsModal from "@/components/FilterOptionsModal";
+import Button from "@/components/inputs/Button";
 
 const PAGE_SIZE = 10;
 
@@ -341,43 +342,12 @@ export default function StocktakingList() {
                             <LocationPicker value={newLocation} label="Nová lokace:" editMode={false} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <button
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#282828",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    fontSize: "0.75rem",
-                                    cursor: "pointer"
-                                }}
-                            >
+                            <Button icon="check" iconPosition="right">
                                 Potvrdit změnu lokace
-                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
-                            </button>
-                            <button
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#282828",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    fontSize: "0.75rem",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setIsQrModalOpen(false)}
-                            >
+                            </Button>
+                            <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsQrModalOpen(false)}>
                                 Storno
-                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </CenteredModal>
@@ -387,43 +357,12 @@ export default function StocktakingList() {
                             Položka není součástí inventurního seznamu.
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <button
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#282828",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    fontSize: "0.75rem",
-                                    cursor: "pointer"
-                                }}
-                            >
+                            <Button icon="add" iconPosition="right">
                                 Založit novou položku
-                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>add</span>
-                            </button>
-                            <button
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    background: "#282828",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    fontSize: "0.75rem",
-                                    cursor: "pointer"
-                                }}
-                                onClick={() => setIsNotInInventoryModalOpen(false)}
-                            >
+                            </Button>
+                            <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsNotInInventoryModalOpen(false)}>
                                 Storno
-                                <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </CenteredModal>
@@ -460,69 +399,15 @@ export default function StocktakingList() {
                                 </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                                <button
-                                    style={{
-                                        flex: 1,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        background: "#282828",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "1rem",
-                                        padding: "0.75rem",
-                                        fontSize: "0.75rem",
-                                        cursor: "pointer"
-                                    }}
-                                    onClick={() => {
-                                        // Go to edit page for this item
-                                        router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
-                                    }}
-                                >
-                                    Editovat
-                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>edit</span>
-                                </button>
-                                <button
-                                    style={{
-                                        flex: 1,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        background: "#282828",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "1rem",
-                                        padding: "0.75rem",
-                                        fontSize: "0.75rem",
-                                        cursor: "pointer"
-                                    }}
-                                    onClick={() => {
-                                        // OK logic (e.g., mark as checked, update state, etc.)
-                                        setIsPreviewModalOpen(false);
-                                    }}
-                                >
-                                    OK
-                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
-                                </button>
-                                <button
-                                    style={{
-                                        flex: 1,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        background: "#282828",
-                                        color: "#fff",
-                                        border: "none",
-                                        borderRadius: "1rem",
-                                        padding: "0.75rem",
-                                        fontSize: "0.75rem",
-                                        cursor: "pointer"
-                                    }}
-                                    onClick={() => setIsPreviewModalOpen(false)}
-                                >
-                                    Zavřít
-                                    <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>close</span>
-                                </button>
+                                <Button icon="check" iconPosition="right" onClick={() => setIsPreviewModalOpen(false)}>
+                                    Označit jako nalezeno
+                                </Button>
+                                <Button icon="edit" iconPosition="right" onClick={() => router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`)}>
+                                    Upravit položku
+                                </Button>
+                                <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsPreviewModalOpen(false)}>
+                                    Storno
+                                </Button>
                             </div>
                         </div>
                     )}

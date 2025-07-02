@@ -1,4 +1,30 @@
 import React, { useRef, useState, useEffect } from "react";
+
+function PictureInputButton({ onClick, title, children, style = {}, ...rest }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            style={{
+                borderRadius: "1rem",
+                padding: "0.75rem",
+                background: "#000",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                ...style
+            }}
+            className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
+            title={title}
+            {...rest}
+        >
+            {children}
+        </button>
+    );
+}
+
 export default function PictureInput({ label, onChange, value, editMode = false }) {
     const [preview, setPreview] = useState(null);
     const [objectFit, setObjectFit] = useState("cover");
@@ -58,60 +84,20 @@ export default function PictureInput({ label, onChange, value, editMode = false 
                     gap: "0.5rem",
                     zIndex: 2
                 }}>
-                    <button
-                        type="button"
+                    <PictureInputButton
                         onClick={toggleObjectFit}
-                        style={{
-                            borderRadius: "1rem",
-                            padding: "0.75rem",
-                            background: "#000",
-                            border: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer"
-                        }}
                         title={objectFit === "cover" ? "Přepnout na obsah (contain)" : "Přepnout na oříznutí (cover)"}
-                        className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
                     >
                         <span className="material-icons-round" style={{ color: "#fff", fontSize: 14 }}>{objectFit === "cover" ? "fit_screen" : "crop"}</span>
-                    </button>
+                    </PictureInputButton>
                     {editMode && (
                         <>
-                            <button
-                                type="button"
-                                onClick={() => inputRef.current.click()}
-                                style={{
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    background: "#000",
-                                    border: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    cursor: "pointer"
-                                }}
-                                className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
-                            >
+                            <PictureInputButton onClick={() => inputRef.current.click()}>
                                 <span className="material-icons-round" style={{ color: "#fff", fontSize: 14 }}>add_a_photo</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDelete}
-                                style={{
-                                    borderRadius: "1rem",
-                                    padding: "0.75rem",
-                                    background: "#000",
-                                    border: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    cursor: "pointer"
-                                }}
-                                className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
-                            >
+                            </PictureInputButton>
+                            <PictureInputButton onClick={handleDelete}>
                                 <span className="material-icons-round" style={{ color: "#FF6262", fontSize: 14 }}>delete</span>
-                            </button>
+                            </PictureInputButton>
                         </>
                     )}
                 </div>

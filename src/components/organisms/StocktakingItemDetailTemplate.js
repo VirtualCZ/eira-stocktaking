@@ -87,8 +87,8 @@ export default function StocktakingItemDetailTemplate({
                         />
                       </div>
                       <TextInput
-                        value={editItem.note}
-                        onChange={e => onEditItemChange({ ...editItem, note: e.target.value })}
+                        value={editItem.description}
+                        onChange={e => onEditItemChange({ ...editItem, description: e.target.value })}
                         label={"Popisek"}
                         placeholder="Popisek"
                       />
@@ -111,10 +111,10 @@ export default function StocktakingItemDetailTemplate({
                       onChange={code => onEditItemChange({ ...editItem, qrCode: code })}
                       editMode={true}
                     />
-                    {editItem.properties && typeof editItem.properties === 'object' && (
+                    {editItem.properties && (
                       <ItemPropertyEditor
-                        properties={editItem.properties}
-                        onChange={props => onEditItemChange({ ...editItem, properties: props })}
+                        properties={Array.isArray(editItem.properties) ? editItem.properties : Object.entries(editItem.properties).map(([key, value]) => ({ key, value }))}
+                        onChange={propsArr => onEditItemChange({ ...editItem, properties: propsArr })}
                       />
                     )}
                   </div>
@@ -161,7 +161,7 @@ export default function StocktakingItemDetailTemplate({
                       )}
                     </ContextButton>
                   </div>
-                  <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                  <div style={{ fontSize: 12, color: "#535353" }}>{item.description}</div>
                 </div>
                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
@@ -172,9 +172,12 @@ export default function StocktakingItemDetailTemplate({
                   value={item.location}
                   editMode={false}
                 />
-                {item.properties && typeof item.properties === 'object' && (
+                {item.properties && (
                   <CardContainer className="gap-2">
-                    {Object.entries(item.properties).map(([key, value]) => (
+                    {(Array.isArray(item.properties)
+                      ? item.properties
+                      : Object.entries(item.properties).map(([key, value]) => ({ key, value }))
+                    ).map(({ key, value }) => (
                       <DetailCardRow key={key} label={key + ':'} value={value} />
                     ))}
                   </CardContainer>

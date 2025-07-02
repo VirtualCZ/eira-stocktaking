@@ -6,6 +6,7 @@ import CenteredModal from "@/components/CenteredModal";
 import SwipeToDelete from "@/components/SwipeToDelete";
 import { useGetLocation } from "@/hooks/useLocation";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
+import Button from '../../../../components/inputs/Button';
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
@@ -23,6 +24,9 @@ export default function StocktakingListItemDetail() {
     const getLocation = useGetLocation();
 
     const [fetchedItem, loading, error] = useStocktakingItem(itemId);
+
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Map API location fields to Czech field names and set item state
     useEffect(() => {
@@ -93,6 +97,9 @@ export default function StocktakingListItemDetail() {
                 barRendered={barRendered}
                 setBarRendered={setBarRendered}
             />
+            <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title="Chyba">
+                <div style={{ color: '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
+            </CenteredModal>
             {/* Delete Confirmation Modal */}
             <CenteredModal title={"Opravdu chcete smazat předmět?"} isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -117,22 +124,35 @@ export default function StocktakingListItemDetail() {
                     }}
                 >
                     <div className="container flex items-center gap-2 p-4 justify-center">
-                        <button
-                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
-                            style={{ fontSize: "0.75rem" }}
-                            onClick={() => setEditMode(false)}
-                        >
+                        <Button variant="secondary" icon="close" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={() => setEditMode(false)}>
                             Zrušit úpravy
-                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>close</span>
-                        </button>
-                        <button
-                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
-                            onClick={() => { /* Save logic here */ }}
-                            style={{ fontSize: "0.75rem" }}
-                        >
+                        </Button>
+                        <Button icon="check" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={() => {
+                            if (!editItem) return;
+                            // Check for empty property keys
+                            let propertiesArr = Array.isArray(editItem.properties)
+                                ? editItem.properties
+                                : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
+                            if (propertiesArr.some(p => !p.key || p.key.trim() === "")) {
+                                setErrorMessage("Všechny pole 'Vlastnost' musí být vyplněné.");
+                                setErrorModalOpen(true);
+                                return;
+                            }
+                            const data = {
+                                image: editItem.image,
+                                name: editItem.name,
+                                description: editItem.description,
+                                note: editItem.note,
+                                location: editItem.location,
+                                qr: editItem.qrCode,
+                                properties: editItem.properties,
+                                id: editItem.id,
+                                date: editItem.date || editItem.lastCheck || null
+                            };
+                            console.log('ULOZIT ZMENY DATA:', data);
+                        }}>
                             Uložit změny
-                            <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>check</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

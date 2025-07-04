@@ -31,8 +31,8 @@ export function useBuildings() {
   return [buildings, loading, error];
 }
 
-export function useStories(buildingId) {
-  const [stories, setStories] = useState([]);
+export function useStoreys(buildingId) {
+  const [storeys, setStoreys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,29 +45,29 @@ export function useStories(buildingId) {
       }
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch stories");
+        if (!res.ok) throw new Error("Failed to fetch storeys");
         return res.json();
       })
       .then((data) => {
-        setStories(Array.isArray(data) ? data : []);
+        setStoreys(Array.isArray(data) ? data : []);
         setError(null);
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, [buildingId]);
 
-  return [stories, loading, error];
+  return [storeys, loading, error];
 }
 
-export function useRooms(buildingId, storyId) {
+export function useRooms(buildingId, storeyId) {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!buildingId || !storyId) return;
+    if (!buildingId || !storeyId) return;
     setLoading(true);
-    fetch(`/api/buildings/${buildingId}/storeys/${storyId}/rooms`, {
+    fetch(`/api/buildings/${buildingId}/storeys/${storeyId}/rooms`, {
       headers: {
         "Authorization": basicAuth
       }
@@ -82,7 +82,7 @@ export function useRooms(buildingId, storyId) {
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  }, [buildingId, storyId]);
+  }, [buildingId, storeyId]);
 
   return [rooms, loading, error];
 }

@@ -1,100 +1,115 @@
 "use client";
-import { useState, useRef, useLayoutEffect } from "react";
-import PictureInput from "@/components/PictureInput";
-import CardContainer from "@/components/CardContainer";
-import TextInput from "@/components/inputs/TextInput";
-import LocationPicker from "@/components/organisms/LocationPicker";
-import QRCodeInput from "@/components/QRCodeInput";
+import { useState } from "react";
+import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
+import { useCreateStocktakingItem } from "@/hooks/useStocktakingItems";
+import CenteredModal from "@/components/CenteredModal";
 
 export default function NewItem() {
-    const [newItem, setNewItem] = useState({
+    const [editItem, setEditItem] = useState({
         name: "",
         description: "",
         note: "",
-        weight: "",
-        size: "",
-        price: "",
         image: "",
         location: null,
-        qrCode: null
+        qr: "",
+        properties: [],
     });
-    const bottomBarRef = useRef(null);
-    const [bottomPadding, setBottomPadding] = useState(0);
+    const [editMode, setEditMode] = useState(true);
+    const [actionModalOpen, setActionModalOpen] = useState(false);
+    const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
+    const { createItem, loading, error, success } = useCreateStocktakingItem();
 
-    useLayoutEffect(() => {
-        const updatePadding = () => {
-            if (bottomBarRef.current) {
-                setBottomPadding(bottomBarRef.current.offsetHeight);
+    // Helper to show modal
+    const showActionModal = (title, message, success) => {
+        setActionModalContent({ title, message, success });
+        setActionModalOpen(true);
+    };
+
+    // Helper to convert properties array to object
+    function propertiesArrayToObject(propertiesArr) {
+        const obj = {};
+        for (const prop of propertiesArr || []) {
+            if ((prop.key || prop.name) && (prop.key || prop.name).trim() !== "") {
+                obj[prop.key || prop.name] = prop.value;
             }
-        };
-        updatePadding();
-        window.addEventListener("resize", updatePadding);
-        return () => window.removeEventListener("resize", updatePadding);
-    }, []);
+        }
+        return obj;
+    }
 
-    const handleSave = () => {
-        console.log("New item: ", newItem);
+    // Helper to map location fields to API format
+    function mapLocationToApi(location) {
+        if (!location) return undefined;
+        return {
+            building: location.budova ?? 0,
+            storey: location.podlazi ?? 0,
+            room: location.mistnost ?? 0,
+        };
+    }
+
+    // Save handler
+    const handleSave = async () => {
+        // Validate required fields if needed
+        let propertiesArr = Array.isArray(editItem.properties)
+            ? editItem.properties
+            : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
+        if (propertiesArr.some(p => !(p.key || p.name) || (p.key || p.name).trim() === "")) {
+            showActionModal("Chyba", "Všechny pole 'Vlastnost' musí být vyplněné.", false);
+            return;
+        }
+        const newItem = {
+            name: editItem.name,
+            description: editItem.description,
+            note: editItem.note,
+            image: typeof editItem.image === 'string' ? editItem.image : (editItem.image?.name || null),
+            location: mapLocationToApi(editItem.location),
+            qr: editItem.qr,
+            properties: propertiesArrayToObject(propertiesArr),
+        };
+        const result = await createItem(newItem);
+        if (result && !error) {
+            showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
+            setEditMode(false);
+        } else {
+            showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
+        }
     };
 
     return (
-        <div className="relative min-h-screen flex flex-col" style={{}}>
-            <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
-                <div className="flex flex-col container" style={{}}>
-                    <PictureInput value={newItem.image || null} onChange={img => setNewItem({ ...newItem, image: img })} editMode={true} />
-                    <div className="p-4 flex flex-col gap-4">
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <TextInput
-                                    value={newItem.name}
-                                    onChange={e => setNewItem({ ...newItem, name: e.target.value })}
-                                    label={"Název"}
-                                    placeholder="Název"
-                                />
-                            </div>
-                            <TextInput
-                                value={newItem.description}
-                                onChange={e => setNewItem({ ...newItem, description: e.target.value })}
-                                label={"Popisek"}
-                                placeholder="Popisek"
-                            />
-                        </div>
-                        <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                            <TextInput
-                                value={newItem.note}
-                                onChange={e => setNewItem({ ...newItem, note: e.target.value })}
-                                label={"Poznámka"}
-                                placeholder="Poznámka"
-                                multiline
-                            />
-                        </div>
-                        <LocationPicker
-                            value={newItem.location}
-                            onChange={loc => setNewItem(prev => ({ ...prev, location: loc }))}
-                            editMode={true}
-                        />
-                        <QRCodeInput
-                            value={newItem.qrCode}
-                            onChange={code => {
-                                console.log('Scanned QR code:', code);
-                                setNewItem(prev => ({ ...prev, qrCode: code }));
-                            }}
-                            editMode={true}
-                        />
-                        <CardContainer>
-                            <TextInput value={newItem.weight || ''} onChange={e => setNewItem({ ...newItem, weight: e.target.value })} label={"Váha"} placeholder="30kg" />
-                            <TextInput value={newItem.size || ''} onChange={e => setNewItem({ ...newItem, size: e.target.value })} label={"Velikost"} placeholder="10*20*30cm" />
-                            <TextInput value={newItem.price || ''} onChange={e => setNewItem({ ...newItem, price: e.target.value })} label={"Cena"} placeholder="1234,-" />
-                        </CardContainer>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                            <div>Nový předmět</div>
-                            <div>ID bude přiděleno automaticky</div>
-                        </div>
-                    </div>
+        <>
+            <StocktakingItemDetailTemplate
+                item={editItem}
+                editItem={editItem}
+                editMode={editMode}
+                onEditItemChange={setEditItem}
+                onEditModeChange={() => setEditMode(!editMode)}
+                onDelete={null}
+                onDuplicate={null}
+                onSave={handleSave}
+                showMove={false}
+                showFound={false}
+                loading={loading}
+                error={error}
+                returnTo={"/"}
+                isDeleteModalOpen={false}
+                setIsDeleteModalOpen={() => {}}
+                bottomPadding={0}
+                setBottomPadding={() => {}}
+                barRendered={false}
+                setBarRendered={() => {}}
+            />
+            {/* Action result modal for create */}
+            <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
+                <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>
+            </CenteredModal>
+            {/* Loading modal for create */}
+            <CenteredModal isOpen={loading} title="Probíhá akce...">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                    <span>Probíhá akce...</span>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
                 </div>
-            </main>
+            </CenteredModal>
+            {/* Fixed bottom bar with save button */}
             <div
-                ref={bottomBarRef}
                 className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
                 style={{
                     background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 20%)',
@@ -104,21 +119,13 @@ export default function NewItem() {
                     <button
                         className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
                         style={{ fontSize: "0.75rem" }}
-                        onClick={() => window.history.back()}
-                    >
-                        Zrušit
-                        <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>close</span>
-                    </button>
-                    <button
-                        className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
                         onClick={handleSave}
-                        style={{ fontSize: "0.75rem" }}
                     >
-                        Uložit předmět
+                        Vytvořit objekt
                         <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>check</span>
                     </button>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

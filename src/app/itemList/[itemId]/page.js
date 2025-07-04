@@ -8,7 +8,7 @@ import { useGetLocation } from "@/hooks/useLocation";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/inputs/Button';
 
-export default function StocktakingListItemDetail() {
+export default function ItemListDetail() {
     const params = useParams();
     const itemId = params.itemId;
     const searchParams = useSearchParams();
@@ -214,8 +214,8 @@ export default function StocktakingListItemDetail() {
                 onDelete={() => setIsDeleteModalOpen(true)}
                 onDuplicate={handleDuplicate}
                 onSave={handleSave}
-                showMove={true}
-                showFound={true}
+                showMove={false}
+                showFound={false}
                 loading={loading}
                 error={error}
                 returnTo={returnTo}

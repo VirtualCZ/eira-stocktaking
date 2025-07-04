@@ -81,6 +81,7 @@ export function useStocktakingItem(id) {
       .then((data) => {
         const fetchedItem = Array.isArray(data.items) && data.items.length > 0 ? data.items[0] : null;
         setItem(fetchedItem);
+        console.log('Fetched item from hook:', fetchedItem);
         setError(null);
       })
       .catch((err) => setError(err))
@@ -88,4 +89,138 @@ export function useStocktakingItem(id) {
   }, [id]);
 
   return [item, loading, error];
+}
+
+export function useCreateStocktakingItem() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  
+  const createItem = async (item) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const res = await fetch('/api/objects/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) throw new Error('Failed to create item');
+      setSuccess(true);
+      return await res.json();
+    } catch (err) {
+      setError(err);
+      setSuccess(false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createItem, loading, error, success };
+}
+
+export function useUpdateStocktakingItem() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const updateItem = async (item) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const res = await fetch('/api/objects/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) throw new Error('Failed to update item');
+      setSuccess(true);
+      return await res.json();
+    } catch (err) {
+      setError(err);
+      setSuccess(false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateItem, loading, error, success };
+}
+
+export function useDeleteStocktakingItem() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const deleteItem = async (id) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const res = await fetch('/api/objects/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: JSON.stringify(id),
+      });
+      if (!res.ok) throw new Error('Failed to delete item');
+      setSuccess(true);
+      const text = await res.text();
+      return text;
+    } catch (err) {
+      setError(err);
+      setSuccess(false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { deleteItem, loading, error, success };
+}
+
+export function useDuplicateStocktakingItem() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const duplicateItem = async (id) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const res = await fetch('/api/objects/duplicate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': basicAuth,
+        },
+        body: JSON.stringify(id),
+      });
+      if (!res.ok) throw new Error('Failed to duplicate item');
+      setSuccess(true);
+      const text = await res.text();
+      return text;
+    } catch (err) {
+      setError(err);
+      setSuccess(false);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { duplicateItem, loading, error, success };
 } 

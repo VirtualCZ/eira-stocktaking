@@ -29,7 +29,7 @@ export default function ItemListDetail() {
             const mappedLoc = fetchedItem.location
                 ? {
                     budova: fetchedItem.location.building,
-                    podlazi: fetchedItem.location.story,
+                    podlazi: fetchedItem.location.storey,
                     mistnost: fetchedItem.location.room,
                 }
                 : null;

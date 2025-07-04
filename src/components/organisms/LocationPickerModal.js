@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react";
-import { useBuildings, useStories, useRooms } from "../../hooks/useBuildings";
+import { useBuildings, useStoreys, useRooms } from "../../hooks/useBuildings";
 import QRScannerModal from "../QRScannerModal";
 import DropdownCard from "../DropdownCard";
 import CenteredModal from "../CenteredModal";
@@ -14,7 +14,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
 
     const prevIsOpen = useRef(isOpen);
 
-    const [stories] = useStories(selectedBudova);
+    const [storeys] = useStoreys(selectedBudova);
     const [rooms] = useRooms(selectedBudova, selectedPodlazi);
 
     useEffect(() => {
@@ -62,9 +62,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
     };
 
     const budovaOptions = buildings.map((b) => ({ value: b.id, text: b.text }));
-    const selectedBuilding = buildings.find((b) => b.id === selectedBudova);
-    const podlaziOptions = stories.map((s) => ({ value: s.id, text: s.text }));
-    const selectedStory = stories.find((s) => s.id === selectedPodlazi);
+    const podlaziOptions = storeys.map((s) => ({ value: s.id, text: s.text }));
     const mistnostOptions = rooms.map((r) => ({ value: r.id, text: r.text }));
 
     const selectedBudovaOption = budovaOptions.find((opt) => opt.value === selectedBudova) || null;

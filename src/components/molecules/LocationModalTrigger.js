@@ -1,17 +1,17 @@
 "use client"
 import React from "react";
-import { useBuildings, useStories, useRooms } from "@/hooks/useBuildings";
+import { useBuildings, useStoreys, useRooms } from "@/hooks/useBuildings";
 
 export default function LocationModalTrigger({ onClick, location, editMode = true, label = "Lokace:" }) {
   const [buildings] = useBuildings();
   const building = buildings.find(b => b.id === location?.budova);
-  const [stories] = useStories(location?.budova);
-  const story = stories.find(s => s.id === location?.podlazi);
+  const [storeys] = useStoreys(location?.budova);
+  const storey = storeys.find(s => s.id === location?.podlazi);
   const [rooms] = useRooms(location?.budova, location?.podlazi);
   const room = rooms.find(r => r.id === location?.mistnost);
 
   const budovaText = building?.text || location?.budova || "-";
-  const podlaziText = story?.text || location?.podlazi || "-";
+  const podlaziText = storey?.text || location?.podlazi || "-";
   const mistnostText = room?.text || location?.mistnost || "-";
 
   const content = (

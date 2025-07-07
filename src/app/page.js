@@ -1,6 +1,6 @@
 "use client"
-import { NavLink } from "@/components/NavCard";
-import HeadingCard from "@/components/HeadingCard";
+import { NavLink } from "@/components/molecules/NavCard";
+import HeadingCard from "@/components/molecules/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 

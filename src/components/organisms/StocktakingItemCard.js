@@ -1,8 +1,8 @@
 import React from "react";
-import CardItemName from "../molecules/CardItemName";
-import CardItemDescription from "../molecules/CardItemDescription";
-import CardItemNote from "../molecules/CardItemNote";
-import CardItemDate from "../molecules/CardItemDate";
+import CardItemName from "@/components/atoms/CardItemName";
+import CardItemDescription from "@/components/atoms/CardItemDescription";
+import CardItemNote from "@/components/atoms/CardItemNote";
+import CardItemDate from "@/components/atoms/CardItemDate";
 
 export default function StocktakingItemCard({ item, renderActions, compact = false }) {
   return (

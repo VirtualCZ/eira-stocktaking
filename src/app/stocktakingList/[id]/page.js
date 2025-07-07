@@ -2,19 +2,19 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useStocktakingItems } from "@/hooks/useStocktakingItems";
 import Link from "next/link";
-import QRScannerModal from "@/components/QRScannerModal";
+import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
-import HeadingCard from "@/components/HeadingCard";
-import { ContextButton, ContextRow } from "@/components/ContextMenu";
-import { Pagination } from "@/components/Pagination";
-import SortOptionsModal from "@/components/SortOptionsModal";
-import CenteredModal from "@/components/CenteredModal";
+import HeadingCard from "@/components/molecules/HeadingCard";
+import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
+import { Pagination } from "@/components/molecules/Pagination";
+import SortOptionsModal from "@/components/organisms/SortOptionsModal";
+import CenteredModal from "@/components/molecules/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
-import CardItemName from "@/components/molecules/CardItemName";
+import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
-import FilterOptionsModal from "@/components/FilterOptionsModal";
-import Button from "@/components/inputs/Button";
+import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
+import Button from "@/components/atoms/Button";
 
 const PAGE_SIZE = 10;
 

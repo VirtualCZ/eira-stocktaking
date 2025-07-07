@@ -1,4 +1,3 @@
-"use client"
 import React, { useState, useEffect } from "react";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 import LocationPicker from "@/components/organisms/LocationPicker";

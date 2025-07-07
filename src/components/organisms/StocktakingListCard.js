@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import CardContainer from "../CardContainer";
-import CardItemName from "../molecules/CardItemName";
-import CardItemDescription from "../molecules/CardItemDescription";
-import CardItemDate from "../molecules/CardItemDate";
+import CardContainer from "@/components/atoms/CardContainer";
+import CardItemName from "@/components/atoms/CardItemName";
+import CardItemDescription from "@/components/atoms/CardItemDescription";
+import CardItemDate from "@/components/atoms/CardItemDate";
 
 export default function StocktakingListCard({ operation, href, onClick }) {
   return (

@@ -18,17 +18,6 @@ const VARIANT_STYLES = {
   },
 };
 
-/**
- * IconButton component for icon-only actions
- * @param {object} props
- * @param {string} props.icon - Material icon name (required)
- * @param {'primary'|'secondary'|'danger'} [props.variant] - Button variant
- * @param {string} [props.borderRadius] - Border radius (e.g., '0.5rem', '1rem')
- * @param {number} [props.size] - Button size in px (width/height/padding)
- * @param {string} [props.className] - Additional className
- * @param {object} [props.style] - Additional style
- * @param {any} rest - Other button props
- */
 const IconButton = ({
   icon,
   variant = 'primary',

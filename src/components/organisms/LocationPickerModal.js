@@ -1,9 +1,9 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react";
 import { useBuildings, useStoreys, useRooms } from "../../hooks/useBuildings";
-import QRScannerModal from "../QRScannerModal";
-import DropdownCard from "../DropdownCard";
-import CenteredModal from "../CenteredModal";
+import QRScannerModal from "@/components/organisms/QRScannerModal";
+import DropdownCard from "@/components/molecules/DropdownCard";
+import CenteredModal from "@/components/molecules/CenteredModal";
 
 export default function LocationPickerModal({ isOpen, onClose, onSave, initialLocation }) {
     const [buildings] = useBuildings();

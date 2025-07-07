@@ -1,15 +1,13 @@
-import React, { useRef, useLayoutEffect, useState } from "react";
-import PictureInput from "../PictureInput";
-import CardContainer from "../CardContainer";
-import DetailCardRow from "../DetailCardRow";
-import { ContextButton, ContextRow } from "../ContextMenu";
+import React, { useRef, useLayoutEffect } from "react";
+import PictureInput from "@/components/molecules/PictureInput";
+import CardContainer from "@/components/atoms/CardContainer";
+import DetailCardRow from "@/components/atoms/DetailCardRow";
+import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import Link from "next/link";
-import CenteredModal from "../CenteredModal";
-import SwipeToDelete from "../SwipeToDelete";
-import LocationPicker from "./LocationPicker";
-import QRCodeInput from "../QRCodeInput";
-import TextInput from "../inputs/TextInput";
-import ItemPropertyEditor from "../molecules/ItemPropertyEditor";
+import LocationPicker from "@/components/organisms/LocationPicker";
+import QRCodeInput from "@/components/molecules/QRCodeInput";
+import TextInput from "@/components/atoms/TextInput";
+import ItemPropertyEditor from "@/components/molecules/ItemPropertyEditor";
 
 export default function StocktakingItemDetailTemplate({
   item,

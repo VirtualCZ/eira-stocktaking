@@ -14,7 +14,7 @@ const BASE_STYLE = {
   justifyContent: 'space-between',
   background: '#282828',
   color: '#fff',
-  border: '1px solid #282828', // Always 1px border for consistent sizing
+  border: '1px solid #282828',
   borderRadius: '1rem',
   padding: '0.75rem',
   fontSize: '0.75rem',
@@ -28,17 +28,6 @@ const SECONDARY_STYLE = {
   border: '1px solid #d1d1d1',
 };
 
-/**
- * Button component
- * @param {object} props
- * @param {React.ReactNode} props.children - Button text
- * @param {React.ReactNode|string} [props.icon] - Icon element or material icon name
- * @param {'left'|'right'} [props.iconPosition] - Icon position
- * @param {'primary'|'secondary'|'default'} [props.variant] - Button variant
- * @param {string} [props.className] - Additional className
- * @param {object} [props.style] - Additional style
- * @param {any} rest - Other button props
- */
 const Button = ({
   children,
   icon,

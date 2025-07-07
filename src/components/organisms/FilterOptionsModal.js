@@ -1,71 +1,82 @@
 import React, { useState, useEffect, useRef } from "react";
-import RadioButton from "./inputs/RadioButton";
-import CardContainer from "./CardContainer";
-import CenteredModal from "./CenteredModal";
+import CardContainer from "../atoms/CardContainer";
+import CenteredModal from "../molecules/CenteredModal";
+import Checkbox from "../atoms/Checkbox";
 
-export default function SortOptionsModal({
+const stateOptions = [
+    { label: "Zbývá", value: "zbyva" },
+    { label: "Nalezeno", value: "nalezeno" },
+    { label: "Přesun", value: "presun" },
+    { label: "Nový", value: "novy" },
+];
+const hasNoteOptions = [
+    { label: "Ano", value: "yes" },
+    { label: "Ne", value: "no" },
+];
+
+export default function FilterOptionsModal({
     isOpen,
     onClose,
-    sortOptions = [],
-    orderOptions = [
-        { label: 'Vzestupně', value: 'asc' },
-        { label: 'Sestupně', value: 'desc' }
-    ],
-    initialSortBy,
-    initialSortOrder,
+    initialState = [],
+    initialHasNote = [],
     onChange
 }) {
-    const [sortBy, setSortBy] = useState(initialSortBy || (sortOptions[0] && sortOptions[0].value));
-    const [sortOrder, setSortOrder] = useState(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
+    const [state, setState] = useState(initialState);
+    const [hasNote, setHasNote] = useState(initialHasNote);
     const prevIsOpen = useRef(isOpen);
 
-    // Reset local state to initial values when opening
     useEffect(() => {
         if (!prevIsOpen.current && isOpen) {
-            setSortBy(initialSortBy || (sortOptions[0] && sortOptions[0].value));
-            setSortOrder(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
+            setState(initialState);
+            setHasNote(initialHasNote);
         }
         prevIsOpen.current = isOpen;
-    }, [isOpen, initialSortBy, initialSortOrder, sortOptions, orderOptions]);
+    }, [isOpen, initialState, initialHasNote]);
+
+    const handleStateChange = (value) => {
+        setState((prev) =>
+            prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+        );
+    };
+    const handleHasNoteChange = (value) => {
+        setHasNote((prev) =>
+            prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+        );
+    };
 
     const handleOk = () => {
         if (onChange) {
-            onChange({ sortBy, sortOrder });
+            onChange({ state, hasNote });
         }
-        onClose();
-    };
-
-    const handleCancel = () => {
-        // Reset to initial values
-        setSortBy(initialSortBy || (sortOptions[0] && sortOptions[0].value));
-        setSortOrder(initialSortOrder || (orderOptions[0] && orderOptions[0].value));
         onClose();
     };
 
     return (
-        <CenteredModal title="Možnosti zobrazení" isOpen={isOpen} onClose={handleCancel} height="auto">
+        <CenteredModal title="Filtry" isOpen={isOpen} onClose={onClose} height="auto">
             <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
                 <CardContainer className="gap-2">
-                    {sortOptions.map((opt) => (
-                        <RadioButton
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: 4 }}>Stav</div>
+                    {stateOptions.map((opt) => (
+                        <Checkbox
                             key={opt.value}
                             label={opt.label}
                             value={opt.value}
-                            checked={sortBy === opt.value}
-                            onChange={setSortBy}
-                            name="sortBy"
+                            checked={state.includes(opt.value)}
+                            onChange={handleStateChange}
+                            name="filterState"
                         />
                     ))}
                 </CardContainer>
                 <CardContainer className="gap-2">
-                    {orderOptions.map((opt) => (
-                        <RadioButton
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: 4 }}>Má poznámku</div>
+                    {hasNoteOptions.map((opt) => (
+                        <Checkbox
                             key={opt.value}
                             label={opt.label}
                             value={opt.value}
-                            checked={sortOrder === opt.value}
-                            onChange={setSortOrder}
-                            name="sortOrder"
+                            checked={hasNote.includes(opt.value)}
+                            onChange={handleHasNoteChange}
+                            name="filterHasNote"
                         />
                     ))}
                 </CardContainer>

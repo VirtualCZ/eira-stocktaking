@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import QRScannerModal from "./QRScannerModal";
+import QRScannerModal from "@/components/organisms/QRScannerModal";
 
 export default function QRCodeInput({ value, onChange, editMode = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,7 +1,6 @@
-"use client";
 import { useState, useEffect } from "react";
 import QrScanner from "react-qr-barcode-scanner";
-import CenteredModal from "./CenteredModal";
+import CenteredModal from "@/components/molecules/CenteredModal";
 
 export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
     const [scannedDataString, setScannedDataString] = useState(null);

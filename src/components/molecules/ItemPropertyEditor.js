@@ -1,7 +1,7 @@
 import React from "react";
-import TextInput from "../inputs/TextInput";
-import CardContainer from "../CardContainer";
-import Button from '../inputs/Button';
+import TextInput from "@/components/atoms/TextInput";
+import CardContainer from "@/components/atoms/CardContainer";
+import Button from "@/components/atoms/Button";
 
 // Helper to generate a unique id
 function generateId() {

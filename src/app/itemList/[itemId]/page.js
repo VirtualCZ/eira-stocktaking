@@ -2,11 +2,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useStocktakingItem, useUpdateStocktakingItem, useDeleteStocktakingItem, useDuplicateStocktakingItem } from "@/hooks/useStocktakingItems";
-import CenteredModal from "@/components/CenteredModal";
-import SwipeToDelete from "@/components/SwipeToDelete";
+import CenteredModal from "@/components/molecules/CenteredModal";
+import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import { useGetLocation } from "@/hooks/useLocation";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
-import Button from '@/components/inputs/Button';
+import Button from '@/components/atoms/Button';
 
 export default function ItemListDetail() {
     const params = useParams();

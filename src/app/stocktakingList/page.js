@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useStocktakingLists } from "@/hooks/useStocktakingLists";
-import HeadingCard from "@/components/HeadingCard";
-import SortOptionsModal from "@/components/SortOptionsModal";
-import { Pagination } from "@/components/Pagination";
+import HeadingCard from "@/components/molecules/HeadingCard";
+import SortOptionsModal from "@/components/organisms/SortOptionsModal";
+import { Pagination } from "@/components/molecules/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import StocktakingListCard from "@/components/organisms/StocktakingListCard";
 

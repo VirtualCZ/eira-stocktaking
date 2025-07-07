@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react";
-import CardContainer from "./CardContainer";
+import CardContainer from "@/components/atoms/CardContainer";
 
 export default function DropdownCard({ label, options = [], onSelect, selected, disabled = false }) {
     const [open, setOpen] = useState(false);

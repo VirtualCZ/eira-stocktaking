@@ -4,7 +4,7 @@ const username = process.env.NEXT_PUBLIC_API_USERNAME;
 const password = process.env.NEXT_PUBLIC_API_PASSWORD;
 const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
 
-export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '' } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -20,10 +20,16 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
         sortBy,
         sortOrder,
       };
-      if (search.trim()) {
+      if (search && search.trim()) {
         body.search = search.trim();
       }
-
+      if (state && Array.isArray(state) && state.length > 0) {
+        body.state = state;
+      }
+      if (hasNote && Array.isArray(hasNote) && hasNote.length > 0) {
+        body.hasNote = hasNote;
+      }
+      console.log("Sending to API:", body);
       fetch(`/api/objects`, {
         method: 'POST',
         headers: {
@@ -46,7 +52,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
     }, search ? 500 : 0); // 500ms delay for search, no delay for other changes
 
     return () => clearTimeout(timeoutId);
-  }, [offset, limit, sortBy, sortOrder, search]);
+  }, [offset, limit, sortBy, sortOrder, search, JSON.stringify(state), JSON.stringify(hasNote)]);
 
   return [items, total, loading, error];
 }

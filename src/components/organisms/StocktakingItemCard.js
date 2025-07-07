@@ -4,11 +4,21 @@ import CardItemDescription from "@/components/atoms/CardItemDescription";
 import CardItemNote from "@/components/atoms/CardItemNote";
 import CardItemDate from "@/components/atoms/CardItemDate";
 
+// Map state to background color
+const stateBgColors = {
+  zbyva: "#FFD8CC",
+  nalezeno: "#CCFFCC",
+  presun: "#CCE0FF",
+  novy: "#FFFACD",
+};
+
 export default function StocktakingItemCard({ item, renderActions, compact = false }) {
+  // Determine background color based on item.state
+  const bgColor = item.state && stateBgColors[item.state] ? stateBgColors[item.state] : "#f0f1f3";
   return (
     <div
-      className={compact ? "flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] p-4" : "flex flex-col rounded-2xl overflow-hidden bg-[#f0f1f3] h-full"}
-      style={compact ? {} : {}}
+      className={compact ? "flex flex-col rounded-2xl overflow-hidden p-4" : "flex flex-col rounded-2xl overflow-hidden h-full"}
+      style={{ background: bgColor }}
     >
       {/* Image (only in full mode) */}
       {!compact && item.image && (

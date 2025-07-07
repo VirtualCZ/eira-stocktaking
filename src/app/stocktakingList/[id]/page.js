@@ -42,7 +42,7 @@ export default function StocktakingList() {
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
     const [searchTerm, setSearchTerm] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-    const [filterState, setFilterState] = useState({ state: "", hasNote: "" });
+    const [filterState, setFilterState] = useState({ state: [], hasNote: [] });
 
     const [currentPage, setCurrentPage] = useState(0);
 
@@ -51,7 +51,9 @@ export default function StocktakingList() {
         limit: PAGE_SIZE,
         sortBy: sortBy,
         sortOrder: sortOrder,
-        search: searchTerm
+        search: searchTerm,
+        state: filterState.state,
+        hasNote: filterState.hasNote,
     });
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;

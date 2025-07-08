@@ -46,15 +46,23 @@ export default function StocktakingList() {
 
     const [currentPage, setCurrentPage] = useState(0);
 
-    const [items, total, loading, error] = useStocktakingItems({
-        offset: currentPage * PAGE_SIZE,
-        limit: PAGE_SIZE,
-        sortBy: sortBy,
-        sortOrder: sortOrder,
-        search: searchTerm,
-        state: filterState.state,
-        hasNote: filterState.hasNote,
-    });
+    const [location, setLocation] = useState(null);
+    const canFetch = location && location.mistnost;
+
+    const [items, total, loading, error] = useStocktakingItems(
+        canFetch
+            ? {
+                offset: currentPage * PAGE_SIZE,
+                limit: PAGE_SIZE,
+                sortBy,
+                sortOrder,
+                search: searchTerm,
+                state: filterState.state,
+                hasNote: filterState.hasNote,
+                roomId: location.mistnost,
+            }
+            : { skip: true }
+    );
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
@@ -194,7 +202,12 @@ export default function StocktakingList() {
                     ]}
                 />
 
-                <UserLocationPicker onChange={() => setCurrentPage(0)} />
+                <UserLocationPicker onChange={setLocation} />
+                {!canFetch && (
+                  <div style={{ color: '#FF6262', fontWeight: 600, padding: '1rem' }}>
+                    Nejprve vyberte místnost (lokaci).
+                  </div>
+                )}
 
                 {loading ? <div>Načítání...</div> : null}
                 {error ? <div>Chyba: {error.message}</div> : null}

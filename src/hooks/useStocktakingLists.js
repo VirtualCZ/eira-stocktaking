@@ -27,6 +27,7 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
         return res.json();
       })
       .then((data) => {
+        console.log(data)
         setLists(Array.isArray(data.items) ? data.items : []);
         setTotal(data.total || 0);
         setError(null);

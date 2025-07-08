@@ -170,6 +170,10 @@ export default function StocktakingItemDetailTemplate({
                   value={item.location}
                   editMode={false}
                 />
+                <QRCodeInput
+                  value={item.qrCode}
+                  editMode={false}
+                />
                 {item.properties && (
                   <CardContainer className="gap-2">
                     {(Array.isArray(item.properties)

@@ -4,7 +4,7 @@ const username = process.env.NEXT_PUBLIC_API_USERNAME;
 const password = process.env.NEXT_PUBLIC_API_PASSWORD;
 const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
 
-export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,9 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       if (hasNote && Array.isArray(hasNote) && hasNote.length > 0) {
         body.hasNote = hasNote;
       }
+      if (roomId) {
+        body.roomId = roomId;
+      }
       console.log("Sending to API:", body);
       fetch(`/api/objects`, {
         method: 'POST',
@@ -52,7 +55,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
     }, search ? 500 : 0); // 500ms delay for search, no delay for other changes
 
     return () => clearTimeout(timeoutId);
-  }, [offset, limit, sortBy, sortOrder, search, JSON.stringify(state), JSON.stringify(hasNote)]);
+  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId]);
 
   return [items, total, loading, error];
 }
@@ -65,14 +68,9 @@ export function useStocktakingItem(id) {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    // Fetch a single item by calculating the offset
-    const offset = Number(id) - 1;
-    const body = {
-      offset,
-      limit: 1
-    };
+    const body = { id };
 
-    fetch(`/api/objects`, {
+    fetch(`/api/object`, {
       method: 'POST',
       headers: {
         "Authorization": basicAuth,
@@ -85,9 +83,9 @@ export function useStocktakingItem(id) {
         return res.json();
       })
       .then((data) => {
-        const fetchedItem = Array.isArray(data.items) && data.items.length > 0 ? data.items[0] : null;
-        setItem(fetchedItem);
-        console.log('Fetched item from hook:', fetchedItem);
+        // If API returns the item directly
+        setItem(data);
+        console.log('Fetched item from hook:', data);
         setError(null);
       })
       .catch((err) => setError(err))

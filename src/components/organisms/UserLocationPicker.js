@@ -7,17 +7,14 @@ export default function UserLocationPicker({ editMode = true, onChange }) {
   const setLocationStorage = useSetLocation();
   const [location, setLocation] = useState(null);
 
+  // On mount, load from storage and notify parent
   useEffect(() => {
-    setLocation(getLocation());
-    // Optionally, listen to storage events for cross-tab sync
-    const onStorage = (e) => {
-      if (e.key === "selectedLocation") {
-        setLocation(getLocation());
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [getLocation]);
+    const stored = getLocation();
+    if (stored) {
+      setLocation(stored);
+      if (onChange) onChange(stored);
+    }
+  }, [getLocation, onChange]);
 
   const handleChange = (loc) => {
     setLocation(loc);

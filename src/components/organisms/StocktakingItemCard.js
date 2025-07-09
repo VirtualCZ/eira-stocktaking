@@ -23,7 +23,13 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
       {/* Image (only in full mode) */}
       {!compact && item.image && (
         <img
-          src={item.image}
+          src={
+            /^data:image\//.test(item.image)
+              ? item.image
+              : (/^[A-Za-z0-9+/=]+$/.test(item.image) && item.image.length > 100)
+                ? `data:image/*;base64,${item.image}`
+                : item.image
+          }
           alt={item.name}
           style={{ width: "100%", height: 100, objectFit: "cover", display: "block" }}
         />

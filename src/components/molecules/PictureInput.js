@@ -34,7 +34,15 @@ export default function PictureInput({ label, onChange, value, editMode = false 
         if (!value) {
             setPreview(null);
         } else if (typeof value === "string") {
-            setPreview(value);
+            // If value looks like a base64 string (not a URL or file path)
+            if (/^data:image\//.test(value)) {
+                setPreview(value);
+            } else if (/^[A-Za-z0-9+/=]+$/.test(value) && value.length > 100) {
+                // crude check for base64 string
+                setPreview(`data:image/*;base64,${value}`);
+            } else {
+                setPreview(value);
+            }
         } else if (value instanceof File) {
             const url = URL.createObjectURL(value);
             setPreview(url);

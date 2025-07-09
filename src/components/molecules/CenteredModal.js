@@ -37,7 +37,7 @@ export default function CenteredModal({
             top: 0,
             left: 0,
             width: "100vw",
-            height: "100vh",
+            height: "100dvh",
             background: isOpen ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0)",
             display: "flex",
             alignItems: "center",
@@ -118,6 +118,7 @@ export default function CenteredModal({
                         flex: 1,
                         overflowY: "auto",
                         padding: "1rem",
+                        maxHeight: '80dvh',
                         ...contentStyle
                     }}>
                         {children}

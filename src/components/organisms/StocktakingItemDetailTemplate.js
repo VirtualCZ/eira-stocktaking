@@ -105,16 +105,14 @@ export default function StocktakingItemDetailTemplate({
                       editMode={true}
                     />
                     <QRCodeInput
-                      value={editItem.qrCode}
+                      value={editItem.qr}
                       onChange={code => onEditItemChange({ ...editItem, qrCode: code })}
                       editMode={true}
                     />
-                    {editItem.properties && (
-                      <ItemPropertyEditor
-                        properties={Array.isArray(editItem.properties) ? editItem.properties : Object.entries(editItem.properties).map(([key, value]) => ({ key, value }))}
-                        onChange={propsArr => onEditItemChange({ ...editItem, properties: propsArr })}
-                      />
-                    )}
+                    <ItemPropertyEditor
+                      properties={Array.isArray(editItem.properties) ? editItem.properties : editItem.properties ? Object.entries(editItem.properties).map(([key, value]) => ({ key, value })) : []}
+                      onChange={propsArr => onEditItemChange({ ...editItem, properties: propsArr })}
+                    />
                   </div>
                 </>
               )}
@@ -171,7 +169,7 @@ export default function StocktakingItemDetailTemplate({
                   editMode={false}
                 />
                 <QRCodeInput
-                  value={item.qrCode}
+                  value={item.qr}
                   editMode={false}
                 />
                 {item.properties && (

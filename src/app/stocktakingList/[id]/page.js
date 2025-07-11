@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { useStocktakingItems } from "@/hooks/useStocktakingItems";
+import { useStocktakingItems, useUpdateStocktakingItem } from "@/hooks/useStocktakingItems";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
@@ -47,7 +47,7 @@ export default function StocktakingList() {
     const [currentPage, setCurrentPage] = useState(0);
 
     const [location, setLocation] = useState(null);
-    const canFetch = location && location.mistnost;
+    const canFetch = location && location.room;
 
     const [items, total, loading, error] = useStocktakingItems(
         canFetch
@@ -59,10 +59,12 @@ export default function StocktakingList() {
                 search: searchTerm,
                 state: filterState.state,
                 hasNote: filterState.hasNote,
-                roomId: location.mistnost,
+                roomId: location.room,
             }
             : { skip: true }
     );
+
+    const { updateItem, loading: updating, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
@@ -86,17 +88,23 @@ export default function StocktakingList() {
         image: "/file.svg",
     };
 
+    // Update location variable names to English
     const currentLocation = {
-        budova: 1,
-        podlazi: 1,
-        mistnost: 101,
+        building: 1,
+        storey: 1,
+        room: 101,
     };
 
     const newLocation = {
-        budova: 2,
-        podlazi: 3,
-        mistnost: 302,
+        building: 2,
+        storey: 3,
+        room: 302,
     };
+
+    // Add state for the move modal and selected item/location
+    const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+    const [moveItem, setMoveItem] = useState(null);
+    const [moveNewLocation, setMoveNewLocation] = useState(null);
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -150,12 +158,19 @@ export default function StocktakingList() {
             <ContextRow
                 icon="swap_horiz"
                 label="Přesun"
-                action={() => alert('Přesun clicked')}
+                action={() => {
+                  setMoveItem(item);
+                  setMoveNewLocation(item.location);
+                  setIsMoveModalOpen(true);
+                }}
             />
             <ContextRow
                 icon="visibility"
                 label="Nalezeno"
-                action={() => alert('Nalezeno clicked')}
+                action={async () => {
+                  const { image, ...rest } = item;
+                  await updateItem({ ...rest, state: 'nalezeno' });
+                }}
             />
         </ContextButton>
     );
@@ -426,6 +441,63 @@ export default function StocktakingList() {
                             </div>
                         </div>
                     )}
+                </CenteredModal>
+                <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky">
+                  {moveItem && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div style={{ color: "#0074D9", fontWeight: 600 }}>
+                        Položka bude přesunuta do jiné místnosti
+                      </div>
+                      <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
+                        {/* Top: Image */}
+                        {moveItem.image && (
+                          <img
+                            src={
+                              /^data:image\//.test(moveItem.image)
+                                ? moveItem.image
+                                : (/^[A-Za-z0-9+/=]+$/.test(moveItem.image) && moveItem.image.length > 100)
+                                  ? `data:image/*;base64,${moveItem.image}`
+                                  : moveItem.image
+                            }
+                            alt={moveItem.name}
+                            style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                          />
+                        )}
+                        {/* Bottom: Content */}
+                        <div className="p-4 gap-4 flex flex-col">
+                          <div>
+                            <CardItemName>{moveItem.name}</CardItemName>
+                            <div style={{ fontSize: 12, color: "#535353" }}>{moveItem.note}</div>
+                          </div>
+                          <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                            Poslední kontrola {moveItem.lastCheck ? new Date(moveItem.lastCheck).toLocaleString() : ""}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
+                        <LocationPicker value={moveItem.location} label="Current location:" editMode={false} />
+                        <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
+                        <LocationPicker value={moveNewLocation} label="New location:" editMode={true} onChange={setMoveNewLocation} />
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                        <Button icon="check" iconPosition="right" onClick={async () => {
+                          if (!moveNewLocation) return;
+                          const { image, ...rest } = moveItem;
+                          await updateItem({ ...rest, location: moveNewLocation, state: 'presun' });
+                          setIsMoveModalOpen(false);
+                          setMoveItem(null);
+                          setMoveNewLocation(null);
+                          // Refresh the list (simulate by resetting page)
+                          setCurrentPage(0);
+                        }}>
+                          Potvrdit změnu lokace
+                        </Button>
+                        <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsMoveModalOpen(false)}>
+                          Storno
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CenteredModal>
 
             </div>

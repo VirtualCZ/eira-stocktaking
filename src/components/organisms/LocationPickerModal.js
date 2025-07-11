@@ -7,27 +7,27 @@ import CenteredModal from "@/components/molecules/CenteredModal";
 
 export default function LocationPickerModal({ isOpen, onClose, onSave, initialLocation }) {
     const [buildings] = useBuildings();
-    const [selectedBudova, setSelectedBudova] = useState(null);
-    const [selectedPodlazi, setSelectedPodlazi] = useState(null);
-    const [selectedMistnost, setSelectedMistnost] = useState(null);
+    const [selectedBuilding, setSelectedBuilding] = useState(null);
+    const [selectedStorey, setSelectedStorey] = useState(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     const prevIsOpen = useRef(isOpen);
 
-    const [storeys] = useStoreys(selectedBudova);
-    const [rooms] = useRooms(selectedBudova, selectedPodlazi);
+    const [storeys] = useStoreys(selectedBuilding);
+    const [rooms] = useRooms(selectedBuilding, selectedStorey);
 
     useEffect(() => {
         if (isOpen && !prevIsOpen.current) {
             if (initialLocation) {
-                const { budova, podlazi, mistnost } = initialLocation;
-                setSelectedBudova(budova ?? null);
-                setSelectedPodlazi(podlazi ?? null);
-                setSelectedMistnost(mistnost ? { id: mistnost } : null);
+                const { building, storey, room } = initialLocation;
+                setSelectedBuilding(building ?? null);
+                setSelectedStorey(storey ?? null);
+                setSelectedRoom(room ? { id: room } : null);
             } else {
-                setSelectedBudova(null);
-                setSelectedPodlazi(null);
-                setSelectedMistnost(null);
+                setSelectedBuilding(null);
+                setSelectedStorey(null);
+                setSelectedRoom(null);
             }
         }
         prevIsOpen.current = isOpen;
@@ -47,10 +47,10 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                 }
 
                 if (parsedScanData.type === "location" && parsedScanData.data) {
-                    const { budova, podlazi, mistnost } = parsedScanData.data;
-                    setSelectedBudova(budova ?? null);
-                    setSelectedPodlazi(podlazi ?? null);
-                    setSelectedMistnost(mistnost ? { id: mistnost } : null);
+                    const { building, storey, room } = parsedScanData.data;
+                    setSelectedBuilding(building ?? null);
+                    setSelectedStorey(storey ?? null);
+                    setSelectedRoom(room ? { id: room } : null);
                 } else {
                     console.warn("Scanned QR is not of type 'location' or data is missing.");
                 }
@@ -61,34 +61,34 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
         setIsScannerOpen(false);
     };
 
-    const budovaOptions = buildings.map((b) => ({ value: b.id, text: b.text }));
-    const podlaziOptions = storeys.map((s) => ({ value: s.id, text: s.text }));
-    const mistnostOptions = rooms.map((r) => ({ value: r.id, text: r.text }));
+    const buildingOptions = buildings.map((b) => ({ value: b.id, text: b.text }));
+    const storeyOptions = storeys.map((s) => ({ value: s.id, text: s.text }));
+    const roomOptions = rooms.map((r) => ({ value: r.id, text: r.text }));
 
-    const selectedBudovaOption = budovaOptions.find((opt) => opt.value === selectedBudova) || null;
-    const selectedPodlaziOption = podlaziOptions.find((opt) => opt.value === selectedPodlazi) || null;
-    const selectedMistnostOption = mistnostOptions.find((opt) => opt.value === selectedMistnost?.id) || null;
+    const selectedBuildingOption = buildingOptions.find((opt) => opt.value === selectedBuilding) || null;
+    const selectedStoreyOption = storeyOptions.find((opt) => opt.value === selectedStorey) || null;
+    const selectedRoomOption = roomOptions.find((opt) => opt.value === selectedRoom?.id) || null;
 
-    const handleBudovaSelect = (val) => {
-        setSelectedBudova(val.value);
-        setSelectedPodlazi(null);
-        setSelectedMistnost(null);
+    const handleBuildingSelect = (val) => {
+        setSelectedBuilding(val.value);
+        setSelectedStorey(null);
+        setSelectedRoom(null);
     };
 
-    const handlePodlaziSelect = (val) => {
-        setSelectedPodlazi(val.value);
-        setSelectedMistnost(null);
+    const handleStoreySelect = (val) => {
+        setSelectedStorey(val.value);
+        setSelectedRoom(null);
     };
 
-    const handleMistnostSelect = (val) => {
-        setSelectedMistnost({ id: val.value, text: val.text });
+    const handleRoomSelect = (val) => {
+        setSelectedRoom({ id: val.value, text: val.text });
     };
 
     const handleSave = () => {
         onSave({
-            budova: selectedBudova,
-            podlazi: selectedPodlazi,
-            mistnost: selectedMistnost?.id,
+            building: selectedBuilding,
+            storey: selectedStorey,
+            room: selectedRoom?.id,
         });
         onClose();
     };
@@ -126,28 +126,28 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                             <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>qr_code</span>
                         </button>
                         <DropdownCard
-                            label="Budova"
-                            options={budovaOptions}
-                            selected={selectedBudovaOption}
-                            onSelect={handleBudovaSelect}
+                            label="Building"
+                            options={buildingOptions}
+                            selected={selectedBuildingOption}
+                            onSelect={handleBuildingSelect}
                         />
                         <DropdownCard
-                            label="Podlaží"
-                            options={podlaziOptions}
-                            selected={selectedPodlaziOption}
-                            onSelect={handlePodlaziSelect}
-                            disabled={!selectedBudova}
+                            label="Storey"
+                            options={storeyOptions}
+                            selected={selectedStoreyOption}
+                            onSelect={handleStoreySelect}
+                            disabled={!selectedBuilding}
                         />
                         <DropdownCard
-                            label="Místnost"
-                            options={mistnostOptions}
-                            selected={selectedMistnostOption}
-                            onSelect={handleMistnostSelect}
-                            disabled={!selectedPodlazi}
+                            label="Room"
+                            options={roomOptions}
+                            selected={selectedRoomOption}
+                            onSelect={handleRoomSelect}
+                            disabled={!selectedStorey}
                         />
                         <button
                             onClick={handleSave}
-                            disabled={!selectedMistnost}
+                            disabled={!selectedRoom}
                             style={{
                                 flex: 1,
                                 display: "flex",
@@ -160,10 +160,10 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                                 padding: "0.75rem",
                                 fontSize: "0.75rem",
                                 cursor: "pointer",
-                                opacity: !selectedMistnost ? 0.5 : 1
+                                opacity: !selectedRoom ? 0.5 : 1
                             }}
                         >
-                            Uložit
+                            Save
                             <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
                         </button>
                     </div>
@@ -176,10 +176,10 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                     onScan={handleQRScan}
                     validate={(parsed) => {
                         if (parsed?.type === "location" && parsed.data) {
-                            const { budova, podlazi, mistnost } = parsed.data;
+                            const { building, storey, room } = parsed.data;
                             return {
                                 valid: true,
-                                message: `Naskenováno: ${budova || "?"} / ${podlazi || "?"} / ${mistnost || "?"}`,
+                                message: `Naskenováno: ${building || "?"} / ${storey || "?"} / ${room || "?"}`,
                                 data: parsed.data,
                             };
                         }

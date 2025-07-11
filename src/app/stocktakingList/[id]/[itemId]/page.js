@@ -46,9 +46,9 @@ export default function StocktakingListItemDetail() {
         if (fetchedItem) {
             const mappedLoc = fetchedItem.location
                 ? {
-                    budova: fetchedItem.location.building,
-                    podlazi: fetchedItem.location.storey,
-                    mistnost: fetchedItem.location.room,
+                    building: fetchedItem.location.building,
+                    storey: fetchedItem.location.storey,
+                    room: fetchedItem.location.room,
                 }
                 : null;
             const itemWithMappedLocation = { ...fetchedItem, location: mappedLoc };
@@ -136,9 +136,9 @@ export default function StocktakingListItemDetail() {
     function mapLocationToApi(location) {
         if (!location) return undefined;
         return {
-            building: location.budova ?? 0,
-            storey: location.podlazi ?? 0,
-            room: location.mistnost ?? 0,
+            building: location.building ?? 0,
+            storey: location.storey ?? 0,
+            room: location.room ?? 0,
         };
     }
 

@@ -40,9 +40,9 @@ export default function NewItem() {
     function mapLocationToApi(location) {
         if (!location) return undefined;
         return {
-            building: location.budova ?? 0,
-            storey: location.podlazi ?? 0,
-            room: location.mistnost ?? 0,
+            building: location.building ?? 0,
+            storey: location.storey ?? 0,
+            room: location.room ?? 0,
         };
     }
 

@@ -2,17 +2,17 @@
 import React from "react";
 import { useBuildings, useStoreys, useRooms } from "@/hooks/useBuildings";
 
-export default function LocationModalTrigger({ onClick, location, editMode = true, label = "Lokace:" }) {
+export default function LocationModalTrigger({ onClick, location, editMode = true, label = "Location:" }) {
   const [buildings] = useBuildings();
-  const building = buildings.find(b => b.id === location?.budova);
-  const [storeys] = useStoreys(location?.budova);
-  const storey = storeys.find(s => s.id === location?.podlazi);
-  const [rooms] = useRooms(location?.budova, location?.podlazi);
-  const room = rooms.find(r => r.id === location?.mistnost);
+  const building = buildings.find(b => b.id === location?.building);
+  const [storeys] = useStoreys(location?.building);
+  const storey = storeys.find(s => s.id === location?.storey);
+  const [rooms] = useRooms(location?.building, location?.storey);
+  const room = rooms.find(r => r.id === location?.room);
 
-  const budovaText = building?.text || location?.budova || "-";
-  const podlaziText = storey?.text || location?.podlazi || "-";
-  const mistnostText = room?.text || location?.mistnost || "-";
+  const buildingText = building?.text || location?.building || "-";
+  const storeyText = storey?.text || location?.storey || "-";
+  const roomText = room?.text || location?.room || "-";
 
   const content = (
     <>
@@ -25,7 +25,7 @@ export default function LocationModalTrigger({ onClick, location, editMode = tru
             location_on
           </span>
           <span style={{ fontWeight: 700, fontSize: 12, color: "#000" }}>
-            {budovaText}, {podlaziText}, {mistnostText}
+            {buildingText}, {storeyText}, {roomText}
           </span>
         </div>
       </div>

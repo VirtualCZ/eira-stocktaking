@@ -126,20 +126,20 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                             <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>qr_code</span>
                         </button>
                         <DropdownCard
-                            label="Building"
+                            label="Budova"
                             options={buildingOptions}
                             selected={selectedBuildingOption}
                             onSelect={handleBuildingSelect}
                         />
                         <DropdownCard
-                            label="Storey"
+                            label="Patro"
                             options={storeyOptions}
                             selected={selectedStoreyOption}
                             onSelect={handleStoreySelect}
                             disabled={!selectedBuilding}
                         />
                         <DropdownCard
-                            label="Room"
+                            label="Místnost"
                             options={roomOptions}
                             selected={selectedRoomOption}
                             onSelect={handleRoomSelect}
@@ -163,7 +163,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                                 opacity: !selectedRoom ? 0.5 : 1
                             }}
                         >
-                            Save
+                            Uložit
                             <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
                         </button>
                     </div>

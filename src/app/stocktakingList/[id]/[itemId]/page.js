@@ -7,6 +7,8 @@ import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import { useGetLocation } from "@/hooks/useLocation";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/atoms/Button';
+import LocationPicker from "@/components/organisms/LocationPicker";
+import CardItemName from "@/components/atoms/CardItemName";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
@@ -17,13 +19,15 @@ export default function StocktakingListItemDetail() {
 
     const [editItem, setEditItem] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+    const [moveNewLocation, setMoveNewLocation] = useState(null);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
     const [barRendered, setBarRendered] = useState(false);
 
     const getLocation = useGetLocation();
 
-    const [fetchedItem, loading, error] = useStocktakingItem(itemId);
+    const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId);
     const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
     const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteStocktakingItem();
     const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateStocktakingItem();
@@ -81,31 +85,6 @@ export default function StocktakingListItemDetail() {
         }
     }, [editMode, barRendered]);
 
-    // Show modals based on hook states
-    useEffect(() => {
-        if (updateSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
-        } else if (updateError) {
-            showActionModal('Chyba', updateError?.message || 'Nepodařilo se upravit položku.', false);
-        }
-    }, [updateSuccess, updateError]);
-
-    useEffect(() => {
-        if (duplicateSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
-        } else if (duplicateError) {
-            showActionModal('Chyba', duplicateError?.message || 'Nepodařilo se duplikovat položku.', false);
-        }
-    }, [duplicateSuccess, duplicateError]);
-
-    useEffect(() => {
-        if (deleteSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně smazána.', true);
-        } else if (deleteError) {
-            showActionModal('Chyba', deleteError?.message || 'Nepodařilo se smazat položku.', false);
-        }
-    }, [deleteSuccess, deleteError]);
-
     // Show loading modal when any action is in progress
     const isAnyLoading = updateLoading || deleteLoading || duplicateLoading;
 
@@ -120,6 +99,36 @@ export default function StocktakingListItemDetail() {
     if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
 
     const item = { ...fetchedItem, location: editItem?.location };
+
+    const handleFound = async () => {
+        if (!item) return;
+        const { image, ...rest } = item;
+        const result = await updateItem({ ...rest, state: 'nalezeno' });
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+            if (refetchItem) refetchItem();
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+        }
+    };
+
+    const handleMoveConfirm = async () => {
+        if (!item || !moveNewLocation) return;
+        const { image, ...rest } = item;
+        const result = await updateItem({ ...rest, location: mapLocationToApi(moveNewLocation), state: 'presun' });
+        setIsMoveModalOpen(false);
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla přesunuta.', true);
+            if (refetchItem) refetchItem();
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se přesunout položku.', false);
+        }
+    };
+
+    const openMoveModal = () => {
+        setMoveNewLocation(item.location);
+        setIsMoveModalOpen(true);
+    };
 
     // Helper to convert properties array to object
     function propertiesArrayToObject(propertiesArr) {
@@ -182,25 +191,36 @@ export default function StocktakingListItemDetail() {
             }
             console.log('Sending image path:', mainData.image);
         }
-        await updateItem(mainData);
-        // Modal display is now handled by effect below
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+        const result = await updateItem(mainData);
+        if(result) {
+            setEditMode(false);
+            showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
+            if (refetchItem) refetchItem();
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se upravit položku.', false);
+        }
     };
 
     // Duplicate handler
     const handleDuplicate = async () => {
         if (!editItem) return;
-        await duplicateItem(editItem.id);
-        // Modal display is now handled by effect below
+        const result = await duplicateItem(editItem.id);
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se duplikovat položku.', false);
+        }
     };
 
     // Delete handler
     const handleDelete = async () => {
         if (!editItem) return;
-        await deleteItem(editItem.id);
-        // Modal display is now handled by effect below
+        const result = await deleteItem(editItem.id);
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla úspěšně smazána.', true);
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se smazat položku.', false);
+        }
     };
 
     return (
@@ -214,6 +234,8 @@ export default function StocktakingListItemDetail() {
                 onDelete={() => setIsDeleteModalOpen(true)}
                 onDuplicate={handleDuplicate}
                 onSave={handleSave}
+                onMove={openMoveModal}
+                onFound={handleFound}
                 showMove={true}
                 showFound={true}
                 loading={loading}
@@ -226,8 +248,8 @@ export default function StocktakingListItemDetail() {
                 barRendered={barRendered}
                 setBarRendered={setBarRendered}
             />
-            <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={updateSuccess ? "Hotovo" : "Chyba"}>
-                <div style={{ color: updateSuccess ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
+            <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={"Chyba"}>
+                <div style={{ color: '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
             </CenteredModal>
             {/* Action result modal for update, delete, duplicate */}
             <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
@@ -249,6 +271,52 @@ export default function StocktakingListItemDetail() {
                         await handleDelete();
                     }} />
                 </div>
+            </CenteredModal>
+            <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky">
+                {item && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div style={{ color: "#0074D9", fontWeight: 600 }}>
+                            Položka bude přesunuta do jiné místnosti
+                        </div>
+                        <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
+                            {item.image && (
+                                <img
+                                    src={
+                                        /^data:image\//.test(item.image)
+                                            ? item.image
+                                            : (/^[A-Za-z0-9+/=]+$/.test(item.image) && item.image.length > 100)
+                                                ? `data:image/*;base64,${item.image}`
+                                                : item.image
+                                    }
+                                    alt={item.name}
+                                    style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
+                                />
+                            )}
+                            <div className="p-4 gap-4 flex flex-col">
+                                <div>
+                                    <CardItemName>{item.name}</CardItemName>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{item.note}</div>
+                                </div>
+                                <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
+                                    Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
+                            <LocationPicker value={item.location} label="Current location:" editMode={false} />
+                            <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
+                            <LocationPicker value={moveNewLocation} label="New location:" editMode={true} onChange={setMoveNewLocation} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                            <Button icon="check" iconPosition="right" onClick={handleMoveConfirm}>
+                                Potvrdit změnu lokace
+                            </Button>
+                            <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsMoveModalOpen(false)}>
+                                Storno
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </CenteredModal>
             {editMode && (
                 <div

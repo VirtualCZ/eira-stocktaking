@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import React from 'react';
 
 // ContextRow component for individual menu items
-export function ContextRow({ icon, label, action, color = '#fff' }) {
+export function ContextRow({ icon, label, action, color = '#fff', closeMenu }) {
   return (
     <button
       onClick={e => {
         e.stopPropagation();
         e.preventDefault();
-        action && action(e);
+        if (action) action(e);
+        if (closeMenu) closeMenu();
       }}
       style={{
         background: 'none',
@@ -120,7 +122,9 @@ export function ContextButton({ children }) {
             boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
           }}
         >
-          {children}
+          {React.Children.map(children, child =>
+            React.cloneElement(child, { closeMenu: () => setIsMenuOpen(false) })
+          )}
         </div>,
         document.body
       )}

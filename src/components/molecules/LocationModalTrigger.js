@@ -2,7 +2,7 @@
 import React from "react";
 import { useBuildings, useStoreys, useRooms } from "@/hooks/useBuildings";
 
-export default function LocationModalTrigger({ onClick, location, editMode = true, label = "Location:" }) {
+export default function LocationModalTrigger({ onClick, location, editMode = true, label= "Lokace:" }) {
   const [buildings] = useBuildings();
   const building = buildings.find(b => b.id === location?.building);
   const [storeys] = useStoreys(location?.building);

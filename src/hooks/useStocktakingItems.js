@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const username = process.env.NEXT_PUBLIC_API_USERNAME;
 const password = process.env.NEXT_PUBLIC_API_PASSWORD;
@@ -65,7 +65,7 @@ export function useStocktakingItem(id) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchItem = useCallback(() => {
     if (!id) return;
     setLoading(true);
     const body = { id };
@@ -83,7 +83,6 @@ export function useStocktakingItem(id) {
         return res.json();
       })
       .then((data) => {
-        // If API returns the item directly
         setItem(data);
         console.log('Fetched item from hook:', data);
         setError(null);
@@ -92,7 +91,11 @@ export function useStocktakingItem(id) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  return [item, loading, error];
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
+
+  return [item, loading, error, fetchItem];
 }
 
 export function useCreateStocktakingItem() {
@@ -134,6 +137,7 @@ export function useUpdateStocktakingItem() {
   const [success, setSuccess] = useState(false);
 
   const updateItem = async (item) => {
+    console.log(item)
     setLoading(true);
     setError(null);
     setSuccess(false);

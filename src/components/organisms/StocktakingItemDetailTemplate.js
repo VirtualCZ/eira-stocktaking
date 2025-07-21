@@ -18,6 +18,8 @@ export default function StocktakingItemDetailTemplate({
   onDelete,
   onDuplicate,
   onSave,
+  onMove,
+  onFound,
   showMove = false,
   showFound = false,
   loading,
@@ -106,7 +108,7 @@ export default function StocktakingItemDetailTemplate({
                     />
                     <QRCodeInput
                       value={editItem.qr}
-                      onChange={code => onEditItemChange({ ...editItem, qrCode: code })}
+                      onChange={code => onEditItemChange({ ...editItem, qr: code })}
                       editMode={true}
                     />
                     <ItemPropertyEditor
@@ -145,14 +147,14 @@ export default function StocktakingItemDetailTemplate({
                         <ContextRow
                           icon="swap_horiz"
                           label="Přesun"
-                          action={() => alert('Přesun clicked')}
+                          action={onMove}
                         />
                       )}
                       {showFound && (
                         <ContextRow
                           icon="visibility"
                           label="Nalezeno"
-                          action={() => alert('Nalezeno clicked')}
+                          action={onFound}
                         />
                       )}
                     </ContextButton>

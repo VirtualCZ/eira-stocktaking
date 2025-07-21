@@ -23,7 +23,7 @@ export default function ItemListDetail() {
 
     const getLocation = useGetLocation();
 
-    const [fetchedItem, loading, error] = useStocktakingItem(itemId);
+    const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId);
     const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
     const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteStocktakingItem();
     const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateStocktakingItem();
@@ -181,25 +181,36 @@ export default function ItemListDetail() {
             }
             console.log('Sending image path:', mainData.image);
         }
-        await updateItem(mainData);
-        // Modal display is now handled by effect below
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+        const result = await updateItem(mainData);
+        if(result) {
+            setEditMode(false);
+            showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
+            if (refetchItem) refetchItem();
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se upravit položku.', false);
+        }
     };
 
     // Duplicate handler
     const handleDuplicate = async () => {
         if (!editItem) return;
-        await duplicateItem(editItem.id);
-        // Modal display is now handled by effect below
+        const result = await duplicateItem(editItem.id);
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se duplikovat položku.', false);
+        }
     };
 
     // Delete handler
     const handleDelete = async () => {
         if (!editItem) return;
-        await deleteItem(editItem.id);
-        // Modal display is now handled by effect below
+        const result = await deleteItem(editItem.id);
+        if(result) {
+            showActionModal('Hotovo', 'Položka byla úspěšně smazána.', true);
+        } else {
+            showActionModal('Chyba', 'Nepodařilo se smazat položku.', false);
+        }
     };
 
     return (

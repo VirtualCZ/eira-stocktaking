@@ -124,7 +124,9 @@ export function ContextButton({ children }) {
           }}
         >
           {React.Children.map(children, child =>
-            React.cloneElement(child, { closeMenu: () => setIsMenuOpen(false) })
+            React.isValidElement(child)
+              ? React.cloneElement(child, { closeMenu: () => setIsMenuOpen(false) })
+              : child
           )}
         </div>,
         document.body

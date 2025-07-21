@@ -10,54 +10,58 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchItems = useCallback(() => {
+    setLoading(true);
+    const body = {
+      offset,
+      limit,
+      sortBy,
+      sortOrder,
+    };
+    if (search && search.trim()) {
+      body.search = search.trim();
+    }
+    if (state && Array.isArray(state) && state.length > 0) {
+      body.state = state;
+    }
+    if (hasNote && Array.isArray(hasNote) && hasNote.length > 0) {
+      body.hasNote = hasNote;
+    }
+    if (roomId) {
+      body.roomId = roomId;
+    }
+    console.log("Sending to API:", body);
+    fetch(`/api/objects`, {
+      method: 'POST',
+      headers: {
+        "Authorization": basicAuth,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch stocktaking items");
+        return res.json();
+      })
+      .then((data) => {
+        setItems(Array.isArray(data.items) ? data.items : []);
+        setTotal(data.total || 0);
+        setError(null);
+      })
+      .catch((err) => setError(err))
+      .finally(() => setLoading(false));
+  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId]);
+
   // Debounced search effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setLoading(true);
-      const body = {
-        offset,
-        limit,
-        sortBy,
-        sortOrder,
-      };
-      if (search && search.trim()) {
-        body.search = search.trim();
-      }
-      if (state && Array.isArray(state) && state.length > 0) {
-        body.state = state;
-      }
-      if (hasNote && Array.isArray(hasNote) && hasNote.length > 0) {
-        body.hasNote = hasNote;
-      }
-      if (roomId) {
-        body.roomId = roomId;
-      }
-      console.log("Sending to API:", body);
-      fetch(`/api/objects`, {
-        method: 'POST',
-        headers: {
-          "Authorization": basicAuth,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch stocktaking items");
-          return res.json();
-        })
-        .then((data) => {
-          setItems(Array.isArray(data.items) ? data.items : []);
-          setTotal(data.total || 0);
-          setError(null);
-        })
-        .catch((err) => setError(err))
-        .finally(() => setLoading(false));
+      fetchItems();
     }, search ? 500 : 0); // 500ms delay for search, no delay for other changes
 
     return () => clearTimeout(timeoutId);
-  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId]);
+  }, [fetchItems, search]);
 
-  return [items, total, loading, error];
+  return [items, total, loading, error, fetchItems];
 }
 
 export function useStocktakingItem(id) {
@@ -96,6 +100,40 @@ export function useStocktakingItem(id) {
   }, [fetchItem]);
 
   return [item, loading, error, fetchItem];
+}
+
+export function useStocktakingItemByQr(qr) {
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!qr) return;
+    setLoading(true);
+    setError(null);
+    fetch(`/api/object/by-qr`, {
+      method: 'POST',
+      headers: {
+        "Authorization": basicAuth,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ qr })
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch item by QR");
+        return res.json();
+      })
+      .then((data) => {
+        setItem(data);
+        setError(null);
+      })
+      .catch((err) => setError(err))
+      .finally(() => setLoading(false));
+  }, [qr]);
+
+  console.log(item)
+
+  return [item, loading, error];
 }
 
 export function useCreateStocktakingItem() {

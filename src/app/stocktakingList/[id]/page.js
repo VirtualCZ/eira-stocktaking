@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { useStocktakingItems, useUpdateStocktakingItem } from "@/hooks/useStocktakingItems";
+import { useStocktakingItems, useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
@@ -35,6 +35,7 @@ export default function StocktakingList() {
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
+    const [scannedLoading, setScannedLoading] = useState(false);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -68,6 +69,9 @@ export default function StocktakingList() {
     );
 
     const { updateItem, loading: updating, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
+
+    const [scannedQr, setScannedQr] = useState(null);
+    const [apiItem, apiLoading, apiError] = useStocktakingItemByQr(scannedQr);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
@@ -126,34 +130,44 @@ export default function StocktakingList() {
         setActionModalOpen(true);
     };
 
-    function handleScan(dataString) {
-        let parsed;
-        try {
-            parsed = JSON.parse(dataString);
-        } catch {
-            alert("Neplatný JSON formát.");
-            return;
-        }
-
-        if (parsed.type !== "item" || !parsed.data || typeof parsed.data.id !== "number") {
-            alert("QR kód neobsahuje platnou položku.");
-            return;
-        }
-
-        // Use real items instead of hardcoded ones
-        const found = items.find(item => item.id === parsed.data.id);
-
-        if (found) {
-            setScannedItem(found);
-            setEditItem({ ...found }); // clone to allow editing
-            setIsPreviewModalOpen(true);
-        } else {
-            const emptyItem = { id: parsed.data.id, name: "Neznámá položka", note: "", image: "" };
-            setScannedItem(emptyItem);
-            setEditItem(emptyItem);
-            setIsPreviewModalOpen(true);
-        }
+    function handleScan(scannedValue) {
+        setIsQRModalOpen(false); // Close scanner immediately
+        setScannedLoading(true);
+        setScannedQr(scannedValue); // Always send to API
+        setScannedItem(null);
+        setEditItem(null);
+        setIsPreviewModalOpen(false);
+        setIsNotInInventoryModalOpen(false);
     }
+
+    // Effect to handle API result from QR scan
+    useEffect(() => {
+        if (scannedQr) {
+            if (apiLoading) {
+                setScannedLoading(true);
+                setIsPreviewModalOpen(false);
+                setIsNotInInventoryModalOpen(false);
+                return;
+            }
+            if (apiItem) {
+                setScannedItem(apiItem);
+                setEditItem({ ...apiItem });
+                setScannedLoading(false);
+                setScannedQr(null);
+                if (apiItem.location && location && apiItem.location.room !== location.room) {
+                    setMoveItem(apiItem);
+                    setMoveNewLocation(location);
+                    setIsMoveModalOpen(true);
+                } else {
+                    setIsPreviewModalOpen(true);
+                }
+            } else if (apiError || (!apiLoading && !apiItem)) {
+                setScannedLoading(false);
+                setScannedQr(null);
+                setIsNotInInventoryModalOpen(true);
+            }
+        }
+    }, [apiItem, apiLoading, apiError, scannedQr, location]);
 
     // Function to render item actions (context menu)
     const renderItemActions = (item) => (
@@ -212,22 +226,6 @@ export default function StocktakingList() {
                         },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
                         { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
-                        { icon: "qr_code_scanner", onClick: () => setIsQrModalOpen(true) },
-                        {
-                            icon: "visibility",
-                            onClick: () => {
-                                // Use a mock item for preview
-                                setScannedItem({
-                                    id: 999,
-                                    name: "Mockovaná židle",
-                                    note: "Toto je ukázková položka pro náhled.",
-                                    image: "/file.svg"
-                                });
-                                setIsPreviewModalOpen(true);
-                            },
-                            title: "Zobrazit ukázkovou položku"
-                        },
-                        { icon: "add_box", onClick: () => setIsNotInInventoryModalOpen(true) }
                     ]}
                 />
 
@@ -344,16 +342,7 @@ export default function StocktakingList() {
                     isOpen={isQRModalOpen}
                     onClose={() => setIsQRModalOpen(false)}
                     onScan={handleScan}
-                    validate={parsed => {
-                        if (parsed.type === "item" && parsed.data && typeof parsed.data.id === "number") {
-                            return {
-                                valid: true,
-                                message: `Naskenováno ID položky: ${parsed.data.id}`,
-                                data: parsed.data
-                            };
-                        }
-                        return { valid: false, message: "QR kód neobsahuje platnou položku." };
-                    }}
+                    validate={() => ({ valid: true, message: "Naskenováno!" })}
                 />
                 <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -401,7 +390,7 @@ export default function StocktakingList() {
                             Položka není součástí inventurního seznamu.
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <Button icon="add" iconPosition="right">
+                            <Button icon="add" iconPosition="right" onClick={() => router.push("/newItem") }>
                                 Založit novou položku
                             </Button>
                             <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsNotInInventoryModalOpen(false)}>
@@ -415,7 +404,9 @@ export default function StocktakingList() {
                     onClose={() => setIsPreviewModalOpen(false)}
                     title="Náhled naskenované položky"
                 >
-                    {scannedItem && (
+                    {scannedLoading ? (
+                        <div style={{ padding: 32, textAlign: 'center' }}>Načítání položky...</div>
+                    ) : scannedItem && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <div style={{
                                 borderRadius: 16,
@@ -427,7 +418,15 @@ export default function StocktakingList() {
                             }}>
                                 {/* Top: Image */}
                                 <img
-                                    src={scannedItem.image}
+                                    src={
+                                        scannedItem.image
+                                            ? (/^data:image\//.test(scannedItem.image)
+                                                ? scannedItem.image
+                                                : (/^[A-Za-z0-9+/=]+$/.test(scannedItem.image) && scannedItem.image.length > 100)
+                                                    ? `data:image/*;base64,${scannedItem.image}`
+                                                    : scannedItem.image)
+                                            : "/file.svg"
+                                    }
                                     alt={scannedItem.name}
                                     style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
                                 />
@@ -438,15 +437,30 @@ export default function StocktakingList() {
                                         <div style={{ fontSize: 12, color: "#535353" }}>{scannedItem.note}</div>
                                     </div>
                                     <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                        {/* You can add more info here if needed */}
+                                        {scannedItem.qr && (<span>QR kód: {scannedItem.qr}</span>)}
                                     </div>
                                 </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                                <Button icon="check" iconPosition="right" onClick={() => setIsPreviewModalOpen(false)}>
+                                <Button icon="check" iconPosition="right" onClick={async () => {
+                                    if (!scannedItem || !scannedItem.id) return;
+                                    const { image, ...rest } = scannedItem;
+                                    const result = await updateItem({ ...rest, state: 'nalezeno' });
+                                    setIsPreviewModalOpen(false);
+                                    if (result) {
+                                        showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+                                        refetchItems();
+                                    } else {
+                                        showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                                    }
+                                }}>
                                     Označit jako nalezeno
                                 </Button>
-                                <Button icon="edit" iconPosition="right" onClick={() => router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`)}>
+                                <Button icon="edit" iconPosition="right" onClick={() => {
+                                    if (scannedItem && scannedItem.id) {
+                                        router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
+                                    }
+                                }}>
                                     Upravit položku
                                 </Button>
                                 <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsPreviewModalOpen(false)}>

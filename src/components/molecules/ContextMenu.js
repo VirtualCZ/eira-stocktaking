@@ -38,9 +38,8 @@ export function ContextButton({ children }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [menuPos, setMenuPos] = useState(null);
 
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target) && buttonRef.current && !buttonRef.current.contains(event.target)) {
@@ -62,35 +61,36 @@ export function ContextButton({ children }) {
   }, [isMenuOpen]);
 
   useEffect(() => {
-    if (isMenuOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      // Default position: below and left-aligned
-      let top = rect.bottom;
-      let left = rect.left;
-      setMenuPos({ top, left });
-      // After menu is rendered, adjust if needed
-      setTimeout(() => {
-        if (menuRef.current) {
-          const menuRect = menuRef.current.getBoundingClientRect();
-          let newTop = top;
-          let newLeft = left;
-          // If menu overflows bottom, open upwards
-          if (menuRect.bottom > window.innerHeight) {
-            newTop = rect.top - menuRect.height;
-            // If still overflows top, clamp to 8px from top
-            if (newTop < 8) newTop = 8;
-          }
-          // If menu overflows right, shift left
-          if (menuRect.right > window.innerWidth) {
-            newLeft = window.innerWidth - menuRect.width - 8;
-          }
-          // If menu overflows left, clamp to 8px from left
-          if (newLeft < 8) newLeft = 8;
-          setMenuPos({ top: newTop, left: newLeft });
-        }
-      }, 0);
+    if (!isMenuOpen) {
+      setMenuPos(null);
     }
   }, [isMenuOpen]);
+
+  React.useLayoutEffect(() => {
+    if (isMenuOpen && menuPos === null && menuRef.current && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuRect = menuRef.current.getBoundingClientRect();
+      
+      let newTop = rect.bottom;
+      let newLeft = rect.left;
+
+      if (rect.left + menuRect.width > window.innerWidth) {
+        newLeft = rect.right - menuRect.width;
+      }
+
+      if (rect.bottom + menuRect.height > window.innerHeight) {
+        newTop = rect.top - menuRect.height;
+      }
+      
+      if (newTop < 8) newTop = 8;
+      if (newLeft < 8) newLeft = 8;
+      if (newLeft + menuRect.width > window.innerWidth) {
+        newLeft = window.innerWidth - menuRect.width - 8;
+      }
+
+      setMenuPos({ top: newTop, left: newLeft });
+    }
+  }, [isMenuOpen, menuPos]);
 
   return (
     <span ref={buttonRef} style={{ display: 'inline-block' }}>
@@ -110,8 +110,9 @@ export function ContextButton({ children }) {
           ref={menuRef}
           style={{
             position: 'fixed',
-            top: menuPos.top,
-            left: menuPos.left,
+            top: menuPos ? menuPos.top : -9999,
+            left: menuPos ? menuPos.left : -9999,
+            visibility: menuPos ? 'visible' : 'hidden',
             backgroundColor: '#282828',
             borderRadius: '16px',
             padding: '12px',

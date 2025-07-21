@@ -46,10 +46,13 @@ export default function StocktakingList() {
 
     const [currentPage, setCurrentPage] = useState(0);
 
+    const [actionModalOpen, setActionModalOpen] = useState(false);
+    const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
+
     const [location, setLocation] = useState(null);
     const canFetch = location && location.room;
 
-    const [items, total, loading, error] = useStocktakingItems(
+    const [items, total, loading, error, refetchItems] = useStocktakingItems(
         canFetch
             ? {
                 offset: currentPage * PAGE_SIZE,
@@ -118,6 +121,11 @@ export default function StocktakingList() {
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
 
+    const showActionModal = (title, message, success) => {
+        setActionModalContent({ title, message, success });
+        setActionModalOpen(true);
+    };
+
     function handleScan(dataString) {
         let parsed;
         try {
@@ -169,7 +177,13 @@ export default function StocktakingList() {
                 label="Nalezeno"
                 action={async () => {
                   const { image, ...rest } = item;
-                  await updateItem({ ...rest, state: 'nalezeno' });
+                  const result = await updateItem({ ...rest, state: 'nalezeno' });
+                  if (result) {
+                    showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                    refetchItems();
+                  } else {
+                    showActionModal('Chyba', `Položku se nepodařilo označit jako nalezenou.`, false);
+                  }
                 }}
             />
         </ContextButton>
@@ -483,12 +497,16 @@ export default function StocktakingList() {
                         <Button icon="check" iconPosition="right" onClick={async () => {
                           if (!moveNewLocation) return;
                           const { image, ...rest } = moveItem;
-                          await updateItem({ ...rest, location: moveNewLocation, state: 'presun' });
+                          const result = await updateItem({ ...rest, location: moveNewLocation, state: 'presun' });
                           setIsMoveModalOpen(false);
                           setMoveItem(null);
                           setMoveNewLocation(null);
-                          // Refresh the list (simulate by resetting page)
-                          setCurrentPage(0);
+                          if (result) {
+                            showActionModal('Hotovo', 'Položka byla úspěšně přesunuta.', true);
+                            refetchItems();
+                          } else {
+                            showActionModal('Chyba', 'Položku se nepodařilo přesunout.', false);
+                          }
                         }}>
                           Potvrdit změnu lokace
                         </Button>
@@ -500,6 +518,11 @@ export default function StocktakingList() {
                   )}
                 </CenteredModal>
 
+                <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
+                    <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>
+                        {actionModalContent.message}
+                    </div>
+                </CenteredModal>
             </div>
         </main>
     );

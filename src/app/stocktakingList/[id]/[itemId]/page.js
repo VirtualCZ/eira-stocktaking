@@ -12,6 +12,7 @@ import CardItemName from "@/components/atoms/CardItemName";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
+    const stocktakingId = params.id;
     const itemId = params.itemId;
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
@@ -21,6 +22,7 @@ export default function StocktakingListItemDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [moveNewLocation, setMoveNewLocation] = useState(null);
+    const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
     const [barRendered, setBarRendered] = useState(false);
@@ -103,7 +105,7 @@ export default function StocktakingListItemDetail() {
     const handleFound = async () => {
         if (!item) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, state: 'nalezeno' });
+        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
         if(result) {
             showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
             if (refetchItem) refetchItem();
@@ -115,7 +117,7 @@ export default function StocktakingListItemDetail() {
     const handleMoveConfirm = async () => {
         if (!item || !moveNewLocation) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, location: mapLocationToApi(moveNewLocation), state: 'presun' });
+        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: mapLocationToApi(moveNewLocation), state: 'presun' });
         setIsMoveModalOpen(false);
         if(result) {
             showActionModal('Hotovo', 'Položka byla přesunuta.', true);
@@ -171,6 +173,7 @@ export default function StocktakingListItemDetail() {
         }
         const mainData = {
             id: editItem.id,
+            stocktakingId: stocktakingId,
             name: editItem.name,
             description: editItem.description,
             note: editItem.note,
@@ -178,6 +181,7 @@ export default function StocktakingListItemDetail() {
             qr: editItem.qr,
             properties: propertiesArrayToObject(propertiesArr),
             lastCheck: editItem.date || editItem.lastCheck || null,
+            state: editItem.state,
             imgChanged,
         };
         // If imgField is a File object, ignore for now and send null. Only send string path or null.
@@ -272,7 +276,7 @@ export default function StocktakingListItemDetail() {
                     }} />
                 </div>
             </CenteredModal>
-            <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky">
+            <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky" disableClickAway={isLocationPickerOpen}>
                 {item && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#0074D9", fontWeight: 600 }}>
@@ -305,7 +309,14 @@ export default function StocktakingListItemDetail() {
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
                             <LocationPicker value={item.location} label="Current location:" editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationPicker value={moveNewLocation} label="New location:" editMode={true} onChange={setMoveNewLocation} />
+                            <LocationPicker 
+                              value={moveNewLocation} 
+                              label="New location:" 
+                              editMode={true} 
+                              onChange={setMoveNewLocation}
+                              onModalOpen={() => setIsLocationPickerOpen(true)}
+                              onModalClose={() => setIsLocationPickerOpen(false)}
+                            />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                             <Button icon="check" iconPosition="right" onClick={handleMoveConfirm}>

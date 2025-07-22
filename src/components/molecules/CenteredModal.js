@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 export default function CenteredModal({
     isOpen,
@@ -31,7 +32,7 @@ export default function CenteredModal({
         };
     }, [isOpen, onClose, disableClickAway]);
 
-    return (
+    const modalContent = (
         <div style={{
             position: "fixed",
             top: 0,
@@ -127,4 +128,11 @@ export default function CenteredModal({
             </div>
         </div>
     );
+
+    // Use portal to render at document body level
+    if (typeof window !== 'undefined' && isOpen) {
+        return createPortal(modalContent, document.body);
+    }
+
+    return null;
 } 

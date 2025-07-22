@@ -168,6 +168,7 @@ export default function ItemListDetail() {
             qr: editItem.qr,
             properties: propertiesArrayToObject(propertiesArr),
             lastCheck: editItem.date || editItem.lastCheck || null,
+            state: editItem.state,
             imgChanged,
         };
         // If imgField is a File object, ignore for now and send null. Only send string path or null.

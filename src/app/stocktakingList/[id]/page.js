@@ -112,6 +112,7 @@ export default function StocktakingList() {
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [moveItem, setMoveItem] = useState(null);
     const [moveNewLocation, setMoveNewLocation] = useState(null);
+    const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
     useLayoutEffect(() => {
         const updatePadding = () => {
@@ -191,7 +192,7 @@ export default function StocktakingList() {
                 label="Nalezeno"
                 action={async () => {
                   const { image, ...rest } = item;
-                  const result = await updateItem({ ...rest, state: 'nalezeno' });
+                  const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
                   if (result) {
                     showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
                     refetchItems();
@@ -445,7 +446,7 @@ export default function StocktakingList() {
                                 <Button icon="check" iconPosition="right" onClick={async () => {
                                     if (!scannedItem || !scannedItem.id) return;
                                     const { image, ...rest } = scannedItem;
-                                    const result = await updateItem({ ...rest, state: 'nalezeno' });
+                                    const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
                                     setIsPreviewModalOpen(false);
                                     if (result) {
                                         showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
@@ -470,7 +471,7 @@ export default function StocktakingList() {
                         </div>
                     )}
                 </CenteredModal>
-                <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky">
+                <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky" disableClickAway={isLocationPickerOpen}>
                   {moveItem && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                       <div style={{ color: "#0074D9", fontWeight: 600 }}>
@@ -505,13 +506,20 @@ export default function StocktakingList() {
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
                         <LocationPicker value={moveItem.location} label="Current location:" editMode={false} />
                         <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                        <LocationPicker value={moveNewLocation} label="New location:" editMode={true} onChange={setMoveNewLocation} />
+                        <LocationPicker 
+                          value={moveNewLocation} 
+                          label="New location:" 
+                          editMode={true} 
+                          onChange={setMoveNewLocation}
+                          onModalOpen={() => setIsLocationPickerOpen(true)}
+                          onModalClose={() => setIsLocationPickerOpen(false)}
+                        />
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                         <Button icon="check" iconPosition="right" onClick={async () => {
                           if (!moveNewLocation) return;
                           const { image, ...rest } = moveItem;
-                          const result = await updateItem({ ...rest, location: moveNewLocation, state: 'presun' });
+                          const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: moveNewLocation, state: 'presun' });
                           setIsMoveModalOpen(false);
                           setMoveItem(null);
                           setMoveNewLocation(null);

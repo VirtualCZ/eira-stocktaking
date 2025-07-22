@@ -131,8 +131,6 @@ export function useStocktakingItemByQr(qr) {
       .finally(() => setLoading(false));
   }, [qr]);
 
-  console.log(item)
-
   return [item, loading, error];
 }
 

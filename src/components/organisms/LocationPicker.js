@@ -7,7 +7,9 @@ export default function LocationPicker({
   value = null, 
   onChange, 
   editMode = true, 
-  label = "Lokace:" 
+  label = "Lokace:",
+  onModalOpen,
+  onModalClose
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,17 +21,27 @@ export default function LocationPicker({
     setIsModalOpen(false);
   };
 
+  const handleOpen = () => {
+    setIsModalOpen(true);
+    if (onModalOpen) onModalOpen();
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    if (onModalClose) onModalClose();
+  };
+
   return (
     <>
       <LocationModalTrigger
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleOpen}
         location={value}
         editMode={editMode}
         label={label}
       />
       <LocationPickerModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleClose}
         onSave={handleSave}
         initialLocation={value}
       />

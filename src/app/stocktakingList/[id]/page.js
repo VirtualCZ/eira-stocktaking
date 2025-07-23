@@ -36,10 +36,7 @@ export default function StocktakingList() {
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
-    const [scannedLoading, setScannedLoading] = useState(false);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-    const [editItem, setEditItem] = useState(null);
-    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
     const [searchTerm, setSearchTerm] = useState('');
@@ -73,6 +70,7 @@ export default function StocktakingList() {
 
     const [scannedQr, setScannedQr] = useState(null);
     const [apiItem, apiLoading, apiError] = useStocktakingItemByQr(scannedQr);
+    const [hasMadeApiCall, setHasMadeApiCall] = useState(false);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
@@ -88,26 +86,6 @@ export default function StocktakingList() {
 
     const bottomBarRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
-
-    // Mock data for modal
-    const foundItem = {
-        name: "Židle Alfa",
-        note: "Kancelářská židle z obchodu abcd",
-        image: "/file.svg",
-    };
-
-    // Update location variable names to English
-    const currentLocation = {
-        building: 1,
-        storey: 1,
-        room: 101,
-    };
-
-    const newLocation = {
-        building: 2,
-        storey: 3,
-        room: 302,
-    };
 
     // Add state for the move modal and selected item/location
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -133,43 +111,58 @@ export default function StocktakingList() {
     };
 
     function handleScan(scannedValue) {
-        setIsQRModalOpen(false); // Close scanner immediately
-        setScannedLoading(true);
-        setScannedQr(scannedValue); // Always send to API
+        // Step 1: Close scanner modal
+        setIsQRModalOpen(false);
+        
+        // Step 2: Clear previous data and prepare for new scan
         setScannedItem(null);
-        setEditItem(null);
-        setIsPreviewModalOpen(false);
+        setHasMadeApiCall(false);
+        
+        // Step 3: Show skeleton modal immediately
+        setIsPreviewModalOpen(true);
         setIsNotInInventoryModalOpen(false);
+        
+        // Step 4: Trigger API request
+        setScannedQr(scannedValue);
     }
 
     // Effect to handle API result from QR scan
     useEffect(() => {
         if (scannedQr) {
+            // Only process when API call is complete (not loading)
             if (apiLoading) {
-                setScannedLoading(true);
-                setIsPreviewModalOpen(false);
-                setIsNotInInventoryModalOpen(false);
+                setHasMadeApiCall(true); // Mark that we've made an API call
                 return;
             }
+            
+            // Only process if we've actually made an API call
+            if (!hasMadeApiCall) {
+                return;
+            }
+            
+            // API call completed - close skeleton modal and show appropriate modal
+            setScannedQr(null);
+            setHasMadeApiCall(false);
+            
             if (apiItem) {
                 setScannedItem(apiItem);
-                setEditItem({ ...apiItem });
-                setScannedLoading(false);
-                setScannedQr(null);
+                
                 if (apiItem.location && location && apiItem.location.room !== location.room) {
+                    // Show move modal
                     setMoveItem(apiItem);
                     setMoveNewLocation(location);
                     setIsMoveModalOpen(true);
+                    setIsPreviewModalOpen(false);
                 } else {
-                    setIsPreviewModalOpen(true);
+                    // Keep preview modal open with real data (skeleton will be replaced)
                 }
             } else if (apiError || (!apiLoading && !apiItem)) {
-                setScannedLoading(false);
-                setScannedQr(null);
+                // Show not in inventory modal
+                setIsPreviewModalOpen(false);
                 setIsNotInInventoryModalOpen(true);
             }
         }
-    }, [apiItem, apiLoading, apiError, scannedQr, location]);
+    }, [apiItem, apiLoading, apiError, scannedQr, location, hasMadeApiCall]);
 
     // Function to render item actions (context menu)
     const renderItemActions = (item) => (
@@ -344,48 +337,9 @@ export default function StocktakingList() {
                     isOpen={isQRModalOpen}
                     onClose={() => setIsQRModalOpen(false)}
                     onScan={handleScan}
-                    validate={() => ({ valid: true, message: "Naskenováno!" })}
+                    validate={false}
                 />
-                <CenteredModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Sken">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                        <div style={{ color: "#FF6262", fontWeight: 600 }}>
-                            Položka nalezena v jiné místnosti
-                        </div>
-                        <div style={{ borderRadius: 16, background: "#f0f1f3", overflow: "hidden", display: "flex", flexDirection: "column", width: "100%" }}>
-                            {/* Top: Image */}
-                            <img
-                                src={foundItem.image}
-                                alt={foundItem.name}
-                                style={{ width: "100%", height: 150, objectFit: "cover", display: "block" }}
-                            />
-                            {/* Bottom: Content */}
-                            <div className="p-4 gap-4 flex flex-col">
-                                {/* First part */}
-                                <div>
-                                    <CardItemName>{foundItem.name}</CardItemName>
-                                    <div style={{ fontSize: 12, color: "#535353" }}>{foundItem.note}</div>
-                                </div>
-                                {/* Second part */}
-                                <div style={{ fontStyle: "italic", fontSize: 12, color: "#535353" }}>
-                                    Poslední kontrola 12.4.2024
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                            <LocationPicker value={currentLocation} label="Aktuální lokace:" editMode={false} />
-                            <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
-                            <LocationPicker value={newLocation} label="Nová lokace:" editMode={false} />
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <Button icon="check" iconPosition="right">
-                                Potvrdit změnu lokace
-                            </Button>
-                            <Button variant="secondary" icon="close" iconPosition="right" onClick={() => setIsQrModalOpen(false)}>
-                                Storno
-                            </Button>
-                        </div>
-                    </div>
-                </CenteredModal>
+
                 <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
@@ -406,9 +360,71 @@ export default function StocktakingList() {
                     onClose={() => setIsPreviewModalOpen(false)}
                     title="Náhled naskenované položky"
                 >
-                    {scannedLoading ? (
-                        <div style={{ padding: 32, textAlign: 'center' }}>Načítání položky...</div>
-                    ) : scannedItem && (
+                    {apiLoading ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            {/* Skeleton for image */}
+                            <div style={{
+                                borderRadius: 16,
+                                background: "#f0f1f3",
+                                overflow: "hidden",
+                                display: "flex",
+                                flexDirection: "column",
+                                width: "100%"
+                            }}>
+                                <div style={{ 
+                                    width: "100%", 
+                                    height: 150, 
+                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                    backgroundSize: "200% 100%",
+                                    animation: "loading 1.5s infinite"
+                                }} />
+                                <div className="p-4 gap-4 flex flex-col">
+                                    {/* Skeleton for name */}
+                                    <div style={{ 
+                                        height: 24, 
+                                        width: "70%", 
+                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                        backgroundSize: "200% 100%",
+                                        animation: "loading 1.5s infinite",
+                                        borderRadius: 4
+                                    }} />
+                                    {/* Skeleton for note */}
+                                    <div style={{ 
+                                        height: 16, 
+                                        width: "90%", 
+                                        background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                        backgroundSize: "200% 100%",
+                                        animation: "loading 1.5s infinite",
+                                        borderRadius: 4
+                                    }} />
+                                </div>
+                            </div>
+                            {/* Skeleton for buttons */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                                <div style={{ 
+                                    height: 48, 
+                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                    backgroundSize: "200% 100%",
+                                    animation: "loading 1.5s infinite",
+                                    borderRadius: 8
+                                }} />
+                                <div style={{ 
+                                    height: 48, 
+                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                    backgroundSize: "200% 100%",
+                                    animation: "loading 1.5s infinite",
+                                    borderRadius: 8
+                                }} />
+                                <div style={{ 
+                                    height: 48, 
+                                    background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+                                    backgroundSize: "200% 100%",
+                                    animation: "loading 1.5s infinite",
+                                    borderRadius: 8
+                                }} />
+                            </div>
+                        </div>
+                    ) : scannedItem ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                             <div style={{
                                 borderRadius: 16,
@@ -470,7 +486,7 @@ export default function StocktakingList() {
                                 </Button>
                             </div>
                         </div>
-                    )}
+                    ) : null}
                 </CenteredModal>
                 <CenteredModal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Přesun položky" disableClickAway={isLocationPickerOpen}>
                   {moveItem && (

@@ -24,3 +24,13 @@ body {
   color: var(--foreground);
   background: var(--background);
 }
+
+/* Loading animation for skeleton */
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

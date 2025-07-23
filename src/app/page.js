@@ -3,7 +3,7 @@ import { NavLink } from "@/components/molecules/NavCard";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import { clearAuthToken, isAuthenticated } from "@/utils/token";
+import { clearAuthToken } from "@/utils/token";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,13 +11,7 @@ export default function Home() {
   const { selectedInventura } = useSelectedInventura();
   const router = useRouter();
 
-  // Check if user has token
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      // If no token, redirect to error page
-      router.push('/error');
-    }
-  }, [router]);
+
 
   const handleLogout = () => {
     clearAuthToken();

@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-
-const username = process.env.NEXT_PUBLIC_API_USERNAME;
-const password = process.env.NEXT_PUBLIC_API_PASSWORD;
-const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
+import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
 export function useBuildings() {
   const [buildings, setBuildings] = useState([]);
@@ -10,11 +7,15 @@ export function useBuildings() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     fetch("/api/buildings", {
-      headers: {
-        "Authorization": basicAuth
-      }
+      headers: getAuthHeadersSafe()
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch buildings");
@@ -38,11 +39,16 @@ export function useStoreys(buildingId) {
 
   useEffect(() => {
     if (!buildingId) return;
+    
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     fetch(`/api/buildings/${buildingId}/storeys`, {
-      headers: {
-        "Authorization": basicAuth
-      }
+      headers: getAuthHeadersSafe()
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch storeys");
@@ -66,11 +72,16 @@ export function useRooms(buildingId, storeyId) {
 
   useEffect(() => {
     if (!buildingId || !storeyId) return;
+    
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     fetch(`/api/buildings/${buildingId}/storeys/${storeyId}/rooms`, {
-      headers: {
-        "Authorization": basicAuth
-      }
+      headers: getAuthHeadersSafe()
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch rooms");

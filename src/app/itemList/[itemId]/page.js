@@ -8,6 +8,7 @@ import { useGetLocation } from "@/hooks/useLocation";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/atoms/Button';
 
+
 export default function ItemListDetail() {
     const params = useParams();
     const itemId = params.itemId;

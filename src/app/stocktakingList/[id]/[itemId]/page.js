@@ -10,6 +10,7 @@ import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 
+
 export default function StocktakingListItemDetail() {
     const params = useParams();
     const stocktakingId = params.id;

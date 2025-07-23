@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import { useCreateStocktakingItem } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
+
 
 export default function NewItem() {
     const [editItem, setEditItem] = useState({

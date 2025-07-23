@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-
-const username = process.env.NEXT_PUBLIC_API_USERNAME;
-const password = process.env.NEXT_PUBLIC_API_PASSWORD;
-const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
+import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
 export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
   const [lists, setLists] = useState([]);
@@ -11,6 +8,12 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const params = new URLSearchParams({
       offset: offset.toString(),
@@ -18,9 +21,7 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
     });
 
     fetch(`/api/events?${params}`, {
-      headers: {
-        "Authorization": basicAuth
-      }
+      headers: getAuthHeadersSafe()
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch stocktaking lists");

@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const username = process.env.NEXT_PUBLIC_API_USERNAME;
-const password = process.env.NEXT_PUBLIC_API_PASSWORD;
-const basicAuth = "Basic " + (typeof window !== 'undefined' ? window.btoa(`${username}:${password}`) : Buffer.from(`${username}:${password}`).toString('base64'));
+import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
 export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId } = {}) {
   const [items, setItems] = useState([]);
@@ -11,6 +8,12 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
   const [error, setError] = useState(null);
 
   const fetchItems = useCallback(() => {
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const body = {
       offset,
@@ -33,10 +36,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
     console.log("Sending to API:", body);
     fetch(`/api/objects`, {
       method: 'POST',
-      headers: {
-        "Authorization": basicAuth,
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeadersSafe(),
       body: JSON.stringify(body)
     })
       .then((res) => {
@@ -71,15 +71,19 @@ export function useStocktakingItem(id) {
 
   const fetchItem = useCallback(() => {
     if (!id) return;
+    
+    // Don't make API call if not authenticated
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const body = { id };
 
     fetch(`/api/object`, {
       method: 'POST',
-      headers: {
-        "Authorization": basicAuth,
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeadersSafe(),
       body: JSON.stringify(body)
     })
       .then((res) => {
@@ -113,10 +117,7 @@ export function useStocktakingItemByQr(qr) {
     setError(null);
     fetch(`/api/object/by-qr`, {
       method: 'POST',
-      headers: {
-        "Authorization": basicAuth,
-        "Content-Type": "application/json"
-      },
+      headers: getAuthHeadersSafe(),
       body: JSON.stringify({ qr })
     })
       .then((res) => {
@@ -146,10 +147,7 @@ export function useCreateStocktakingItem() {
     try {
       const res = await fetch('/api/objects/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': basicAuth,
-        },
+        headers: getAuthHeadersSafe(),
         body: JSON.stringify(item),
       });
       if (!res.ok) throw new Error('Failed to create item');
@@ -180,10 +178,7 @@ export function useUpdateStocktakingItem() {
     try {
       const res = await fetch('/api/objects/update', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': basicAuth,
-        },
+        headers: getAuthHeadersSafe(),
         body: JSON.stringify(item),
       });
       if (!res.ok) throw new Error('Failed to update item');
@@ -213,10 +208,7 @@ export function useDeleteStocktakingItem() {
     try {
       const res = await fetch('/api/objects/delete', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': basicAuth,
-        },
+        headers: getAuthHeadersSafe(),
         body: JSON.stringify(id),
       });
       if (!res.ok) throw new Error('Failed to delete item');
@@ -247,10 +239,7 @@ export function useDuplicateStocktakingItem() {
     try {
       const res = await fetch('/api/objects/duplicate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': basicAuth,
-        },
+        headers: getAuthHeadersSafe(),
         body: JSON.stringify(id),
       });
       if (!res.ok) throw new Error('Failed to duplicate item');

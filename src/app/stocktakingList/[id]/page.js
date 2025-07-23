@@ -16,7 +16,8 @@ import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 
-const PAGE_SIZE = 10;
+
+const PAGE_SIZE = 5;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },

@@ -16,6 +16,12 @@ export const getAuthToken = () => {
   return null;
 };
 
+export const setAuthToken = (token) => {
+  if (typeof window === 'undefined') return;
+  // Set token as cookie
+  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax; secure=${window.location.protocol === 'https:'}`;
+};
+
 export const clearAuthToken = () => {
   if (typeof window === 'undefined') return;
   // Clear cookie

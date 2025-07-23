@@ -4,12 +4,12 @@ import CardItemDescription from "@/components/atoms/CardItemDescription";
 import CardItemNote from "@/components/atoms/CardItemNote";
 import CardItemDate from "@/components/atoms/CardItemDate";
 
-// Map state to background color
+// Map state to background color - using subtle, professional colors
 const stateBgColors = {
-  zbyva: "#FFD8CC",
-  nalezeno: "#CCFFCC",
-  presun: "#CCE0FF",
-  novy: "#FFFACD",
+  zbyva: "#f0f1f3",      // Default grey - remaining items
+  nalezeno: "#e8f5e8",   // Very light green - found items
+  presun: "#e8f0f8",     // Very light blue - moved items
+  novy: "#f8f4e8",       // Very light beige - new items
 };
 
 export default function StocktakingItemCard({ item, renderActions, compact = false }) {

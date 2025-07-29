@@ -53,6 +53,12 @@ export default function PictureInput({ label, onChange, value, editMode = false 
     const handleFile = e => {
         const file = e.target.files[0];
         if (file) {
+            // Check if file type is allowed
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Povolené formáty obrázků jsou: JPEG, PNG, GIF, WebP');
+                return;
+            }
             onChange && onChange(file);
         }
     };
@@ -67,7 +73,7 @@ export default function PictureInput({ label, onChange, value, editMode = false 
     return (
         <div style={{ position: "relative", width: "100%" }}>
             {label && <label style={{ display: "block", fontWeight: 600, marginBottom: "1rem" }}>{label}</label>}
-            <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={handleFile} />
+            <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment" style={{ display: "none" }} onChange={handleFile} />
             <picture style={{
                 display: "flex",
                 alignItems: "center",

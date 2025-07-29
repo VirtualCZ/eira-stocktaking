@@ -30,10 +30,10 @@ export default function StocktakingListItemDetail() {
 
     const getLocation = useGetLocation();
 
-    const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId);
-    const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
-    const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteStocktakingItem();
-    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateStocktakingItem();
+    const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId, stocktakingId);
+    const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateStocktakingItem(stocktakingId);
+    const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteStocktakingItem(stocktakingId);
+    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateStocktakingItem(stocktakingId);
 
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -185,16 +185,39 @@ export default function StocktakingListItemDetail() {
             state: editItem.state,
             imgChanged,
         };
-        // If imgField is a File object, ignore for now and send null. Only send string path or null.
+        // Convert File objects to base64 data for backend processing
         if (imgChanged) {
             if (typeof imgField === 'string') {
-                mainData.image = imgField;
+                // If it's already a base64 string, use it directly
+                if (imgField.startsWith('data:image/')) {
+                    mainData.image = imgField;
+                } else {
+                    mainData.image = imgField;
+                }
             } else if (imgField instanceof File) {
-                mainData.image = imgField.name;
+                // Convert File to base64
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const base64Data = reader.result;
+                    mainData.image = base64Data;
+                    console.log('Sending image as base64 data');
+                    
+                    // Send the update with base64 image data
+                    const result = await updateItem(mainData);
+                    if(result) {
+                        setEditMode(false);
+                        showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
+                        if (refetchItem) refetchItem();
+                    } else {
+                        showActionModal('Chyba', 'Nepodařilo se upravit položku.', false);
+                    }
+                };
+                reader.readAsDataURL(imgField);
+                return; // Exit early, will be handled in onload
             } else {
                 mainData.image = null;
             }
-            console.log('Sending image path:', mainData.image);
+            console.log('Sending image data:', typeof mainData.image);
         }
         const result = await updateItem(mainData);
         if(result) {

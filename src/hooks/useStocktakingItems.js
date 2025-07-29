@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
-export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId, eventId } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,14 +33,20 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
     if (roomId) {
       body.roomId = roomId;
     }
+    if (eventId) {
+      body.eventId = eventId;
+    }
     console.log("Sending to API:", body);
     fetch(`/api/objects`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
       body: JSON.stringify(body)
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch stocktaking items");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Failed to fetch stocktaking items - HTTP ${res.status}: ${errorText || res.statusText}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -50,7 +56,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId]);
+  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId]);
 
   // Debounced search effect
   useEffect(() => {
@@ -64,7 +70,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
   return [items, total, loading, error, fetchItems];
 }
 
-export function useStocktakingItem(id) {
+export function useStocktakingItem(id, eventId) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,14 +86,20 @@ export function useStocktakingItem(id) {
     
     setLoading(true);
     const body = { id };
+    if (eventId) {
+      body.eventId = eventId;
+    }
 
     fetch(`/api/object`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
       body: JSON.stringify(body)
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch stocktaking item");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Failed to fetch stocktaking item - HTTP ${res.status}: ${errorText || res.statusText}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -97,7 +109,7 @@ export function useStocktakingItem(id) {
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, eventId]);
 
   useEffect(() => {
     fetchItem();
@@ -106,7 +118,7 @@ export function useStocktakingItem(id) {
   return [item, loading, error, fetchItem];
 }
 
-export function useStocktakingItemByQr(qr) {
+export function useStocktakingItemByQr(qr, eventId) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -115,13 +127,20 @@ export function useStocktakingItemByQr(qr) {
     if (!qr) return;
     setLoading(true);
     setError(null);
+    const body = { qr };
+    if (eventId) {
+      body.eventId = eventId;
+    }
     fetch(`/api/object/by-qr`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
-      body: JSON.stringify({ qr })
+      body: JSON.stringify(body)
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch item by QR");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Failed to fetch item by QR - HTTP ${res.status}: ${errorText || res.statusText}`);
+        }
         return res.json();
       })
       .then((data) => {
@@ -130,12 +149,12 @@ export function useStocktakingItemByQr(qr) {
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  }, [qr]);
+  }, [qr, eventId]);
 
   return [item, loading, error];
 }
 
-export function useCreateStocktakingItem() {
+export function useCreateStocktakingItem(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -145,12 +164,19 @@ export function useCreateStocktakingItem() {
     setError(null);
     setSuccess(false);
     try {
+      const itemWithEventId = { ...item };
+      if (eventId) {
+        itemWithEventId.eventId = eventId;
+      }
       const res = await fetch('/api/objects/create', {
         method: 'POST',
         headers: getAuthHeadersSafe(),
-        body: JSON.stringify(item),
+        body: JSON.stringify(itemWithEventId),
       });
-      if (!res.ok) throw new Error('Failed to create item');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to create item - HTTP ${res.status}: ${errorText || res.statusText}`);
+      }
       setSuccess(true);
       return await res.json();
     } catch (err) {
@@ -165,23 +191,31 @@ export function useCreateStocktakingItem() {
   return { createItem, loading, error, success };
 }
 
-export function useUpdateStocktakingItem() {
+export function useUpdateStocktakingItem(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
   const updateItem = async (item) => {
-    console.log(item)
+    console.log("pawsome",item)
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
+      const itemWithEventId = { ...item };
+      console.log(eventId)
+      if (eventId) {
+        itemWithEventId.eventId = eventId;
+      }
       const res = await fetch('/api/objects/update', {
         method: 'POST',
         headers: getAuthHeadersSafe(),
-        body: JSON.stringify(item),
+        body: JSON.stringify(itemWithEventId),
       });
-      if (!res.ok) throw new Error('Failed to update item');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to update item - HTTP ${res.status}: ${errorText || res.statusText}`);
+      }
       setSuccess(true);
       return await res.json();
     } catch (err) {
@@ -196,7 +230,7 @@ export function useUpdateStocktakingItem() {
   return { updateItem, loading, error, success };
 }
 
-export function useDeleteStocktakingItem() {
+export function useDeleteStocktakingItem(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -206,12 +240,19 @@ export function useDeleteStocktakingItem() {
     setError(null);
     setSuccess(false);
     try {
+      const body = { id };
+      if (eventId) {
+        body.eventId = eventId;
+      }
       const res = await fetch('/api/objects/delete', {
         method: 'POST',
         headers: getAuthHeadersSafe(),
-        body: JSON.stringify(id),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Failed to delete item');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to delete item - HTTP ${res.status}: ${errorText || res.statusText}`);
+      }
       setSuccess(true);
       const text = await res.text();
       return text;
@@ -227,7 +268,7 @@ export function useDeleteStocktakingItem() {
   return { deleteItem, loading, error, success };
 }
 
-export function useDuplicateStocktakingItem() {
+export function useDuplicateStocktakingItem(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -237,12 +278,19 @@ export function useDuplicateStocktakingItem() {
     setError(null);
     setSuccess(false);
     try {
+      const body = { id };
+      if (eventId) {
+        body.eventId = eventId;
+      }
       const res = await fetch('/api/objects/duplicate', {
         method: 'POST',
         headers: getAuthHeadersSafe(),
-        body: JSON.stringify(id),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Failed to duplicate item');
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to duplicate item - HTTP ${res.status}: ${errorText || res.statusText}`);
+      }
       setSuccess(true);
       const text = await res.text();
       return text;

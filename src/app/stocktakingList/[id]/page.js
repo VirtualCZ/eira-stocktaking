@@ -62,14 +62,15 @@ export default function StocktakingList() {
                 state: filterState.state,
                 hasNote: filterState.hasNote,
                 roomId: location.room,
+                eventId: stocktakingId,
             }
             : { skip: true }
     );
 
-    const { updateItem, loading: updating, error: updateError, success: updateSuccess } = useUpdateStocktakingItem();
+    const { updateItem, loading: updating, error: updateError, success: updateSuccess } = useUpdateStocktakingItem(stocktakingId);
 
     const [scannedQr, setScannedQr] = useState(null);
-    const [apiItem, apiLoading, apiError] = useStocktakingItemByQr(scannedQr);
+    const [apiItem, apiLoading, apiError] = useStocktakingItemByQr(scannedQr, stocktakingId);
     const [hasMadeApiCall, setHasMadeApiCall] = useState(false);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;

@@ -18,7 +18,7 @@ export default function NewItem() {
     const [editMode, setEditMode] = useState(true);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const { createItem, loading, error, success } = useCreateStocktakingItem();
+    const { createItem, loading, error, success } = useCreateStocktakingItem(null);
 
     // Helper to show modal
     const showActionModal = (title, message, success) => {

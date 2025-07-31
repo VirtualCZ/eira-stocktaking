@@ -3,12 +3,14 @@ import { NavLink } from "@/components/molecules/NavCard";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthToken } from "@/utils/token";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
+  const { user, loading: userLoading } = useCurrentUser();
   const router = useRouter();
 
 
@@ -55,7 +57,9 @@ export default function Home() {
             style={{ backgroundColor: "#000" }}
           >
             <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>account_circle</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Uživatel</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+              {userLoading ? "Načítání..." : (user?.username || user?.name || "Uživatel")}
+            </span>
           </button>
           <button
             className="flex items-center gap-2 p-3 rounded-2xl"

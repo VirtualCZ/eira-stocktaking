@@ -13,6 +13,7 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
+import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 
@@ -74,6 +75,8 @@ export default function StocktakingList() {
     const [hasMadeApiCall, setHasMadeApiCall] = useState(false);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+
+
 
     const viewModes = [
         { mode: 'grid', icon: 'view_module' },
@@ -232,13 +235,47 @@ export default function StocktakingList() {
                   </div>
                 )}
 
-                {loading ? <div>Načítání...</div> : null}
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    <>
-                        {viewMode === 'grid' && (
-                            <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                {items.map(item => (
+                    {loading ? (
+                        // Skeleton loading state
+                        <>
+                            {viewMode === 'grid' && (
+                                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                                    {Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                        <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
+                                    ))}
+                                </div>
+                            )}
+                            {viewMode === 'detailed' && (
+                                Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                    <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
+                                ))
+                            )}
+                            {viewMode === 'compact' && (
+                                Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                    <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={true} />
+                                ))
+                            )}
+                        </>
+                    ) : (
+                        // Actual items
+                        <>
+                            {viewMode === 'grid' && (
+                                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                                    {items.map(item => (
+                                        <Link
+                                            key={item.id}
+                                            href={`/stocktakingList/${stocktakingId}/${item.id}`}
+                                            style={{ textDecoration: "none" }}
+                                        >
+                                            <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                            {viewMode === 'detailed' && (
+                                items.map(item => (
                                     <Link
                                         key={item.id}
                                         href={`/stocktakingList/${stocktakingId}/${item.id}`}
@@ -246,41 +283,27 @@ export default function StocktakingList() {
                                     >
                                         <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
                                     </Link>
-                                ))}
-                            </div>
-                        )}
-                        {viewMode === 'detailed' && (
-                            items.map(item => (
-                                <Link
-                                    key={item.id}
-                                    href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                    style={{ textDecoration: "none" }}
-                                >
-                                    <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
-                                </Link>
-                            ))
-                        )}
+                                ))
+                            )}
 
-                        {viewMode === 'compact' && (
-                            items.map(item => (
-                                <Link
-                                    key={item.id}
-                                    href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                    style={{ textDecoration: "none" }}
-                                >
-                                    <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
-                                </Link>
-                            ))
-                        )}
-                    </>
+                            {viewMode === 'compact' && (
+                                items.map(item => (
+                                    <Link
+                                        key={item.id}
+                                        href={`/stocktakingList/${stocktakingId}/${item.id}`}
+                                        style={{ textDecoration: "none" }}
+                                    >
+                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
+                                    </Link>
+                                ))
+                            )}
+                        </>
+                    )}
                 </div>
                 <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={(newPage) => {
-                        setCurrentPage(newPage);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
+                    onPageChange={setCurrentPage}
                 />
                 {/* Fixed bottom bar with search and QR button */}
                 <div

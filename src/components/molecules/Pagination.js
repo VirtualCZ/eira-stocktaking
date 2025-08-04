@@ -39,7 +39,10 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
       return (
         <button
           key={index}
-          onClick={() => onPageChange(pageNum - 1)}
+          onClick={() => {
+            onPageChange(pageNum - 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           style={{
             background: 'none',
             border: 'none',
@@ -66,7 +69,10 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
     }}>
       <button
         disabled={currentPage === 0}
-        onClick={() => onPageChange(currentPage - 1)}
+        onClick={() => {
+          onPageChange(currentPage - 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         style={{
           padding: '8px',
           border: 'none',
@@ -92,7 +98,10 @@ export function Pagination({ currentPage, totalPages, onPageChange }) {
 
       <button
         disabled={currentPage >= totalPages - 1}
-        onClick={() => onPageChange(currentPage + 1)}
+        onClick={() => {
+          onPageChange(currentPage + 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         style={{
           padding: '8px',
           border: 'none',

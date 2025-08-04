@@ -3,9 +3,13 @@ import { useState, useEffect } from "react";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import { useCreateStocktakingItem } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
+import { useSelectedInventura } from "@/hooks/useSelectedInventura";
+import { useRouter } from "next/navigation";
 
 
 export default function NewItem() {
+    const { selectedInventura } = useSelectedInventura();
+    const router = useRouter();
     const [editItem, setEditItem] = useState({
         name: "",
         description: "",
@@ -18,7 +22,7 @@ export default function NewItem() {
     const [editMode, setEditMode] = useState(true);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const { createItem, loading, error, success } = useCreateStocktakingItem(null);
+    const { createItem, loading, error, success } = useCreateStocktakingItem(selectedInventura?.id || null);
 
     // Helper to show modal
     const showActionModal = (title, message, success) => {
@@ -57,19 +61,78 @@ export default function NewItem() {
             showActionModal("Chyba", "Všechny pole 'Vlastnost' musí být vyplněné.", false);
             return;
         }
+        
         const newItem = {
             name: editItem.name,
             description: editItem.description,
             note: editItem.note,
-            image: typeof editItem.image === 'string' ? editItem.image : (editItem.image?.name || null),
             location: mapLocationToApi(editItem.location),
             qr: editItem.qr,
             properties: propertiesArrayToObject(propertiesArr),
         };
+
+        // Handle image data conversion
+        const currentImage = editItem.image || null;
+        if (currentImage) {
+            if (typeof currentImage === 'string') {
+                // If it's already a base64 string, use it directly
+                if (currentImage.startsWith('data:image/')) {
+                    newItem.image = currentImage;
+                } else {
+                    newItem.image = currentImage;
+                }
+            } else if (currentImage instanceof File) {
+                // Convert File to base64
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const base64Data = reader.result;
+                    newItem.image = base64Data;
+                    console.log('Sending image as base64 data');
+                    
+                    // Send the create request with base64 image data
+                    const result = await createItem(newItem);
+                    if (result && !error) {
+                        // Navigate to the newly created item
+                        if (result.id) {
+                            if (selectedInventura?.id) {
+                                // If we have a stocktaking event, go to stocktaking item detail
+                                router.push(`/stocktakingList/${selectedInventura.id}/${result.id}`);
+                            } else {
+                                // Otherwise go to general item detail
+                                router.push(`/itemList/${result.id}`);
+                            }
+                        } else {
+                            showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
+                            setEditMode(false);
+                        }
+                    } else {
+                        showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
+                    }
+                };
+                reader.readAsDataURL(currentImage);
+                return; // Exit early, will be handled in onload
+            } else {
+                newItem.image = null;
+            }
+        } else {
+            newItem.image = null;
+        }
+
         const result = await createItem(newItem);
         if (result && !error) {
-            showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
-            setEditMode(false);
+            // Navigate to the newly created item
+            if (result.id) {
+                if (selectedInventura?.id) {
+                    // If we have a stocktaking event, go to stocktaking item detail
+                    router.push(`/stocktakingList/${selectedInventura.id}/${result.id}`);
+                } else {
+                    // Otherwise go to general item detail
+                    router.push(`/itemList/${result.id}`);
+                }
+            } else {
+                showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
+                setEditMode(false);
+            }
         } else {
             showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
         }

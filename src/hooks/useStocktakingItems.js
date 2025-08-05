@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
-export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId, eventId } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId, eventId, thumbnail = true } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -22,6 +22,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       limit,
       sortBy,
       sortOrder,
+      thumbnail,
     };
     if (search && search.trim()) {
       body.search = search.trim();
@@ -79,7 +80,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       
     // Return the abort function so it can be called to cancel this request
     return abortController;
-  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId]);
+  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, thumbnail]);
 
   // Debounced search effect with request cancellation
   useEffect(() => {

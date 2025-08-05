@@ -18,7 +18,7 @@ import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -64,6 +64,7 @@ export default function StocktakingList() {
                 hasNote: filterState.hasNote,
                 roomId: location.room,
                 eventId: stocktakingId,
+                thumbnail: true, // Use thumbnails for list view
             }
             : { skip: true }
     );

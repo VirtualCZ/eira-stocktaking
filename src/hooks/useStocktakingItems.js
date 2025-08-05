@@ -15,6 +15,8 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
     }
 
     setLoading(true);
+    setError(null);
+    
     const body = {
       offset,
       limit,
@@ -37,10 +39,15 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       body.eventId = eventId;
     }
     console.log("Sending to API:", body);
+    
+    // Create AbortController for this request
+    const abortController = new AbortController();
+    
     fetch(`/api/objects`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: abortController.signal
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -50,21 +57,46 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
         return res.json();
       })
       .then((data) => {
-        setItems(Array.isArray(data.items) ? data.items : []);
-        setTotal(data.total || 0);
-        setError(null);
+        // Only update state if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setItems(Array.isArray(data.items) ? data.items : []);
+          setTotal(data.total || 0);
+          setError(null);
+        }
       })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        // Only update error if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setError(err);
+        }
+      })
+      .finally(() => {
+        // Only update loading if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      });
+      
+    // Return the abort function so it can be called to cancel this request
+    return abortController;
   }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId]);
 
-  // Debounced search effect
+  // Debounced search effect with request cancellation
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchItems();
+    let timeoutId;
+    let abortController;
+    
+    timeoutId = setTimeout(() => {
+      abortController = fetchItems();
     }, search ? 500 : 0); // 500ms delay for search, no delay for other changes
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      // Abort the request if it's still pending
+      if (abortController) {
+        abortController.abort();
+      }
+    };
   }, [fetchItems, search]);
 
   return [items, total, loading, error, fetchItems];
@@ -125,16 +157,23 @@ export function useStocktakingItemByQr(qr, eventId) {
 
   useEffect(() => {
     if (!qr) return;
+    
     setLoading(true);
     setError(null);
+    
     const body = { qr };
     if (eventId) {
       body.eventId = eventId;
     }
+    
+    // Create AbortController for this request
+    const abortController = new AbortController();
+    
     fetch(`/api/object/by-qr`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: abortController.signal
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -144,11 +183,29 @@ export function useStocktakingItemByQr(qr, eventId) {
         return res.json();
       })
       .then((data) => {
-        setItem(data);
-        setError(null);
+        // Only update state if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setItem(data);
+          setError(null);
+        }
       })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        // Only update error if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setError(err);
+        }
+      })
+      .finally(() => {
+        // Only update loading if this request hasn't been aborted
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      });
+      
+    // Return cleanup function to abort the request
+    return () => {
+      abortController.abort();
+    };
   }, [qr, eventId]);
 
   return [item, loading, error];

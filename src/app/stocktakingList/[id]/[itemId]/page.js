@@ -13,8 +13,8 @@ import CardItemName from "@/components/atoms/CardItemName";
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
-    const stocktakingId = params.id;
-    const itemId = params.itemId;
+    const stocktakingId = parseInt(params.id);
+    const itemId = parseInt(params.itemId);
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
     const [editMode, setEditMode] = useState(false);

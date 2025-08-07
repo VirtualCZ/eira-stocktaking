@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
-export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId, eventId, thumbnail = true } = {}) {
+export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sortOrder = 'asc', search = '', state, hasNote, roomId, eventId, thumbnail = true, skip = false } = {}) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchItems = useCallback(() => {
-    // Don't make API call if not authenticated
-    if (!isAuthenticated()) {
+    // Don't make API call if skip is true or not authenticated
+    if (skip || !isAuthenticated()) {
       setLoading(false);
       return;
     }
@@ -80,7 +80,7 @@ export function useStocktakingItems({ offset = 0, limit = 10, sortBy = 'id', sor
       
     // Return the abort function so it can be called to cancel this request
     return abortController;
-  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, thumbnail]);
+  }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, thumbnail, skip]);
 
   // Debounced search effect with request cancellation
   useEffect(() => {
@@ -122,6 +122,8 @@ export function useStocktakingItem(id, eventId) {
     if (eventId) {
       body.eventId = eventId;
     }
+
+    console.log("Sending to API:", body);
 
     fetch(`/api/object`, {
       method: 'POST',

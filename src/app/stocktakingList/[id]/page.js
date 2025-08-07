@@ -31,7 +31,7 @@ export default function StocktakingList() {
 
     const router = useRouter();
     const params = useParams();
-    const stocktakingId = params.id;
+    const stocktakingId = parseInt(params.id);
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);

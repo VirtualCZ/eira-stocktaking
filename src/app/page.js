@@ -70,7 +70,7 @@ export default function Home() {
           </button>
         </div>
         {/* Right: Settings */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <Link
             href="/settings"
             className="flex items-center justify-center p-3 rounded-2xl"
@@ -78,7 +78,7 @@ export default function Home() {
           >
             <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>settings</span>
           </Link>
-        </div>
+        </div> */}
       </div>
 
       {/* ; Content */}
@@ -117,10 +117,6 @@ export default function Home() {
           <NavLink
             text="Přidat nový předmět"
             href="newItem"
-          />
-          <NavLink
-            text="Seznam poloažek"
-            href="itemList"
           />
         </nav>
       </main>

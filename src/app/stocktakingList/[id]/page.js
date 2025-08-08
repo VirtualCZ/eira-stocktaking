@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useStocktakingItems, useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
+import { usePageState } from "@/hooks/usePageState";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
@@ -32,19 +33,23 @@ export default function StocktakingList() {
     const router = useRouter();
     const params = useParams();
     const stocktakingId = parseInt(params.id);
-    const [sortBy, setSortBy] = useState("id");
-    const [sortOrder, setSortOrder] = useState('asc');
+    
+    // Use page state for filters and sorting
+    const [pageState, updatePageState, resetPageState] = usePageState(`stocktakingList_${stocktakingId}`, {
+        sortBy: "id",
+        sortOrder: 'asc',
+        viewMode: 'detailed',
+        searchTerm: '',
+        filterState: { state: [], hasNote: [] },
+        currentPage: 0
+    });
+
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
-    const [viewMode, setViewMode] = useState('detailed'); // 'grid', 'detailed', 'compact'
-    const [searchTerm, setSearchTerm] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-    const [filterState, setFilterState] = useState({ state: [], hasNote: [] });
-
-    const [currentPage, setCurrentPage] = useState(0);
 
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
@@ -55,13 +60,13 @@ export default function StocktakingList() {
     const [items, total, loading, error, refetchItems] = useStocktakingItems(
         canFetch
             ? {
-                offset: currentPage * PAGE_SIZE,
+                offset: pageState.currentPage * PAGE_SIZE,
                 limit: PAGE_SIZE,
-                sortBy,
-                sortOrder,
-                search: searchTerm,
-                state: filterState.state,
-                hasNote: filterState.hasNote,
+                sortBy: pageState.sortBy,
+                sortOrder: pageState.sortOrder,
+                search: pageState.searchTerm,
+                state: pageState.filterState.state,
+                hasNote: pageState.filterState.hasNote,
                 roomId: location.room,
                 eventId: stocktakingId,
                 thumbnail: true, // Use thumbnails for list view
@@ -84,9 +89,9 @@ export default function StocktakingList() {
         { mode: 'detailed', icon: 'view_list' },
         { mode: 'compact', icon: 'view_agenda' }
     ];
-    const currentViewIdx = viewModes.findIndex(vm => vm.mode === viewMode);
+    const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
-        setViewMode(viewModes[(currentViewIdx + 1) % viewModes.length].mode);
+        updatePageState({ viewMode: viewModes[(currentViewIdx + 1) % viewModes.length].mode });
     };
 
     const bottomBarRef = useRef(null);
@@ -205,8 +210,8 @@ export default function StocktakingList() {
 
     // Reset page to 0 when search or filters change
     useEffect(() => {
-        setCurrentPage(0);
-    }, [searchTerm, filterState]);
+        updatePageState({ currentPage: 0 });
+    }, [pageState.searchTerm, pageState.filterState]);
 
     return (
         <main className="relative min-h-screen flex flex-col items-center">
@@ -241,28 +246,28 @@ export default function StocktakingList() {
                     {loading ? (
                         // Skeleton loading state
                         <>
-                            {viewMode === 'grid' && (
-                                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                    {Array.from({ length: PAGE_SIZE }, (_, index) => (
-                                        <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
-                                    ))}
-                                </div>
-                            )}
-                            {viewMode === 'detailed' && (
-                                Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                                    {pageState.viewMode === 'grid' && (
+                            <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                                {Array.from({ length: PAGE_SIZE }, (_, index) => (
                                     <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
-                                ))
-                            )}
-                            {viewMode === 'compact' && (
-                                Array.from({ length: PAGE_SIZE }, (_, index) => (
-                                    <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={true} />
-                                ))
-                            )}
+                                ))}
+                            </div>
+                        )}
+                        {pageState.viewMode === 'detailed' && (
+                            Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
+                            ))
+                        )}
+                        {pageState.viewMode === 'compact' && (
+                            Array.from({ length: PAGE_SIZE }, (_, index) => (
+                                <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={true} />
+                            ))
+                        )}
                         </>
                     ) : (
                         // Actual items
                         <>
-                            {viewMode === 'grid' && (
+                            {pageState.viewMode === 'grid' && (
                                 <div className="grid grid-cols-2 gap-4 auto-rows-fr">
                                     {items.map(item => (
                                         <Link
@@ -275,7 +280,7 @@ export default function StocktakingList() {
                                     ))}
                                 </div>
                             )}
-                            {viewMode === 'detailed' && (
+                            {pageState.viewMode === 'detailed' && (
                                 items.map(item => (
                                     <Link
                                         key={item.id}
@@ -287,7 +292,7 @@ export default function StocktakingList() {
                                 ))
                             )}
 
-                            {viewMode === 'compact' && (
+                            {pageState.viewMode === 'compact' && (
                                 items.map(item => (
                                     <Link
                                         key={item.id}
@@ -302,9 +307,9 @@ export default function StocktakingList() {
                     )}
                 </div>
                 <Pagination
-                    currentPage={currentPage}
+                    currentPage={pageState.currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={(page) => updatePageState({ currentPage: page })}
                 />
                 {/* Fixed bottom bar with search and QR button */}
                 <div
@@ -321,8 +326,8 @@ export default function StocktakingList() {
                             <input
                                 type="text"
                                 placeholder="Hledat..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                value={pageState.searchTerm}
+                                onChange={(e) => updatePageState({ searchTerm: e.target.value })}
                                 className="flex-1 bg-transparent border-none outline-none text-white h-4"
                                 style={{ fontSize: "16px" }}
                             />
@@ -341,21 +346,26 @@ export default function StocktakingList() {
                     isOpen={isOptionsModalOpen}
                     onClose={() => setIsOptionsModalOpen(false)}
                     sortOptions={sortOptions}
-                    initialSortBy={sortBy}
-                    initialSortOrder={sortOrder}
+                    initialSortBy={pageState.sortBy}
+                    initialSortOrder={pageState.sortOrder}
                     onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
-                        setSortBy(newSortBy);
-                        setSortOrder(newSortOrder);
-                        setCurrentPage(0);
+                        updatePageState({ 
+                            sortBy: newSortBy, 
+                            sortOrder: newSortOrder, 
+                            currentPage: 0 
+                        });
                     }}
                 />
                 <FilterOptionsModal
                     isOpen={isFilterModalOpen}
                     onClose={() => setIsFilterModalOpen(false)}
-                    initialState={filterState.state}
-                    initialHasNote={filterState.hasNote}
+                    initialState={pageState.filterState.state}
+                    initialHasNote={pageState.filterState.hasNote}
                     onChange={({ state, hasNote }) => {
-                        setFilterState({ state, hasNote });
+                        updatePageState({ 
+                            filterState: { state, hasNote },
+                            currentPage: 0 
+                        });
                     }}
                 />
                 <QRScannerModal

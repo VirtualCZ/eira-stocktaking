@@ -114,10 +114,17 @@ export default function Home() {
               href="search"
             />
           </div>
-          <NavLink
-            text="Přidat nový předmět"
-            href="newItem"
-          />
+          <div className="flex flex-col gap-2">
+            <NavLink
+              text="Přidat nový předmět"
+              href="newItem"
+            />
+            <NavLink
+              text="Propojit existující položku"
+              href="linkItem"
+              variant="light"
+            />
+          </div>
         </nav>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">

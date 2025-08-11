@@ -49,7 +49,7 @@ export default function SearchPage() {
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
-    const [items, total, loading, error, refetchItems] = useStocktakingItems({
+    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useStocktakingItems({
         offset: pageState.currentPage * PAGE_SIZE,
         limit: PAGE_SIZE,
         sortBy: pageState.sortBy,
@@ -58,7 +58,7 @@ export default function SearchPage() {
         state: pageState.filterState.state,
         hasNote: pageState.filterState.hasNote,
         eventId: selectedInventura?.id,
-        thumbnail: true, // Use thumbnails for list view
+        includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
     });
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
@@ -70,7 +70,16 @@ export default function SearchPage() {
     ];
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
-        updatePageState({ viewMode: viewModes[(currentViewIdx + 1) % viewModes.length].mode });
+        const newViewMode = viewModes[(currentViewIdx + 1) % viewModes.length].mode;
+        const currentViewMode = pageState.viewMode;
+        
+        updatePageState({ viewMode: newViewMode });
+        
+        // Only refetch if switching FROM compact (no images) TO grid/detailed (with images)
+        // AND we don't already have images for current page
+        if (currentViewMode === 'compact' && newViewMode !== 'compact' && !hasImagesForCurrentPage) {
+            refetchWithImages();
+        }
     };
 
     const bottomBarRef = useRef(null);

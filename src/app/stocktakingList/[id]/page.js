@@ -57,7 +57,7 @@ export default function StocktakingList() {
     const [location, setLocation] = useState(null);
     const canFetch = location && location.room;
 
-    const [items, total, loading, error, refetchItems] = useStocktakingItems(
+    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useStocktakingItems(
         canFetch
             ? {
                 offset: pageState.currentPage * PAGE_SIZE,
@@ -69,7 +69,7 @@ export default function StocktakingList() {
                 hasNote: pageState.filterState.hasNote,
                 roomId: location.room,
                 eventId: stocktakingId,
-                thumbnail: true, // Use thumbnails for list view
+                includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
             }
             : { skip: true }
     );
@@ -91,7 +91,16 @@ export default function StocktakingList() {
     ];
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
-        updatePageState({ viewMode: viewModes[(currentViewIdx + 1) % viewModes.length].mode });
+        const newViewMode = viewModes[(currentViewIdx + 1) % viewModes.length].mode;
+        const currentViewMode = pageState.viewMode;
+        
+        updatePageState({ viewMode: newViewMode });
+        
+        // Only refetch if switching FROM compact (no images) TO grid/detailed (with images)
+        // AND we don't already have images for current page
+        if (currentViewMode === 'compact' && newViewMode !== 'compact' && !hasImagesForCurrentPage && canFetch) {
+            refetchWithImages();
+        }
     };
 
     const bottomBarRef = useRef(null);

@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { isAuthenticated, setAuthToken } from "@/utils/token";
 import { useRouter } from "next/navigation";
+import Button from "@/components/atoms/Button";
+import TextInput from "@/components/atoms/TextInput";
+import CardContainer from "@/components/atoms/CardContainer";
 
 export default function ErrorPage() {
   const [showError, setShowError] = useState(false);
@@ -29,8 +32,8 @@ export default function ErrorPage() {
 
   if (!showError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#f0f1f3" }}>
+        <div style={{ fontSize: "1rem", color: "#535353" }}>Loading...</div>
       </div>
     );
   }
@@ -39,46 +42,51 @@ export default function ErrorPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="text-center max-w-md">
         <div className="text-6xl mb-4">🔒</div>
-        <h1 className="text-2xl font-bold mb-4">Přístup zamítnut</h1>
-        <p className="text-gray-600 mb-6">
+        <h1 className="text-2xl font-bold mb-4" style={{ color: "#282828" }}>Přístup zamítnut</h1>
+        <p className="mb-6" style={{ color: "#535353" }}>
           Pro přístup k aplikaci je vyžadován platný token. 
           Prosím, použijte správný odkaz s tokenem.
         </p>
         
         {/* Token Input for Testing */}
-        <div className="bg-blue-50 p-4 rounded-lg mb-4">
-          <p className="text-sm text-blue-700 mb-3">
-            <strong>Testování:</strong> Zadejte token pro přístup
+        <CardContainer className="mb-4">
+          <p className="text-sm mb-3" style={{ color: "#535353" }}>
+            Zadejte token pro přístup
           </p>
           <div className="flex gap-2">
-            <input
-              type="text"
+            <TextInput
+              label="Token"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Zadejte token..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
             />
-            <button
+            <Button
               onClick={handleSetToken}
               disabled={isSettingToken || !token.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50"
+              style={{ 
+                flex: "none",
+                padding: "0.75rem",
+                borderRadius: "0.5rem",
+                alignSelf: "flex-end",
+                border: "none"
+              }}
             >
               {isSettingToken ? 'Nastavuji...' : 'Nastavit'}
-            </button>
+            </Button>
           </div>
-        </div>
+        </CardContainer>
 
-        <div className="bg-gray-100 p-4 rounded-lg">
-          <p className="text-sm text-gray-700">
+        <CardContainer>
+          <p className="text-sm" style={{ color: "#535353" }}>
             <strong>Příklad správného přístupu:</strong>
           </p>
-          <code className="text-xs block mt-2 p-2 bg-white rounded">
+          <code className="text-xs block mt-2 p-2 rounded" style={{ background: "#f0f1f3", color: "#282828" }}>
             &lt;form method="POST" action="https://localhost:3000/"&gt;<br/>
             &nbsp;&nbsp;&lt;input type="hidden" name="token" value="your-token" /&gt;<br/>
             &nbsp;&nbsp;&lt;button type="submit"&gt;Otevřít aplikaci&lt;/button&gt;<br/>
             &lt;/form&gt;
           </code>
-        </div>
+        </CardContainer>
       </div>
     </div>
   );

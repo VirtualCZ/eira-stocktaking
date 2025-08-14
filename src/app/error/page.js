@@ -25,8 +25,18 @@ export default function ErrorPage() {
   const handleSetToken = () => {
     if (token.trim()) {
       setIsSettingToken(true);
-      setAuthToken(token.trim());
-      alert('Token nastaven! Prosím obnovte stránku.');
+      
+      try {
+        // Set token as cookie only
+        document.cookie = `auth_token=${token.trim()}; path=/; max-age=86400; SameSite=Lax`;
+        console.log('Token saved to cookie');
+        
+        // Redirect to home page
+        router.push('/');
+      } catch (error) {
+        console.error('Error setting token:', error);
+        alert('Chyba při nastavování tokenu: ' + error.message);
+      }
     }
   };
 
@@ -81,11 +91,33 @@ export default function ErrorPage() {
             <strong>Příklad správného přístupu:</strong>
           </p>
           <code className="text-xs block mt-2 p-2 rounded" style={{ background: "#f0f1f3", color: "#282828" }}>
-            &lt;form method="POST" action="https://localhost:3000/"&gt;<br/>
+            &lt;form method="POST" action="/"&gt;<br/>
             &nbsp;&nbsp;&lt;input type="hidden" name="token" value="your-token" /&gt;<br/>
             &nbsp;&nbsp;&lt;button type="submit"&gt;Otevřít aplikaci&lt;/button&gt;<br/>
             &lt;/form&gt;
           </code>
+          
+          {/* Debug section */}
+          <div className="mt-4 p-3 rounded" style={{ background: "#f0f1f3" }}>
+            <p className="text-xs mb-2" style={{ color: "#535353" }}>
+              <strong>Debug Info:</strong>
+            </p>
+            <Button
+              onClick={() => {
+                const cookies = document.cookie;
+                console.log('All cookies:', cookies);
+                alert(`Cookies: ${cookies || 'none'}`);
+              }}
+              style={{ 
+                fontSize: "0.75rem",
+                padding: "0.5rem",
+                borderRadius: "0.25rem",
+                border: "none"
+              }}
+            >
+              Check Cookies
+            </Button>
+          </div>
         </CardContainer>
       </div>
     </div>

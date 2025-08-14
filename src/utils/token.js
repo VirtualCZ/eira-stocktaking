@@ -4,7 +4,7 @@ const TOKEN_KEY = 'auth_token';
 export const getAuthToken = () => {
   if (typeof window === 'undefined') return null;
   
-  // Get token from cookies
+  // Get token from cookies only
   const cookies = document.cookie.split(';');
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
@@ -18,8 +18,9 @@ export const getAuthToken = () => {
 
 export const setAuthToken = (token) => {
   if (typeof window === 'undefined') return;
-  // Set token as cookie
-  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax; secure=${window.location.protocol === 'https:'}`;
+  // Set token as cookie - only use Secure flag for HTTPS
+  const isSecure = window.location.protocol === 'https:';
+  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax; ${isSecure ? 'Secure;' : ''}`;
 };
 
 export const clearAuthToken = () => {

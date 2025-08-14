@@ -77,12 +77,81 @@ export function NavLink({
     href = "#",
     icon = null,
     size = "small", // "big" or "small"
-    variant = "light" // "light" or "dark"
+    variant = "light", // "light" or "dark"
+    disabled = false
 }) {
     // Color logic
     const isDark = variant === "dark";
     const bgColor = isDark ? "#000" : "#f0f1f3";
     const textColor = isDark ? "#fff" : "#000";
+    
+    // Disabled state styling
+    if (disabled) {
+        const disabledBgColor = "#e0e0e0";
+        const disabledTextColor = "#999";
+        
+        // Big variant
+        if (size === "big") {
+            return (
+                <div
+                    style={{
+                        background: disabledBgColor,
+                        borderRadius: 16,
+                        padding: 16,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        alignItems: "stretch",
+                        textDecoration: "none",
+                        color: disabledTextColor,
+                        flex: "1",
+                        cursor: "not-allowed",
+                        opacity: 0.6
+                    }}
+                >
+                    {/* Icon row */}
+                    {icon && (
+                        <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", minHeight: 32 }}>
+                            <span className="material-icons-round" style={{ fontSize: 32, color: disabledTextColor }}>{icon}</span>
+                        </div>
+                    )}
+                    {/* Text + Arrow row */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            minHeight: 32,
+                            marginTop: icon ? 32 : 0
+                        }}
+                    >
+                        <span style={{ fontWeight: 600, fontSize: 12 }}>{text}</span>
+                        <span className="material-icons-round" style={{ fontSize: 14, color: disabledTextColor }}>arrow_forward_ios</span>
+                    </div>
+                </div>
+            );
+        }
+        // Small variant
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 16,
+                    borderRadius: 16,
+                    background: disabledBgColor,
+                    textDecoration: "none",
+                    color: disabledTextColor,
+                    cursor: "not-allowed",
+                    opacity: 0.6
+                }}
+            >
+                <span style={{ fontWeight: 600, fontSize: 12 }}>{text}</span>
+                <span className="material-icons-round" style={{ fontSize: 14, color: disabledTextColor }}>arrow_forward_ios</span>
+            </div>
+        );
+    }
     // Big variant
     if (size === "big") {
         return (

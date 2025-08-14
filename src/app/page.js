@@ -112,17 +112,20 @@ export default function Home() {
               size="big"
               icon="search"
               href="search"
+              disabled={!selectedInventura}
             />
           </div>
           <div className="flex flex-col gap-2">
             <NavLink
               text="Přidat nový předmět"
               href="newItem"
+              disabled={!selectedInventura}
             />
             <NavLink
               text="Propojit existující položku"
               href="linkItem"
               variant="light"
+              disabled={!selectedInventura}
             />
           </div>
         </nav>

@@ -137,7 +137,14 @@ export default function StocktakingListItemDetail() {
     function propertiesArrayToObject(propertiesArr) {
         const obj = {};
         for (const prop of propertiesArr || []) {
-            if ((prop.key || prop.name) && (prop.key || prop.name).trim() !== "") {
+            // For API-defined properties, use metaCode as key if available, otherwise use label
+            if (prop.fieldType) {
+                const key = prop.metaCode || prop.label;
+                if (key && prop.value !== undefined && prop.value !== null && prop.value.toString().trim() !== "") {
+                    obj[key] = prop.value;
+                }
+            } else if ((prop.key || prop.name) && (prop.key || prop.name).trim() !== "") {
+                // For custom properties, use the old format
                 obj[prop.key || prop.name] = prop.value;
             }
         }
@@ -167,11 +174,21 @@ export default function StocktakingListItemDetail() {
         let propertiesArr = Array.isArray(editItem.properties)
             ? editItem.properties
             : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
-        if (propertiesArr.some(p => !(p.key || p.name) || (p.key || p.name).trim() === "")) {
-            setErrorMessage("Všechny pole 'Vlastnost' musí být vyplněné.");
+        
+        // Validate properties - for API-defined properties, only check if value exists
+        if (propertiesArr.some(p => {
+            // For API-defined properties, only value is required
+            if (p.fieldType) {
+                return !p.value || p.value.toString().trim() === "";
+            }
+            // For custom properties, both key and value are required
+            return !(p.key || p.name) || (p.key || p.name).trim() === "" || !p.value || p.value.toString().trim() === "";
+        })) {
+            setErrorMessage("Všechny pole 'Hodnota' musí být vyplněné.");
             setErrorModalOpen(true);
             return;
         }
+        
         const mainData = {
             id: editItem.id,
             stocktakingId: stocktakingId,

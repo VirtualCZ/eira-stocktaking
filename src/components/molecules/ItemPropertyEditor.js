@@ -3,14 +3,61 @@ import TextInput from "@/components/atoms/TextInput";
 import CardContainer from "@/components/atoms/CardContainer";
 import Button from "@/components/atoms/Button";
 
+// Helper to get appropriate input type based on fieldType
+function getInputType(fieldType) {
+  switch (fieldType) {
+    case 'entproptype_date':
+      return 'date';
+    case 'entproptype_timestamp':
+      return 'datetime-local';
+    case 'entproptype_decimal':
+    case 'entproptype_numeric':
+      return 'number';
+    case 'entproptype_text':
+      return 'text';
+    case 'entproptype_alphanumeric':
+    default:
+      return 'text';
+  }
+}
+
+// Helper to format value for display based on fieldType
+function formatValueForDisplay(value, fieldType) {
+  if (!value) return '';
+  
+  switch (fieldType) {
+    case 'entproptype_date':
+    case 'entproptype_timestamp':
+      if (typeof value === 'string' && value.includes('T')) {
+        // Convert ISO string to local datetime-local format
+        const date = new Date(value);
+        if (fieldType === 'entproptype_date') {
+          return date.toISOString().split('T')[0];
+        } else {
+          return date.toISOString().slice(0, 16);
+        }
+      }
+      return value;
+    default:
+      return value;
+  }
+}
+
 // Helper to generate a unique id
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
 export default function ItemPropertyEditor({ properties = [], onChange }) {
-  // Ensure all properties have an id
-  const normalizedProps = properties.map(p => p.id ? p : { ...p, id: generateId() });
+  const normalizedProps = properties.map(p => {
+    if (p.id) return p;
+    return {
+      ...p,
+      id: generateId(),
+      key: p.metaCode || p.label,
+      priority: p.priority || 0
+    };
+  });
 
   const handleKeyChange = (idx, newKey) => {
     if (normalizedProps.some((p, i) => i !== idx && p.key === newKey)) return;
@@ -23,60 +70,37 @@ export default function ItemPropertyEditor({ properties = [], onChange }) {
     onChange(newProps);
   };
 
-  const handleDelete = (idx) => {
-    const newProps = normalizedProps.filter((_, i) => i !== idx);
-    onChange(newProps);
-  };
+  // Removed handleDelete function - no more deleting properties
 
-  const handleAdd = () => {
-    let idx = 1;
-    let newKey = "";
-    const existingKeys = normalizedProps.map(p => p.key);
-    while (existingKeys.includes("new" + idx)) idx++;
-    newKey = "new" + idx;
-    onChange([...normalizedProps, { key: newKey, value: "", id: generateId() }]);
-  };
+  // Removed handleAdd function - no more adding new properties
+
+    // Don't render anything if there are no properties
+  if (normalizedProps.length === 0) {
+    return null;
+  }
 
   return (
     <CardContainer className="">
-      {normalizedProps.map(({ key, value, id }, idx) => (
+      {normalizedProps
+        .sort((a, b) => (a.priority || 0) - (b.priority || 0)) // Sort by priority
+        .map(({ key, value, id, label, fieldType }, idx) => (
         <div key={id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <TextInput
-            value={key}
+            value={label}
             onChange={e => handleKeyChange(idx, e.target.value)}
             label={idx === 0 ? "Vlastnost" : undefined}
             placeholder="Název"
+            disabled={true} // Always disabled since we only have API-defined properties now
           />
           <TextInput
-            value={value}
+            value={formatValueForDisplay(value, fieldType)}
             onChange={e => handleValueChange(idx, e.target.value)}
             label={idx === 0 ? "Hodnota" : undefined}
             placeholder="Hodnota"
+            type={getInputType(fieldType)}
           />
-          <button
-            type="button"
-            onClick={() => handleDelete(idx)}
-            className="flex items-center justify-center hover:opacity-80 active:opacity-80 focus:opacity-80"
-            style={{
-              borderRadius: "0.5rem",
-              padding: "0.75rem",
-              border: "none",
-              background: "#FF6262",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              marginTop: 8
-            }}
-            title="Odebrat"
-          >
-            <span className="material-icons-round" style={{ color: "#000", fontSize: 16 }}>delete</span>
-          </button>
         </div>
       ))}
-      <Button icon="add" iconPosition="right" type="button" onClick={handleAdd} style={{ fontSize: "0.75rem" }} className="mt-2">
-        Přidat vlastnost
-      </Button>
     </CardContainer>
   );
 } 

@@ -174,16 +174,21 @@ export default function StocktakingItemDetailTemplate({
                   value={item.qr}
                   editMode={false}
                 />
-                {item.properties && (
-                  <CardContainer className="gap-2">
-                    {(Array.isArray(item.properties)
-                      ? item.properties
-                      : Object.entries(item.properties).map(([key, value]) => ({ key, value }))
-                    ).map(({ key, value }) => (
-                      <DetailCardRow key={key} label={key + ':'} value={value} />
-                    ))}
-                  </CardContainer>
-                )}
+                                 {item.properties && Array.isArray(item.properties) && item.properties.length > 0 && (
+                   <CardContainer className="gap-2">
+                     {item.properties
+                       .sort((a, b) => (a.priority || 0) - (b.priority || 0)) // Sort by priority
+                       .map((prop, index) => {
+                         const label = prop.label || prop.key || `Vlastnost ${index + 1}`;
+                         const value = prop.value || '';
+                         const key = prop.metaCode || prop.key || `prop_${index}`;
+                         
+                         return (
+                           <DetailCardRow key={key} label={label + ':'} value={value} />
+                         );
+                       })}
+                   </CardContainer>
+                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                   <div>Poslední úprava {item.lastCheck}</div>
                   <div>ID {item.id}</div>

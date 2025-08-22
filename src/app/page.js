@@ -92,42 +92,102 @@ export default function Home() {
           extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
         />
         <nav className="flex flex-col gap-2">
-          <NavLink
-            text="Seznam inventur"
-            size="small"
-            icon="inventory"
-            href="stocktakingList"
-            variant="light"
-          />
-          <div className="flex flex-row gap-2">
-            <NavLink
-              text={selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
-              size="big"
-              icon="assignment"
-              href={selectedInventura ? `stocktakingList/${selectedInventura.id}` : "stocktakingList"}
-              variant="dark"
-            />
-            <NavLink
-              text="Najdi majetek"
-              size="big"
-              icon="search"
-              href="search"
-              disabled={!selectedInventura}
-            />
+          {/* Event display card - non-clickable */}
+          <div
+            style={{
+              background: "#000",
+              borderRadius: 16,
+              padding: 16,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "stretch",
+              color: "#fff",
+              minHeight: "auto"
+            }}
+          >
+            {/* Event name row */}
+            <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", minHeight: 32 }}>
+              <span className="material-icons-round" style={{ fontSize: 32, color: "#fff" }}>assignment</span>
+            </div>
+            
+                         {/* Event name and place links */}
+             <div style={{ marginTop: 47 }}>
+               <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+                 {selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
+               </div>
+               
+               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                 <Link
+                   href={selectedInventura ? `stocktakingList/${selectedInventura.id}` : "stocktakingList"}
+                   style={{
+                     display: "flex",
+                     alignItems: "center",
+                     justifyContent: "space-between",
+                     padding: 16,
+                     borderRadius: 16,
+                     background: "#282828",
+                     textDecoration: "none",
+                     color: "#fff",
+                   }}
+                 >
+                   <span style={{ fontWeight: 600, fontSize: 12 }}>Změnit inventuru</span>
+                   <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>arrow_forward_ios</span>
+                 </Link>
+                 
+                 {selectedInventura && (
+                   <Link
+                     href={`stocktakingList/${selectedInventura.id}`}
+                     style={{
+                       display: "flex",
+                       alignItems: "center",
+                       justifyContent: "space-between",
+                       padding: 16,
+                       borderRadius: 16,
+                       background: "#282828",
+                       textDecoration: "none",
+                       color: "#fff",
+                     }}
+                   >
+                     <span style={{ fontWeight: 600, fontSize: 12 }}>Začít inventuru</span>
+                     <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>arrow_forward_ios</span>
+                   </Link>
+                 )}
+               </div>
+             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <NavLink
-              text="Přidat nový předmět"
-              href="newItem"
-              disabled={!selectedInventura}
-            />
-            <NavLink
-              text="Propojit existující položku"
-              href="linkItem"
-              variant="light"
-              disabled={!selectedInventura}
-            />
-          </div>
+
+                    {/* Divider */}
+          <div style={{ width: '100%', height: 2, background: '#F0F1F3', margin: '8px 0' }} />
+          
+                     {/* Operations section */}
+           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+             <div style={{ fontWeight: 700, fontSize: 14, color: '#535353' }}>
+               Operace s majetkem
+             </div>
+
+             <NavLink
+               text="Najdi majetek"
+               size="small"
+               icon="search"
+               href="search"
+               disabled={!selectedInventura}
+             />
+
+             <NavLink
+               text="Přidat nový předmět"
+               size="small"
+               href="newItem"
+               disabled={!selectedInventura}
+             />
+
+             <NavLink
+               text="Propojit existující položku"
+               size="small"
+               href="linkItem"
+               disabled={!selectedInventura}
+             />
+           </div>
         </nav>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">

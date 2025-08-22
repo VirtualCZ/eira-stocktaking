@@ -147,7 +147,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                         />
                         <button
                             onClick={handleSave}
-                            disabled={!selectedRoom}
+                            disabled={!(selectedRoom || (!selectedBuilding && !selectedStorey && !selectedRoom))}
                             style={{
                                 flex: 1,
                                 display: "flex",
@@ -160,11 +160,35 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                                 padding: "0.75rem",
                                 fontSize: "0.75rem",
                                 cursor: "pointer",
-                                opacity: !selectedRoom ? 0.5 : 1
+                                opacity: !(selectedRoom || (!selectedBuilding && !selectedStorey && !selectedRoom)) ? 0.5 : 1
                             }}
                         >
                             Uložit
                             <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                        </button>
+                        
+                        <button
+                            onClick={() => {
+                                setSelectedBuilding(null);
+                                setSelectedStorey(null);
+                                setSelectedRoom(null);
+                            }}
+                            style={{
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                background: "#F0F1F3",
+                                color: "#535353",
+                                border: "none",
+                                borderRadius: "1rem",
+                                padding: "0.75rem",
+                                fontSize: "0.75rem",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Vymazat výběr
+                            <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>clear</span>
                         </button>
                     </div>
                 </CenteredModal>

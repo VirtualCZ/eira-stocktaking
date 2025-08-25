@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { useStocktakingItems } from "@/hooks/useStocktakingItems";
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import { useAllObjects } from "@/hooks/useAllObjects";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { usePageState } from "@/hooks/usePageState";
+import { useSetLocation, useGetLocation } from "@/hooks/useLocation";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,7 @@ import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
+import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 
 const PAGE_SIZE = 10;
 
@@ -29,6 +31,7 @@ const sortOptions = [
 export default function SearchPage() {
     const router = useRouter();
     const { selectedInventura } = useSelectedInventura();
+    const [location, setLocation] = useState(null);
     
     // Use page state for filters and sorting
     const [pageState, updatePageState, resetPageState] = usePageState('searchPage', {
@@ -49,7 +52,8 @@ export default function SearchPage() {
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
-    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useStocktakingItems({
+
+    const hookOptions = useMemo(() => ({
         offset: pageState.currentPage * PAGE_SIZE,
         limit: PAGE_SIZE,
         sortBy: pageState.sortBy,
@@ -58,8 +62,21 @@ export default function SearchPage() {
         state: pageState.filterState.state,
         hasNote: pageState.filterState.hasNote,
         eventId: selectedInventura?.id,
+        roomId: location?.room,
         includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
-    });
+    }), [
+        pageState.currentPage,
+        pageState.sortBy,
+        pageState.sortOrder,
+        pageState.searchTerm,
+        pageState.filterState.state,
+        pageState.filterState.hasNote,
+        selectedInventura?.id,
+        location?.room,
+        pageState.viewMode
+    ]);
+
+    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useAllObjects(hookOptions);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
@@ -124,10 +141,12 @@ export default function SearchPage() {
         </ContextButton>
     );
 
-    // Reset page to 0 when search or filters change
+
+
+    // Reset page to 0 when search, filters, or location change
     useEffect(() => {
         updatePageState({ currentPage: 0 });
-    }, [pageState.searchTerm, pageState.filterState]);
+    }, [pageState.searchTerm, pageState.filterState, location]);
 
     return (
         <main className="relative min-h-screen flex flex-col items-center">
@@ -147,6 +166,7 @@ export default function SearchPage() {
                         },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
                         { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
+
                     ]}
                 />
 
@@ -155,6 +175,9 @@ export default function SearchPage() {
                         Nejprve vyberte inventuru na hlavní stránce.
                     </div>
                 )}
+
+                {/* Location filter */}
+                <UserLocationPicker onChange={setLocation} />
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
@@ -311,6 +334,8 @@ export default function SearchPage() {
                         {actionModalContent.message}
                     </div>
                 </CenteredModal>
+
+
             </div>
         </main>
     );

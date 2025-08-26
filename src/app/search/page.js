@@ -3,7 +3,6 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "re
 import { useAllObjects } from "@/hooks/useAllObjects";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { usePageState } from "@/hooks/usePageState";
-import { useSetLocation, useGetLocation } from "@/hooks/useLocation";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,6 @@ import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import { Pagination } from "@/components/molecules/Pagination";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
 import CenteredModal from "@/components/molecules/CenteredModal";
-import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";

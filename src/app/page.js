@@ -118,40 +118,20 @@ export default function Home() {
                </div>
                
                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                 <Link
-                   href={selectedInventura ? `stocktakingList/${selectedInventura.id}` : "stocktakingList"}
-                   style={{
-                     display: "flex",
-                     alignItems: "center",
-                     justifyContent: "space-between",
-                     padding: 16,
-                     borderRadius: 16,
-                     background: "#282828",
-                     textDecoration: "none",
-                     color: "#fff",
-                   }}
-                 >
-                   <span style={{ fontWeight: 600, fontSize: 12 }}>Změnit inventuru</span>
-                   <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>arrow_forward_ios</span>
-                 </Link>
+                 <NavLink
+                   text="Změnit inventuru"
+                   href="stocktakingList"
+                   size="small"
+                   variant="dark"
+                 />
                  
                  {selectedInventura && (
-                   <Link
+                   <NavLink
+                     text="Začít inventuru"
                      href={`stocktakingList/${selectedInventura.id}`}
-                     style={{
-                       display: "flex",
-                       alignItems: "center",
-                       justifyContent: "space-between",
-                       padding: 16,
-                       borderRadius: 16,
-                       background: "#282828",
-                       textDecoration: "none",
-                       color: "#fff",
-                     }}
-                   >
-                     <span style={{ fontWeight: 600, fontSize: 12 }}>Začít inventuru</span>
-                     <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>arrow_forward_ios</span>
-                   </Link>
+                     size="small"
+                     variant="dark"
+                   />
                  )}
                </div>
              </div>

@@ -9,7 +9,7 @@ export function NavButton({
 }) {
     // Color logic
     const isDark = variant === "dark";
-    const bgColor = isDark ? "#000" : "#f0f1f3";
+    const bgColor = isDark ? "#282828" : "#f0f1f3";
     const textColor = isDark ? "#fff" : "#000";
     // Big variant
     if (size === "big") {
@@ -82,7 +82,7 @@ export function NavLink({
 }) {
     // Color logic
     const isDark = variant === "dark";
-    const bgColor = isDark ? "#000" : "#f0f1f3";
+    const bgColor = isDark ? "#282828" : "#f0f1f3";
     const textColor = isDark ? "#fff" : "#000";
     
     // Disabled state styling

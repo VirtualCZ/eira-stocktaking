@@ -348,11 +348,11 @@ export default function StocktakingListItemDetail() {
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
-                            <LocationPicker value={item.location} label="Current location:" editMode={false} />
+                            <LocationPicker value={item.location} label="Aktuální umístění:" editMode={false} />
                             <span className="material-icons-round" style={{ fontSize: 24, color: "#000" }}>arrow_downward</span>
                             <LocationPicker 
                               value={moveNewLocation} 
-                              label="New location:" 
+                              label="Nové umístění:" 
                               editMode={true} 
                               onChange={setMoveNewLocation}
                               onModalOpen={() => setIsLocationPickerOpen(true)}

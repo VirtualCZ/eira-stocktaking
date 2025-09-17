@@ -61,6 +61,7 @@ export default function SearchPage() {
         hasNote: pageState.filterState.hasNote,
         eventId: selectedInventura?.id,
         roomId: location?.room,
+        // entregIds: [123, 456, 789], // Example: Filter by specific object types
         includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
     }), [
         pageState.currentPage,

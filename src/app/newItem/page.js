@@ -1,15 +1,23 @@
 "use client";
-import { useState, useEffect } from "react";
-import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
+import { useState, useEffect, useCallback } from "react";
+import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
 import { useCreateStocktakingItem } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useRouter } from "next/navigation";
+import { useEntregs } from "@/hooks/useEntregs";
+import DropdownCard from "@/components/molecules/DropdownCard";
+import PictureInput from "@/components/molecules/PictureInput";
+import TextInput from "@/components/atoms/TextInput";
+import LocationPicker from "@/components/organisms/LocationPicker";
+import QRCodeInput from "@/components/molecules/QRCodeInput";
+import Link from "next/link";
 
 
 export default function NewItem() {
     const { selectedInventura } = useSelectedInventura();
     const router = useRouter();
+    const [entregs, entregsLoading, entregsError] = useEntregs();
     const [editItem, setEditItem] = useState({
         name: "",
         description: "",
@@ -18,6 +26,7 @@ export default function NewItem() {
         location: null,
         qr: "",
         properties: [],
+        entregId: null,
     });
     const [editMode, setEditMode] = useState(true);
     const [actionModalOpen, setActionModalOpen] = useState(false);
@@ -53,7 +62,12 @@ export default function NewItem() {
 
     // Save handler
     const handleSave = async () => {
-        // Validate required fields if needed
+        // Validate required fields
+        if (!editItem.entregId) {
+            showActionModal("Chyba", "Musíte vybrat typ objektu.", false);
+            return;
+        }
+        
         let propertiesArr = Array.isArray(editItem.properties)
             ? editItem.properties
             : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
@@ -69,6 +83,7 @@ export default function NewItem() {
             location: mapLocationToApi(editItem.location),
             qr: editItem.qr,
             properties: propertiesArrayToObject(propertiesArr),
+            entregId: editItem.entregId,
         };
 
         // Handle image data conversion
@@ -138,29 +153,133 @@ export default function NewItem() {
         }
     };
 
+    // Prepare entreg options for dropdown - ensure entregs is an array
+    const entregOptions = Array.isArray(entregs) 
+        ? entregs.map(entreg => ({
+            value: entreg.entregId,
+            text: entreg.entregDesc || entreg.entregMetaCode
+        }))
+        : [];
+
+    const selectedEntreg = entregOptions.find(opt => opt.value === editItem.entregId) || null;
+
+    // Stable handlers to prevent re-renders
+    const handleNameChange = useCallback((e) => {
+        setEditItem(prev => ({ ...prev, name: e.target.value }));
+    }, []);
+
+    const handleDescriptionChange = useCallback((e) => {
+        setEditItem(prev => ({ ...prev, description: e.target.value }));
+    }, []);
+
+    const handleNoteChange = useCallback((e) => {
+        setEditItem(prev => ({ ...prev, note: e.target.value }));
+    }, []);
+
+    const handleEntregChange = useCallback((option) => {
+        setEditItem(prev => ({ ...prev, entregId: option.value }));
+    }, []);
+
+    const handleLocationChange = useCallback((loc) => {
+        setEditItem(prev => ({ ...prev, location: loc }));
+    }, []);
+
+    const handleQRChange = useCallback((code) => {
+        setEditItem(prev => ({ ...prev, qr: code }));
+    }, []);
+
+    const handleImageChange = useCallback((image) => {
+        setEditItem(prev => ({ ...prev, image }));
+    }, []);
+
     return (
         <>
-            <StocktakingItemDetailTemplate
-                item={editItem}
-                editItem={editItem}
-                editMode={editMode}
-                onEditItemChange={setEditItem}
-                onEditModeChange={() => setEditMode(!editMode)}
-                onDelete={null}
-                onDuplicate={null}
-                onSave={handleSave}
-                showMove={false}
-                showFound={false}
-                loading={loading}
-                error={error}
-                returnTo={"/"}
-                isDeleteModalOpen={false}
-                setIsDeleteModalOpen={() => {}}
-                bottomPadding={0}
-                setBottomPadding={() => {}}
-                barRendered={false}
-                setBarRendered={() => {}}
-            />
+            <div className="relative min-h-screen flex flex-col">
+                <main className="flex flex-col items-center" style={{ minHeight: "100vh" }}>
+                    <div className="flex flex-col container">
+                        <Link
+                            href="/"
+                            style={{
+                                position: "absolute",
+                                marginTop: "1rem",
+                                marginLeft: "1rem",
+                                background: "#000",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 16,
+                                width: 38,
+                                height: 38,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                zIndex: 1100,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                textDecoration: "none"
+                            }}
+                        >
+                            <span className="material-icons-round" style={{ fontSize: 16 }}>home</span>
+                        </Link>
+                        <PictureInput 
+                            value={editItem.image || ""} 
+                            onChange={handleImageChange}
+                            editMode={true} 
+                        />
+                        <div className="p-4 flex flex-col gap-4">
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <TextInput
+                                        value={editItem.name}
+                                        onChange={handleNameChange}
+                                        label="Název"
+                                        placeholder="Název"
+                                    />
+                                </div>
+                                <TextInput
+                                    value={editItem.description}
+                                    onChange={handleDescriptionChange}
+                                    label="Popisek"
+                                    placeholder="Popisek"
+                                />
+                            </div>
+                            <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                            <TextInput
+                                value={editItem.note || ""}
+                                onChange={handleNoteChange}
+                                label="Poznámka"
+                                placeholder="Poznámka"
+                                multiline
+                            />
+                            <DropdownCard
+                                label="Typ objektu"
+                                options={entregOptions}
+                                selected={selectedEntreg}
+                                onSelect={handleEntregChange}
+                                disabled={entregsLoading}
+                            />
+                            {entregsError && (
+                                <div style={{ color: '#FF6262', fontSize: '12px', marginTop: '4px' }}>
+                                    Chyba při načítání typů objektů: {entregsError.message}
+                                </div>
+                            )}
+                            {entregsLoading && (
+                                <div style={{ color: '#535353', fontSize: '12px', marginTop: '4px' }}>
+                                    Načítání typů objektů...
+                                </div>
+                            )}
+                            <LocationPicker
+                                value={editItem.location}
+                                onChange={handleLocationChange}
+                                editMode={true}
+                            />
+                            <QRCodeInput
+                                value={editItem.qr}
+                                onChange={handleQRChange}
+                                editMode={true}
+                            />
+                        </div>
+                    </div>
+                </main>
+            </div>
             {/* Action result modal for create */}
             <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
                 <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>

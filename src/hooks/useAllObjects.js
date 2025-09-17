@@ -20,6 +20,7 @@ export function useAllObjects(options = {}) {
         hasNote = [],
         roomId = null,
         eventId = null,
+        entregIds = [],
         includeImages = false,
         skip = false
     } = options;
@@ -49,6 +50,10 @@ export function useAllObjects(options = {}) {
                 includeImages: currentOptions.includeImages,
                 thumbnail: true // Always use thumbnails when including images
             };
+
+            if (currentOptions.entregIds && currentOptions.entregIds.length > 0) {
+                body.entregIds = currentOptions.entregIds;
+            }
 
             if (currentOptions.roomId) {
                 body.roomId = currentOptions.roomId;
@@ -108,8 +113,8 @@ export function useAllObjects(options = {}) {
 
     // Create a stable key for the current request to prevent unnecessary refetches
     const requestKey = useMemo(() => JSON.stringify({
-        offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, includeImages
-    }), [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, includeImages]);
+        offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, entregIds, includeImages
+    }), [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, entregIds, includeImages]);
 
     const refetchItems = useCallback(async () => {
         return await fetchItems();

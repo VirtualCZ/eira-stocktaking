@@ -18,6 +18,7 @@ export function useStocktakingItems(options = {}) {
         hasNote = [],
         roomId = null,
         eventId = null,
+        entregIds = [],
         includeImages = false,
         skip = false
     } = options;
@@ -51,6 +52,9 @@ export function useStocktakingItems(options = {}) {
             }
             if (eventId) {
                 body.eventId = parseInt(eventId, 10);
+            }
+            if (entregIds && entregIds.length > 0) {
+                body.entregIds = entregIds;
             }
 
             abortController = new AbortController();

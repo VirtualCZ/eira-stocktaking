@@ -106,12 +106,19 @@ export default function StocktakingListItemDetail() {
     const handleFound = async () => {
         if (!item) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+        const newState = item.state === 'nalezeno' ? 'zbyva' : 'nalezeno';
+        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: newState });
         if(result) {
-            showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+            const message = newState === 'nalezeno' 
+                ? 'Položka byla označena jako nalezena.' 
+                : 'Položka byla označena jako nenalezena.';
+            showActionModal('Hotovo', message, true);
             if (refetchItem) refetchItem();
         } else {
-            showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+            const errorMessage = newState === 'nalezeno'
+                ? 'Nepodařilo se označit položku jako nalezenou.'
+                : 'Nepodařilo se označit položku jako nenalezenou.';
+            showActionModal('Chyba', errorMessage, false);
         }
     };
 
@@ -164,78 +171,16 @@ export default function StocktakingListItemDetail() {
     // Save handler
     const handleSave = async () => {
         if (!editItem) return;
-        const originalImage = originalImageRef.current;
-        const currentImage = editItem.image || null;
-        let imgChanged = currentImage !== originalImage;
-        let imgField = undefined;
-        if (imgChanged) {
-            imgField = currentImage; // can be null (deleted) or new image data
-        }
-        let propertiesArr = Array.isArray(editItem.properties)
-            ? editItem.properties
-            : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
-        
-        // Validate properties - for API-defined properties, only check if value exists
-        if (propertiesArr.some(p => {
-            // For API-defined properties, only value is required
-            if (p.fieldType) {
-                return !p.value || p.value.toString().trim() === "";
-            }
-            // For custom properties, both key and value are required
-            return !(p.key || p.name) || (p.key || p.name).trim() === "" || !p.value || p.value.toString().trim() === "";
-        })) {
-            setErrorMessage("Všechny pole 'Hodnota' musí být vyplněné.");
-            setErrorModalOpen(true);
-            return;
-        }
         
         const mainData = {
             id: editItem.id,
             stocktakingId: stocktakingId,
-            name: editItem.name,
             description: editItem.description,
             note: editItem.note,
-            location: mapLocationToApi(editItem.location),
             qr: editItem.qr,
-            properties: propertiesArrayToObject(propertiesArr),
             lastCheck: editItem.date || editItem.lastCheck || null,
             state: editItem.state,
-            imgChanged,
         };
-        // Convert File objects to base64 data for backend processing
-        if (imgChanged) {
-            if (typeof imgField === 'string') {
-                // If it's already a base64 string, use it directly
-                if (imgField.startsWith('data:image/')) {
-                    mainData.image = imgField;
-                } else {
-                    mainData.image = imgField;
-                }
-            } else if (imgField instanceof File) {
-                // Convert File to base64
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    const base64Data = reader.result;
-                    mainData.image = base64Data;
-                    console.log('Sending image as base64 data');
-                    
-                    // Send the update with base64 image data
-                    const result = await updateItem(mainData);
-                    if(result) {
-                        setEditMode(false);
-                        showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
-                        if (refetchItem) refetchItem();
-                    } else {
-                        showActionModal('Chyba', 'Nepodařilo se upravit položku.', false);
-                    }
-                };
-                reader.readAsDataURL(imgField);
-                return; // Exit early, will be handled in onload
-            } else {
-                mainData.image = null;
-            }
-            console.log('Sending image data:', typeof mainData.image);
-        }
         const result = await updateItem(mainData);
         if(result) {
             setEditMode(false);

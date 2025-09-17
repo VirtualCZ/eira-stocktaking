@@ -145,44 +145,14 @@ export default function ItemListDetail() {
     // Save handler
     const handleSave = async () => {
         if (!editItem) return;
-        const originalImage = originalImageRef.current;
-        const currentImage = editItem.image || null;
-        let imgChanged = currentImage !== originalImage;
-        let imgField = undefined;
-        if (imgChanged) {
-            imgField = currentImage; // can be null (deleted) or new image data
-        }
-        let propertiesArr = Array.isArray(editItem.properties)
-            ? editItem.properties
-            : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
-        if (propertiesArr.some(p => !(p.key || p.name) || (p.key || p.name).trim() === "")) {
-            setErrorMessage("Všechny pole 'Vlastnost' musí být vyplněné.");
-            setErrorModalOpen(true);
-            return;
-        }
         const mainData = {
             id: editItem.id,
-            name: editItem.name,
             description: editItem.description,
             note: editItem.note,
-            location: mapLocationToApi(editItem.location),
             qr: editItem.qr,
-            properties: propertiesArrayToObject(propertiesArr),
             lastCheck: editItem.date || editItem.lastCheck || null,
             state: editItem.state,
-            imgChanged,
         };
-        // If imgField is a File object, ignore for now and send null. Only send string path or null.
-        if (imgChanged) {
-            if (typeof imgField === 'string') {
-                mainData.image = imgField;
-            } else if (imgField instanceof File) {
-                mainData.image = imgField.name;
-            } else {
-                mainData.image = null;
-            }
-            console.log('Sending image path:', mainData.image);
-        }
         const result = await updateItem(mainData);
         if(result) {
             setEditMode(false);

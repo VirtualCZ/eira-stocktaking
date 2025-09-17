@@ -201,16 +201,23 @@ export default function StocktakingList() {
                 }}
             />
             <ContextRow
-                icon="visibility"
-                label="Nalezeno"
+                icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
+                label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
                 action={async () => {
                   const { image, ...rest } = item;
-                  const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                  const newState = item.state === 'nalezeno' ? 'zbyva' : 'nalezeno';
+                  const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: newState });
                   if (result) {
-                    showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                    const message = newState === 'nalezeno' 
+                        ? 'Položka byla označena jako nalezena.' 
+                        : 'Položka byla označena jako nenalezena.';
+                    showActionModal('Hotovo', message, true);
                     refetchItems();
                   } else {
-                    showActionModal('Chyba', `Položku se nepodařilo označit jako nalezenou.`, false);
+                    const errorMessage = newState === 'nalezeno'
+                        ? 'Nepodařilo se označit položku jako nalezenou.'
+                        : 'Nepodařilo se označit položku jako nenalezenou.';
+                    showActionModal('Chyba', errorMessage, false);
                   }
                 }}
             />

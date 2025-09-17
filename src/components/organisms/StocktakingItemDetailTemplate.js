@@ -75,16 +75,11 @@ export default function StocktakingItemDetailTemplate({
             <>
               {editItem && (
                 <>
-                  <PictureInput value={editItem.image || ""} onChange={img => onEditItemChange({ ...editItem, image: img })} editMode={true} />
+                  <PictureInput value={editItem.image || ""} editMode={false} />
                   <div className="p-4 flex flex-col gap-4">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <TextInput
-                          value={editItem.name}
-                          onChange={e => onEditItemChange({ ...editItem, name: e.target.value })}
-                          label={"Název"}
-                          placeholder="Název"
-                        />
+                        <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{editItem.name}</span>
                       </div>
                       <TextInput
                         value={editItem.description}
@@ -103,18 +98,32 @@ export default function StocktakingItemDetailTemplate({
                     />
                     <LocationPicker
                       value={editItem.location}
-                      onChange={loc => onEditItemChange({ ...editItem, location: loc })}
-                      editMode={true}
+                      editMode={false}
                     />
                     <QRCodeInput
                       value={editItem.qr}
                       onChange={code => onEditItemChange({ ...editItem, qr: code })}
                       editMode={true}
                     />
-                    <ItemPropertyEditor
-                      properties={Array.isArray(editItem.properties) ? editItem.properties : editItem.properties ? Object.entries(editItem.properties).map(([key, value]) => ({ key, value })) : []}
-                      onChange={propsArr => onEditItemChange({ ...editItem, properties: propsArr })}
-                    />
+                    {editItem.properties && Array.isArray(editItem.properties) && editItem.properties.length > 0 && (
+                      <CardContainer className="gap-2">
+                        {editItem.properties
+                          .sort((a, b) => (a.priority || 0) - (b.priority || 0)) // Sort by priority
+                          .map((prop, index) => {
+                            const label = prop.label || prop.key || `Vlastnost ${index + 1}`;
+                            const value = prop.value || '';
+                            const key = prop.metaCode || prop.key || `prop_${index}`;
+                            
+                            return (
+                              <DetailCardRow key={key} label={label + ':'} value={value} />
+                            );
+                          })}
+                      </CardContainer>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
+                      <div>Poslední úprava {editItem.lastCheck || editItem.date}</div>
+                      <div>ID {editItem.id}</div>
+                    </div>
                   </div>
                 </>
               )}
@@ -152,8 +161,8 @@ export default function StocktakingItemDetailTemplate({
                       )}
                       {showFound && (
                         <ContextRow
-                          icon="visibility"
-                          label="Nalezeno"
+                          icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
+                          label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
                           action={onFound}
                         />
                       )}

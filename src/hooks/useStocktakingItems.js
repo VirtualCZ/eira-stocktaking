@@ -17,6 +17,9 @@ export function useStocktakingItems(options = {}) {
         state = [],
         hasNote = [],
         roomId = null,
+        buildingId = null,
+        storeyId = null,
+        noLocation = false,
         eventId = null,
         entregIds = [],
         includeImages = false,
@@ -49,6 +52,15 @@ export function useStocktakingItems(options = {}) {
 
             if (roomId) {
                 body.roomId = roomId;
+            }
+            if (buildingId) {
+                body.buildingId = buildingId;
+            }
+            if (storeyId) {
+                body.storeyId = storeyId;
+            }
+            if (noLocation) {
+                body.noLocation = noLocation;
             }
             if (eventId) {
                 body.eventId = parseInt(eventId, 10);
@@ -99,7 +111,7 @@ export function useStocktakingItems(options = {}) {
                 setLoading(false);
             }
         }
-    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, skip]); // Removed includeImages from dependencies
+    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, buildingId, storeyId, noLocation, eventId, skip]); // Removed includeImages and entregIds to prevent infinite loop
 
     const refetchItems = useCallback(async () => {
         const result = await fetchItems();

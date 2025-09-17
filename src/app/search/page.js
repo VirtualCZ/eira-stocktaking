@@ -61,6 +61,9 @@ export default function SearchPage() {
         hasNote: pageState.filterState.hasNote,
         eventId: selectedInventura?.id,
         roomId: location?.room,
+        buildingId: location?.building,
+        storeyId: location?.storey,
+        noLocation: !location?.building && !location?.storey && !location?.room,
         // entregIds: [123, 456, 789], // Example: Filter by specific object types
         includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
     }), [
@@ -72,12 +75,14 @@ export default function SearchPage() {
         pageState.filterState.hasNote,
         selectedInventura?.id,
         location?.room,
+        location,
         pageState.viewMode
     ]);
 
     const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useAllObjects(hookOptions);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+
 
     const viewModes = [
         { mode: 'grid', icon: 'view_module' },

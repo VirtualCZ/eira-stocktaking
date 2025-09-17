@@ -3,11 +3,11 @@ import React from "react";
 import { useBuildings, useStoreys, useRooms } from "@/hooks/useBuildings";
 
 export default function LocationModalTrigger({ onClick, location, editMode = true, label= "Lokace:" }) {
-  const [buildings] = useBuildings();
+  const { buildings } = useBuildings();
   const building = buildings.find(b => b.id === location?.building);
-  const [storeys] = useStoreys(location?.building);
+  const { storeys } = useStoreys(location?.building);
   const storey = storeys.find(s => s.id === location?.storey);
-  const [rooms] = useRooms(location?.building, location?.storey);
+  const { rooms } = useRooms(location?.building, location?.storey);
   const room = rooms.find(r => r.id === location?.room);
 
   const buildingText = building?.text || location?.building || "-";

@@ -6,7 +6,7 @@ import DropdownCard from "@/components/molecules/DropdownCard";
 import CenteredModal from "@/components/molecules/CenteredModal";
 
 export default function LocationPickerModal({ isOpen, onClose, onSave, initialLocation }) {
-    const [buildings] = useBuildings();
+    const { buildings } = useBuildings();
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [selectedStorey, setSelectedStorey] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null);
@@ -14,8 +14,8 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
 
     const prevIsOpen = useRef(isOpen);
 
-    const [storeys] = useStoreys(selectedBuilding);
-    const [rooms] = useRooms(selectedBuilding, selectedStorey);
+    const { storeys } = useStoreys(selectedBuilding);
+    const { rooms } = useRooms(selectedBuilding, selectedStorey);
 
     useEffect(() => {
         if (isOpen && !prevIsOpen.current) {
@@ -61,34 +61,56 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
         setIsScannerOpen(false);
     };
 
-    const buildingOptions = buildings.map((b) => ({ value: b.id, text: b.text }));
-    const storeyOptions = storeys.map((s) => ({ value: s.id, text: s.text }));
-    const roomOptions = rooms.map((r) => ({ value: r.id, text: r.text }));
+    const buildingOptions = [
+        { value: null, text: "-bez výběru-" },
+        ...buildings.map((b) => ({ value: b.id, text: b.text }))
+    ];
+    const storeyOptions = [
+        { value: null, text: "-bez výběru-" },
+        ...storeys.map((s) => ({ value: s.id, text: s.text }))
+    ];
+    const roomOptions = [
+        { value: null, text: "-bez výběru-" },
+        ...rooms.map((r) => ({ value: r.id, text: r.text }))
+    ];
 
-    const selectedBuildingOption = buildingOptions.find((opt) => opt.value === selectedBuilding) || null;
-    const selectedStoreyOption = storeyOptions.find((opt) => opt.value === selectedStorey) || null;
-    const selectedRoomOption = roomOptions.find((opt) => opt.value === selectedRoom?.id) || null;
+    const selectedBuildingOption = buildingOptions.find((opt) => opt.value === selectedBuilding) || buildingOptions[0];
+    const selectedStoreyOption = storeyOptions.find((opt) => opt.value === selectedStorey) || storeyOptions[0];
+    const selectedRoomOption = roomOptions.find((opt) => opt.value === selectedRoom?.id) || roomOptions[0];
 
     const handleBuildingSelect = (val) => {
         setSelectedBuilding(val.value);
         setSelectedStorey(null);
         setSelectedRoom(null);
+        
+        // If "-bez výběru-" is selected, clear all below
+        if (val.value === null) {
+            setSelectedStorey(null);
+            setSelectedRoom(null);
+        }
     };
 
     const handleStoreySelect = (val) => {
         setSelectedStorey(val.value);
         setSelectedRoom(null);
+        
+        // If "-bez výběru-" is selected, clear all below
+        if (val.value === null) {
+            setSelectedRoom(null);
+        }
     };
 
     const handleRoomSelect = (val) => {
-        setSelectedRoom({ id: val.value, text: val.text });
+        setSelectedRoom(val.value === null ? null : { id: val.value, text: val.text });
     };
 
     const handleSave = () => {
+        const noLocation = !selectedBuilding && !selectedStorey && !selectedRoom;
         onSave({
             building: selectedBuilding,
             storey: selectedStorey,
             room: selectedRoom?.id,
+            noLocation: noLocation,
         });
         onClose();
     };
@@ -147,7 +169,6 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                         />
                         <button
                             onClick={handleSave}
-                            disabled={!(selectedRoom || (!selectedBuilding && !selectedStorey && !selectedRoom))}
                             style={{
                                 flex: 1,
                                 display: "flex",
@@ -159,8 +180,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
                                 borderRadius: "1rem",
                                 padding: "0.75rem",
                                 fontSize: "0.75rem",
-                                cursor: "pointer",
-                                opacity: !(selectedRoom || (!selectedBuilding && !selectedStorey && !selectedRoom)) ? 0.5 : 1
+                                cursor: "pointer"
                             }}
                         >
                             Uložit

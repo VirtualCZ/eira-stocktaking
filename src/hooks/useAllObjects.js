@@ -19,6 +19,9 @@ export function useAllObjects(options = {}) {
         state = [],
         hasNote = [],
         roomId = null,
+        buildingId = null,
+        storeyId = null,
+        noLocation = false,
         eventId = null,
         entregIds = [],
         includeImages = false,
@@ -57,6 +60,15 @@ export function useAllObjects(options = {}) {
 
             if (currentOptions.roomId) {
                 body.roomId = currentOptions.roomId;
+            }
+            if (currentOptions.buildingId) {
+                body.buildingId = currentOptions.buildingId;
+            }
+            if (currentOptions.storeyId) {
+                body.storeyId = currentOptions.storeyId;
+            }
+            if (currentOptions.noLocation) {
+                body.noLocation = currentOptions.noLocation;
             }
             if (currentOptions.eventId) {
                 body.eventId = parseInt(currentOptions.eventId, 10);
@@ -112,9 +124,9 @@ export function useAllObjects(options = {}) {
     }, [options]);
 
     // Create a stable key for the current request to prevent unnecessary refetches
-    const requestKey = useMemo(() => JSON.stringify({
-        offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, entregIds, includeImages
-    }), [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, entregIds, includeImages]);
+    const requestKey = useMemo(() => {
+        return JSON.stringify(options);
+    }, [options]);
 
     const refetchItems = useCallback(async () => {
         return await fetchItems();

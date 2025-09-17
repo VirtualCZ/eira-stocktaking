@@ -55,7 +55,7 @@ export default function StocktakingList() {
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
     const [location, setLocation] = useState(null);
-    const canFetch = location && location.room;
+    const canFetch = location && (location.building || location.storey || location.room);
 
     const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useStocktakingItems(
         canFetch
@@ -68,6 +68,9 @@ export default function StocktakingList() {
                 state: pageState.filterState.state,
                 hasNote: pageState.filterState.hasNote,
                 roomId: location.room,
+                buildingId: location.building,
+                storeyId: location.storey,
+                noLocation: !location.building && !location.storey && !location.room,
                 eventId: stocktakingId,
                 includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
             }
@@ -251,11 +254,6 @@ export default function StocktakingList() {
                 />
 
                 <UserLocationPicker onChange={setLocation} />
-                {!canFetch && (
-                  <div style={{ color: '#FF6262', fontWeight: 600, padding: '1rem' }}>
-                    Nejprve vyberte místnost (lokaci).
-                  </div>
-                )}
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">

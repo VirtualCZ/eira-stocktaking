@@ -1,99 +1,127 @@
-import { useState, useEffect } from "react";
-import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
+import { useState, useEffect, useCallback } from 'react';
+import { getAuthHeadersSafe, isAuthenticated } from '@/utils/token';
 
 export function useBuildings() {
-  const [buildings, setBuildings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const [buildings, setBuildings] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Don't make API call if not authenticated
-    if (!isAuthenticated()) {
-      setLoading(false);
-      return;
-    }
+    const fetchBuildings = useCallback(async () => {
+        if (!isAuthenticated()) {
+            setLoading(false);
+            return;
+        }
 
-    setLoading(true);
-    fetch("/api/buildings", {
-      headers: getAuthHeadersSafe()
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch buildings");
-        return res.json();
-      })
-      .then((data) => {
-        setBuildings(Array.isArray(data) ? data : []);
+        setLoading(true);
         setError(null);
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
-  }, []);
 
-  return [buildings, loading, error];
+        try {
+            const res = await fetch('/api/buildings', {
+                method: 'GET',
+                headers: getAuthHeadersSafe(),
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+
+            const data = await res.json();
+            setBuildings(data || []);
+        } catch (err) {
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchBuildings();
+    }, [fetchBuildings]);
+
+    return { buildings, loading, error, refetch: fetchBuildings };
 }
 
 export function useStoreys(buildingId) {
-  const [storeys, setStoreys] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const [storeys, setStoreys] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!buildingId) return;
-    
-    // Don't make API call if not authenticated
-    if (!isAuthenticated()) {
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    fetch(`/api/buildings/${buildingId}/storeys`, {
-      headers: getAuthHeadersSafe()
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch storeys");
-        return res.json();
-      })
-      .then((data) => {
-        setStoreys(Array.isArray(data) ? data : []);
+    const fetchStoreys = useCallback(async () => {
+        if (!isAuthenticated() || !buildingId) {
+            setStoreys([]);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
         setError(null);
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
-  }, [buildingId]);
 
-  return [storeys, loading, error];
+        try {
+            const res = await fetch(`/api/buildings/${buildingId}/storeys`, {
+                method: 'GET',
+                headers: getAuthHeadersSafe(),
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+
+            const data = await res.json();
+            setStoreys(data || []);
+        } catch (err) {
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [buildingId]);
+
+    useEffect(() => {
+        fetchStoreys();
+    }, [fetchStoreys]);
+
+    return { storeys, loading, error, refetch: fetchStoreys };
 }
 
 export function useRooms(buildingId, storeyId) {
-  const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!buildingId || !storeyId) return;
-    
-    // Don't make API call if not authenticated
-    if (!isAuthenticated()) {
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    fetch(`/api/buildings/${buildingId}/storeys/${storeyId}/rooms`, {
-      headers: getAuthHeadersSafe()
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch rooms");
-        return res.json();
-      })
-      .then((data) => {
-        setRooms(Array.isArray(data) ? data : []);
+    const fetchRooms = useCallback(async () => {
+        if (!isAuthenticated() || !buildingId || !storeyId) {
+            setRooms([]);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
         setError(null);
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
-  }, [buildingId, storeyId]);
 
-  return [rooms, loading, error];
+        try {
+            const res = await fetch(`/api/buildings/${buildingId}/storeys/${storeyId}/rooms`, {
+                method: 'GET',
+                headers: getAuthHeadersSafe(),
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+
+            const data = await res.json();
+            setRooms(data || []);
+        } catch (err) {
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [buildingId, storeyId]);
+
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
+
+    return { rooms, loading, error, refetch: fetchRooms };
 }

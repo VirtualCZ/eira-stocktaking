@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import RadioButton from "@/components/atoms/RadioButton";
-import CardContainer from "@/components/atoms/CardContainer";
+import ButtonGroup from "@/components/atoms/ButtonGroup";
 import CenteredModal from "@/components/molecules/CenteredModal";
 
 export default function SortOptionsModal({
@@ -43,33 +42,45 @@ export default function SortOptionsModal({
     };
 
     return (
-        <CenteredModal title="Možnosti zobrazení" isOpen={isOpen} onClose={handleCancel} height="auto">
-            <div style={{ margin: '0 auto', display: "flex", gap: "1rem", flexDirection: "column" }}>
-                <CardContainer className="gap-2">
-                    {sortOptions.map((opt) => (
-                        <RadioButton
-                            key={opt.value}
-                            label={opt.label}
-                            value={opt.value}
-                            checked={sortBy === opt.value}
-                            onChange={setSortBy}
-                            name="sortBy"
-                        />
-                    ))}
-                </CardContainer>
-                <CardContainer className="gap-2">
-                    {orderOptions.map((opt) => (
-                        <RadioButton
-                            key={opt.value}
-                            label={opt.label}
-                            value={opt.value}
-                            checked={sortOrder === opt.value}
-                            onChange={setSortOrder}
-                            name="sortOrder"
-                        />
-                    ))}
-                </CardContainer>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end'}}>
+        <CenteredModal title="Možnosti zobrazení" isOpen={isOpen} onClose={handleCancel} height="auto" width="90vw">
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                        Seřadit podle:
+                    </div>
+                    <ButtonGroup
+                        options={sortOptions.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            icon: opt.value === 'id' ? 'tag' : 
+                                  opt.value === 'name' ? 'label' : 
+                                  opt.value === 'lastCheck' ? 'schedule' : 'note'
+                        }))}
+                        value={sortBy}
+                        onChange={setSortBy}
+                        iconPosition="left"
+                        orientation="vertical"
+                    />
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                        Pořadí:
+                    </div>
+                    <ButtonGroup
+                        options={orderOptions.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            icon: opt.value === 'asc' ? 'arrow_upward' : 'arrow_downward'
+                        }))}
+                        value={sortOrder}
+                        onChange={setSortOrder}
+                        iconPosition="left"
+                        orientation="vertical"
+                    />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: "0.5rem" }}>
                     <button
                         onClick={handleOk}
                         style={{

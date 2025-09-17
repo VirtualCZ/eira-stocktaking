@@ -13,6 +13,8 @@ export function useBaseItems(options = {}) {
         sortBy = 'name',
         sortOrder = 'asc',
         search = '',
+        buildingId = null,
+        storeyId = null,
         roomId = null,
         eventId = null,
         skip = false
@@ -36,9 +38,18 @@ export function useBaseItems(options = {}) {
                 sortBy,
                 sortOrder,
                 search,
-                roomId,
                 eventId
             };
+
+            if (buildingId) {
+                body.buildingId = buildingId;
+            }
+            if (storeyId) {
+                body.storeyId = storeyId;
+            }
+            if (roomId) {
+                body.roomId = roomId;
+            }
 
             abortController = new AbortController();
             console.log("useBaseItems - Sending request:", body);
@@ -81,7 +92,7 @@ export function useBaseItems(options = {}) {
                 setLoading(false);
             }
         }
-    }, [offset, limit, sortBy, sortOrder, search, roomId, eventId, skip]);
+    }, [offset, limit, sortBy, sortOrder, search, buildingId, storeyId, roomId, eventId, skip]);
 
     const refetchItems = useCallback(async () => {
         const result = await fetchBaseItems();

@@ -15,22 +15,34 @@ export default function CenteredModal({
 }) {
     const modalRef = useRef(null);
 
+    // Handle click outside
     useEffect(() => {
-        if (disableClickAway) return;
+        if (disableClickAway || !isOpen) return;
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
                 onClose();
             }
         };
 
-        if (isOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-
+        document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [isOpen, onClose, disableClickAway]);
+
+    // Handle background scroll prevention
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            // Always restore on cleanup
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
 
     const modalContent = (
         <div style={{
@@ -43,7 +55,7 @@ export default function CenteredModal({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 1000,
+            zIndex: 9999,
             transition: "background 0.3s ease-in-out",
             pointerEvents: isOpen ? "auto" : "none",
             opacity: isOpen ? 1 : 0,
@@ -54,6 +66,11 @@ export default function CenteredModal({
                 ref={modalRef}
                 style={{
                     padding: "1rem",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
                 }}
             >
                 <div style={{
@@ -63,6 +80,9 @@ export default function CenteredModal({
                     boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
                     minHeight: 40,
                     height: height,
+                    maxHeight: "calc(100dvh - 2rem)",
+                    width: width,
+                    maxWidth: "calc(100vw - 2rem)",
                     overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
@@ -117,9 +137,13 @@ export default function CenteredModal({
                     {/* Content section */}
                     <div style={{
                         flex: 1,
-                        overflowY: "auto",
+                        overflow: "auto",
+                        overscrollBehavior: "contain",
+                        WebkitOverflowScrolling: "touch",
+                        touchAction: "auto",
                         padding: "1rem",
-                        maxHeight: '80dvh',
+                        display: "flex",
+                        flexDirection: "column",
                         ...contentStyle
                     }}>
                         {children}

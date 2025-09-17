@@ -245,8 +245,8 @@ export default function NewItem() {
                             <TextInput
                                 value={editItem.note || ""}
                                 onChange={handleNoteChange}
-                                label="Poznámka"
-                                placeholder="Poznámka"
+                                label="Poznámka k inventuře"
+                                placeholder="Poznámka k inventuře"
                                 multiline
                             />
                             <DropdownCard

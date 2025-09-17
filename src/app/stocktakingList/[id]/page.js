@@ -25,7 +25,7 @@ const sortOptions = [
     { label: 'ID', value: 'id' },
     { label: 'Jméno', value: 'name' },
     { label: 'Datum', value: 'lastCheck' },
-    { label: 'Poznámka', value: 'note' },
+    { label: 'Poznámka k inventuře', value: 'note' },
 ];
 
 export default function StocktakingList() {

@@ -92,8 +92,8 @@ export default function StocktakingItemDetailTemplate({
                     <TextInput
                       value={editItem.note}
                       onChange={e => onEditItemChange({ ...editItem, note: e.target.value })}
-                      label={"Poznámka"}
-                      placeholder="Poznámka"
+                      label={"Poznámka k inventuře"}
+                      placeholder="Poznámka k inventuře"
                       multiline
                     />
                     <LocationPicker
@@ -172,7 +172,7 @@ export default function StocktakingItemDetailTemplate({
                 </div>
                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                  <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka:</div>
+                  <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka k inventuře:</div>
                   <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
                 </div>
                 <LocationPicker

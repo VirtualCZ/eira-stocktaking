@@ -71,8 +71,8 @@ export default function LinkItemDetailTemplate({
             <TextInput
               value={item.note || ""}
               onChange={e => onEditItemChange({ ...item, note: e.target.value })}
-              label={"Poznámka"}
-              placeholder="Poznámka"
+              label={"Poznámka k inventuře"}
+              placeholder="Poznámka k inventuře"
               multiline
             />
             <LocationPicker

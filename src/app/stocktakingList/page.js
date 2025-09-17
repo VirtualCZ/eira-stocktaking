@@ -12,7 +12,7 @@ const PAGE_SIZE = 10;
 const sortOptions = [
     { label: 'ID', value: 'id' },
     { label: 'Datum', value: 'date' },
-    { label: 'Poznámka', value: 'note' }
+    { label: 'Poznámka k inventuře', value: 'note' }
 ];
 
 export default function StocktakingOperationsList() {

@@ -246,20 +246,33 @@ export default function StocktakingList() {
                 icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
                 label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
                 action={async () => {
-                  const { image, ...rest } = item;
-                  const newState = item.state === 'nalezeno' ? 'zbyva' : 'nalezeno';
-                  const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: newState });
-                  if (result) {
-                    const message = newState === 'nalezeno' 
-                        ? 'Položka byla označena jako nalezena.' 
-                        : 'Položka byla označena jako nenalezena.';
-                    showActionModal('Hotovo', message, true);
-                    refetchItems();
+                  if (item.state === 'nalezeno') {
+                    // Toggle to not found
+                    const { image, ...rest } = item;
+                    const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
+                    if (result) {
+                      showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
+                      refetchItems();
+                    } else {
+                      showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
+                    }
                   } else {
-                    const errorMessage = newState === 'nalezeno'
-                        ? 'Nepodařilo se označit položku jako nalezenou.'
-                        : 'Nepodařilo se označit položku jako nenalezenou.';
-                    showActionModal('Chyba', errorMessage, false);
+                    // Toggle to found
+                    if (recordStatus) {
+                      // Show status selection modal
+                      setPendingItem(item);
+                      setIsStatusSelectionModalOpen(true);
+                    } else {
+                      // Direct confirmation without status selection
+                      const { image, ...rest } = item;
+                      const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                      if (result) {
+                        showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                        refetchItems();
+                      } else {
+                        showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+                      }
+                    }
                   }
                 }}
             />

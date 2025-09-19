@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
 
 export function useSettings() {
-    const [recordStatus, setRecordStatus] = useState(false);
-
-    // Load settings from localStorage on mount
-    useEffect(() => {
+    const [recordStatus, setRecordStatus] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('settings_recordStatus');
-            if (saved !== null) {
-                setRecordStatus(JSON.parse(saved));
-            }
+            return saved !== null ? JSON.parse(saved) : false;
         }
-    }, []);
+        return false;
+    });
 
     // Save settings to localStorage when changed
     useEffect(() => {

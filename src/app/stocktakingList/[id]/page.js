@@ -58,6 +58,7 @@ export default function StocktakingList() {
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
     const [isStatusSelectionModalOpen, setIsStatusSelectionModalOpen] = useState(false);
     const [pendingItem, setPendingItem] = useState(null);
+    const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
     const [location, setLocation] = useState(null);
     const canFetch = location && (location.building || location.storey || location.room);
@@ -150,24 +151,29 @@ export default function StocktakingList() {
     const handleStatusSelect = async (status) => {
         if (!pendingItem) return;
         
-        const { image, ...rest } = pendingItem;
-        const updatedNote = appendStatusToNote(rest.note, status);
-        
-        const result = await updateItem({ 
-            ...rest, 
-            stocktakingId: stocktakingId, 
-            state: 'nalezeno',
-            note: updatedNote
-        });
-        
-        setIsPreviewModalOpen(false);
-        setPendingItem(null);
-        
-        if (result) {
-            showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-            refetchItems();
-        } else {
-            showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+        setIsUpdatingItem(true);
+        try {
+            const { image, ...rest } = pendingItem;
+            const updatedNote = appendStatusToNote(rest.note, status);
+            
+            const result = await updateItem({ 
+                ...rest, 
+                stocktakingId: stocktakingId, 
+                state: 'nalezeno',
+                note: updatedNote
+            });
+            
+            setIsPreviewModalOpen(false);
+            setPendingItem(null);
+            
+            if (result) {
+                showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+                refetchItems();
+            } else {
+                showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+            }
+        } finally {
+            setIsUpdatingItem(false);
         }
     };
 
@@ -248,13 +254,18 @@ export default function StocktakingList() {
                 action={async () => {
                   if (item.state === 'nalezeno') {
                     // Toggle to not found
-                    const { image, ...rest } = item;
-                    const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
-                    if (result) {
-                      showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
-                      refetchItems();
-                    } else {
-                      showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
+                    setIsUpdatingItem(true);
+                    try {
+                      const { image, ...rest } = item;
+                      const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
+                      if (result) {
+                        showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
+                        refetchItems();
+                      } else {
+                        showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
+                      }
+                    } finally {
+                      setIsUpdatingItem(false);
                     }
                   } else {
                     // Toggle to found
@@ -264,13 +275,18 @@ export default function StocktakingList() {
                       setIsStatusSelectionModalOpen(true);
                     } else {
                       // Direct confirmation without status selection
-                      const { image, ...rest } = item;
-                      const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
-                      if (result) {
-                        showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
-                        refetchItems();
-                      } else {
-                        showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+                      setIsUpdatingItem(true);
+                      try {
+                        const { image, ...rest } = item;
+                        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                        if (result) {
+                          showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                          refetchItems();
+                        } else {
+                          showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+                        }
+                      } finally {
+                        setIsUpdatingItem(false);
                       }
                     }
                   }
@@ -570,14 +586,19 @@ export default function StocktakingList() {
                                         setIsStatusSelectionModalOpen(true);
                                     } else {
                                         // Direct confirmation without status selection
-                                        const { image, ...rest } = scannedItem;
-                                        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
-                                        setIsPreviewModalOpen(false);
-                                        if (result) {
-                                            showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                                            refetchItems();
-                                        } else {
-                                            showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                                        setIsUpdatingItem(true);
+                                        try {
+                                            const { image, ...rest } = scannedItem;
+                                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                                            setIsPreviewModalOpen(false);
+                                            if (result) {
+                                                showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+                                                refetchItems();
+                                            } else {
+                                                showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                                            }
+                                        } finally {
+                                            setIsUpdatingItem(false);
                                         }
                                     }
                                 }}>
@@ -681,6 +702,14 @@ export default function StocktakingList() {
                     onStatusSelect={handleStatusSelect}
                     itemName={pendingItem?.name || ''}
                 />
+
+                {/* Loading modal for item updates */}
+                <CenteredModal isOpen={isUpdatingItem} title="Probíhá akce...">
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <span>Probíhá akce...</span>
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+                    </div>
+                </CenteredModal>
             </div>
         </main>
     );

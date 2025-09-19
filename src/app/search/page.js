@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
 import { useAllObjects } from "@/hooks/useAllObjects";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { usePageState } from "@/hooks/usePageState";
@@ -41,6 +41,29 @@ export default function SearchPage() {
         currentPage: 0
     });
 
+    // Create stable location values to prevent unnecessary useMemo recalculations
+    const locationValues = useMemo(() => ({
+        building: location?.building,
+        storey: location?.storey,
+        room: location?.room
+    }), [location?.building, location?.storey, location?.room]);
+
+    // Track if location has been initialized to prevent premature API calls
+    const [locationInitialized, setLocationInitialized] = useState(false);
+
+    // Stable location change handler
+    const handleLocationChange = useCallback((newLocation) => {
+        setLocation(newLocation);
+        setLocationInitialized(true);
+    }, []);
+
+    // Mark location as initialized when it's first set
+    useEffect(() => {
+        if (location && !locationInitialized) {
+            setLocationInitialized(true);
+        }
+    }, [location, locationInitialized]);
+
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
@@ -51,22 +74,26 @@ export default function SearchPage() {
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
 
-    const hookOptions = useMemo(() => ({
-        offset: pageState.currentPage * PAGE_SIZE,
-        limit: PAGE_SIZE,
-        sortBy: pageState.sortBy,
-        sortOrder: pageState.sortOrder,
-        search: pageState.searchTerm,
-        state: pageState.filterState.state,
-        hasNote: pageState.filterState.hasNote,
-        eventId: selectedInventura?.id,
-        roomId: location?.room,
-        buildingId: location?.building,
-        storeyId: location?.storey,
-        noLocation: !location?.building && !location?.storey && !location?.room,
-        // entregIds: [123, 456, 789], // Example: Filter by specific object types
-        includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
-    }), [
+    const hookOptions = useMemo(() => {
+        const options = {
+            offset: pageState.currentPage * PAGE_SIZE,
+            limit: PAGE_SIZE,
+            sortBy: pageState.sortBy,
+            sortOrder: pageState.sortOrder,
+            search: pageState.searchTerm,
+            state: pageState.filterState.state,
+            hasNote: pageState.filterState.hasNote,
+            eventId: selectedInventura?.id,
+            roomId: locationValues.room,
+            buildingId: locationValues.building,
+            storeyId: locationValues.storey,
+            noLocation: !locationValues.building && !locationValues.storey && !locationValues.room,
+            // entregIds: [123, 456, 789], // Example: Filter by specific object types
+            includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
+            skip: !locationInitialized || !selectedInventura?.id, // Skip API calls until location and inventura are ready
+        };
+        return options;
+    }, [
         pageState.currentPage,
         pageState.sortBy,
         pageState.sortOrder,
@@ -74,9 +101,11 @@ export default function SearchPage() {
         pageState.filterState.state,
         pageState.filterState.hasNote,
         selectedInventura?.id,
-        location?.room,
-        location,
-        pageState.viewMode
+        locationValues.room,
+        locationValues.building,
+        locationValues.storey,
+        pageState.viewMode,
+        locationInitialized
     ]);
 
     const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useAllObjects(hookOptions);
@@ -181,7 +210,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Location filter */}
-                <UserLocationPicker onChange={setLocation} />
+                <UserLocationPicker onChange={handleLocationChange} />
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">

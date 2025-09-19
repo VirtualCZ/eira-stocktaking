@@ -83,7 +83,7 @@ export default function LinkItemDetailTemplate({
             <QRCodeInput
               value={item.qr}
               onChange={code => onEditItemChange({ ...item, qr: code })}
-              editMode={true}
+              editMode={false}
             />
             {item.properties && (
               <CardContainer className="gap-2">

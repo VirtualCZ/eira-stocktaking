@@ -33,15 +33,24 @@ export default function CenteredModal({
     // Handle background scroll prevention
     useEffect(() => {
         if (isOpen) {
+            // Store current scroll position
+            const scrollY = window.scrollY;
+            
+            // Prevent scrolling
             document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            
+            return () => {
+                // Restore scroll position and styles
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                window.scrollTo(0, scrollY);
+            };
         }
-
-        return () => {
-            // Always restore on cleanup
-            document.body.style.overflow = '';
-        };
     }, [isOpen]);
 
     const modalContent = (
@@ -79,7 +88,7 @@ export default function CenteredModal({
                     position: "relative",
                     boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
                     minHeight: 40,
-                    height: height,
+                    height: height === "auto" ? "auto" : height,
                     maxHeight: "calc(100dvh - 2rem)",
                     width: width,
                     maxWidth: "calc(100vw - 2rem)",
@@ -140,7 +149,7 @@ export default function CenteredModal({
                         overflow: "auto",
                         overscrollBehavior: "contain",
                         WebkitOverflowScrolling: "touch",
-                        touchAction: "auto",
+                        touchAction: "pan-y",
                         padding: "1rem",
                         display: "flex",
                         flexDirection: "column",

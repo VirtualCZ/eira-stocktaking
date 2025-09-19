@@ -6,12 +6,14 @@ import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthToken } from "@/utils/token";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import SettingsModal from "@/components/organisms/SettingsModal";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
   const { user, loading: userLoading } = useCurrentUser();
   const router = useRouter();
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
 
 
@@ -70,15 +72,15 @@ export default function Home() {
           </button>
         </div>
         {/* Right: Settings */}
-        {/* <div className="flex items-center">
-          <Link
-            href="/settings"
+        <div className="flex items-center">
+          <button
+            onClick={() => setIsSettingsModalOpen(true)}
             className="flex items-center justify-center p-3 rounded-2xl"
             style={{ backgroundColor: "#000" }}
           >
             <span className="material-icons-round" style={{ fontSize: 14, color: "#fff" }}>settings</span>
-          </Link>
-        </div> */}
+          </button>
+        </div>
       </div>
 
       {/* ; Content */}
@@ -172,6 +174,11 @@ export default function Home() {
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
       </footer>
+      
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useGetLocation, useSetLocation } from "@/hooks/useLocation";
 import LocationPicker from "@/components/organisms/LocationPicker";
 
@@ -6,20 +6,26 @@ export default function UserLocationPicker({ editMode = true, onChange }) {
   const getLocation = useGetLocation();
   const setLocationStorage = useSetLocation();
   const [location, setLocation] = useState(null);
+  const onChangeRef = useRef(onChange);
+
+  // Keep the ref up to date
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   // On mount, load from storage and notify parent
   useEffect(() => {
     const stored = getLocation();
     if (stored) {
       setLocation(stored);
-      if (onChange) onChange(stored);
+      if (onChangeRef.current) onChangeRef.current(stored);
     }
-  }, [getLocation, onChange]);
+  }, [getLocation]);
 
   const handleChange = (loc) => {
     setLocation(loc);
     setLocationStorage(loc);
-    if (onChange) onChange(loc);
+    if (onChangeRef.current) onChangeRef.current(loc);
   };
 
   return (

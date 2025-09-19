@@ -103,7 +103,7 @@ export default function StocktakingItemDetailTemplate({
                     <QRCodeInput
                       value={editItem.qr}
                       onChange={code => onEditItemChange({ ...editItem, qr: code })}
-                      editMode={true}
+                      editMode={false}
                     />
                     {editItem.properties && Array.isArray(editItem.properties) && editItem.properties.length > 0 && (
                       <CardContainer className="gap-2">

@@ -16,7 +16,9 @@ import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
+import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from "@/components/atoms/Button";
+import { useSettings } from "@/hooks/useSettings";
 
 
 const PAGE_SIZE = 10;
@@ -33,6 +35,7 @@ export default function StocktakingList() {
     const router = useRouter();
     const params = useParams();
     const stocktakingId = parseInt(params.id);
+    const { recordStatus } = useSettings();
     
     // Use page state for filters and sorting
     const [pageState, updatePageState, resetPageState] = usePageState(`stocktakingList_${stocktakingId}`, {
@@ -53,6 +56,8 @@ export default function StocktakingList() {
 
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
+    const [isStatusSelectionModalOpen, setIsStatusSelectionModalOpen] = useState(false);
+    const [pendingItem, setPendingItem] = useState(null);
 
     const [location, setLocation] = useState(null);
     const canFetch = location && (location.building || location.storey || location.room);
@@ -130,6 +135,40 @@ export default function StocktakingList() {
     const showActionModal = (title, message, success) => {
         setActionModalContent({ title, message, success });
         setActionModalOpen(true);
+    };
+
+    // Helper function to append status to note
+    const appendStatusToNote = (existingNote, status) => {
+        const statusText = status.label;
+        if (!existingNote) {
+            return `Stav: ${statusText}`;
+        }
+        return `${existingNote} | Stav: ${statusText}`;
+    };
+
+    // Handle status selection from modal
+    const handleStatusSelect = async (status) => {
+        if (!pendingItem) return;
+        
+        const { image, ...rest } = pendingItem;
+        const updatedNote = appendStatusToNote(rest.note, status);
+        
+        const result = await updateItem({ 
+            ...rest, 
+            stocktakingId: stocktakingId, 
+            state: 'nalezeno',
+            note: updatedNote
+        });
+        
+        setIsPreviewModalOpen(false);
+        setPendingItem(null);
+        
+        if (result) {
+            showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+            refetchItems();
+        } else {
+            showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+        }
     };
 
     function handleScan(scannedValue) {
@@ -511,14 +550,22 @@ export default function StocktakingList() {
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                                 <Button icon="check" iconPosition="right" onClick={async () => {
                                     if (!scannedItem || !scannedItem.id) return;
-                                    const { image, ...rest } = scannedItem;
-                                    const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
-                                    setIsPreviewModalOpen(false);
-                                    if (result) {
-                                        showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                                        refetchItems();
+                                    
+                                    if (recordStatus) {
+                                        // Show status selection modal
+                                        setPendingItem(scannedItem);
+                                        setIsStatusSelectionModalOpen(true);
                                     } else {
-                                        showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                                        // Direct confirmation without status selection
+                                        const { image, ...rest } = scannedItem;
+                                        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                                        setIsPreviewModalOpen(false);
+                                        if (result) {
+                                            showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+                                            refetchItems();
+                                        } else {
+                                            showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                                        }
                                     }
                                 }}>
                                     Označit jako nalezeno
@@ -611,6 +658,16 @@ export default function StocktakingList() {
                         {actionModalContent.message}
                     </div>
                 </CenteredModal>
+
+                <StatusSelectionModal
+                    isOpen={isStatusSelectionModalOpen}
+                    onClose={() => {
+                        setIsStatusSelectionModalOpen(false);
+                        setPendingItem(null);
+                    }}
+                    onStatusSelect={handleStatusSelect}
+                    itemName={pendingItem?.name || ''}
+                />
             </div>
         </main>
     );

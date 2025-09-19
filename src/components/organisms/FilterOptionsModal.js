@@ -53,110 +53,132 @@ export default function FilterOptionsModal({
 
     return (
         <CenteredModal title="Filtry" isOpen={isOpen} onClose={onClose} height="auto" width="90vw">
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
-                        Stav:
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {stateOptions.map((opt) => (
-                            <label
-                                key={opt.value}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.75rem",
-                                    padding: "0.75rem",
-                                    borderRadius: "8px",
-                                    border: "1px solid #e0e0e0",
-                                    backgroundColor: state.includes(opt.value) ? "#f8f9fa" : "white",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                    fontSize: "0.875rem",
-                                    fontWeight: "500"
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!state.includes(opt.value)) {
-                                        e.target.style.backgroundColor = "#f5f5f5";
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!state.includes(opt.value)) {
-                                        e.target.style.backgroundColor = "white";
-                                    }
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={state.includes(opt.value)}
-                                    onChange={() => handleStateChange(opt.value)}
+            <div style={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                height: "100%", 
+                width: "100%",
+                minHeight: "40px"
+            }}>
+                {/* Scrollable content */}
+                <div style={{ 
+                    flex: 1, 
+                    overflow: "auto", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    gap: "1.5rem",
+                    minHeight: 0
+                }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                            Stav:
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            {stateOptions.map((opt) => (
+                                <label
+                                    key={opt.value}
                                     style={{
-                                        width: "18px",
-                                        height: "18px",
-                                        accentColor: "#282828",
-                                        cursor: "pointer"
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.75rem",
+                                        padding: "0.75rem",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e0e0e0",
+                                        backgroundColor: state.includes(opt.value) ? "#f8f9fa" : "white",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        fontSize: "0.875rem",
+                                        fontWeight: "500"
                                     }}
-                                />
-                                <span>{opt.label}</span>
-                            </label>
-                        ))}
+                                    onMouseEnter={(e) => {
+                                        if (!state.includes(opt.value)) {
+                                            e.target.style.backgroundColor = "#f5f5f5";
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!state.includes(opt.value)) {
+                                            e.target.style.backgroundColor = "white";
+                                        }
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={state.includes(opt.value)}
+                                        onChange={() => handleStateChange(opt.value)}
+                                        style={{
+                                            width: "18px",
+                                            height: "18px",
+                                            accentColor: "#282828",
+                                            cursor: "pointer"
+                                        }}
+                                    />
+                                    <span>{opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                            Má poznámku:
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            {hasNoteOptions.map((opt) => (
+                                <label
+                                    key={opt.value}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.75rem",
+                                        padding: "0.75rem",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e0e0e0",
+                                        backgroundColor: hasNote.includes(opt.value) ? "#f8f9fa" : "white",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        fontSize: "0.875rem",
+                                        fontWeight: "500"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!hasNote.includes(opt.value)) {
+                                            e.target.style.backgroundColor = "#f5f5f5";
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!hasNote.includes(opt.value)) {
+                                            e.target.style.backgroundColor = "white";
+                                        }
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={hasNote.includes(opt.value)}
+                                        onChange={() => handleHasNoteChange(opt.value)}
+                                        style={{
+                                            width: "18px",
+                                            height: "18px",
+                                            accentColor: "#282828",
+                                            cursor: "pointer"
+                                        }}
+                                    />
+                                    <span>{opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
-                        Má poznámku:
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {hasNoteOptions.map((opt) => (
-                            <label
-                                key={opt.value}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.75rem",
-                                    padding: "0.75rem",
-                                    borderRadius: "8px",
-                                    border: "1px solid #e0e0e0",
-                                    backgroundColor: hasNote.includes(opt.value) ? "#f8f9fa" : "white",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                    fontSize: "0.875rem",
-                                    fontWeight: "500"
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!hasNote.includes(opt.value)) {
-                                        e.target.style.backgroundColor = "#f5f5f5";
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!hasNote.includes(opt.value)) {
-                                        e.target.style.backgroundColor = "white";
-                                    }
-                                }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={hasNote.includes(opt.value)}
-                                    onChange={() => handleHasNoteChange(opt.value)}
-                                    style={{
-                                        width: "18px",
-                                        height: "18px",
-                                        accentColor: "#282828",
-                                        cursor: "pointer"
-                                    }}
-                                />
-                                <span>{opt.label}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: "0.5rem" }}>
+                {/* OK button - OUTSIDE scrollable area */}
+                <div style={{ 
+                    flexShrink: 0,
+                    borderTop: "1px solid #e0e0e0",
+                    paddingTop: "1rem",
+                    marginTop: "1rem"
+                }}>
                     <button
                         onClick={handleOk}
                         style={{
-                            flex: 1,
+                            width: "100%",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
@@ -165,12 +187,20 @@ export default function FilterOptionsModal({
                             border: "none",
                             borderRadius: "1rem",
                             padding: "0.75rem",
-                            fontSize: "0.75rem",
-                            cursor: "pointer"
+                            fontSize: "0.875rem",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "background 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = "#1a1a1a";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = "#282828";
                         }}
                     >
                         OK
-                        <span className="material-icons-round" style={{ fontSize: 20, marginLeft: 8 }}>check</span>
+                        <span className="material-icons-round" style={{ fontSize: "18px" }}>check</span>
                     </button>
                 </div>
             </div>

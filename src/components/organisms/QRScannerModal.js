@@ -63,25 +63,22 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
 
     return (
         <CenteredModal
-            contentStyle={{
-                padding: 0
-            }}
-            height="70vh"
             isOpen={showModal}
             onClose={onClose}
             title="QR Sken"
+            width="90vw"
         >
             <div style={{
                 background: "#fff",
-                padding: "20px",
-                paddingTop: "50px",
+                padding: "1rem",
                 textAlign: "center",
                 position: "relative",
                 width: "100%",
-                boxShadow: "0px -5px 15px rgba(0,0,0,0.2)",
-                height: "100%",
+                height: "60vh",
+                maxHeight: "500px",
                 display: "flex",
                 flexDirection: "column",
+                borderRadius: "8px",
             }}>
 
                 <div style={{ flexGrow: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: "16px" }}>
@@ -110,12 +107,13 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
                 </div>
 
                 <div style={{
-                    color: "#fff",
+                    color: "#333",
                     whiteSpace: "pre-line",
-                    fontSize: 16,
-                    padding: "10px 0",
+                    fontSize: "0.875rem",
+                    padding: "0.75rem 0",
                     minHeight: '40px',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    fontWeight: 500
                 }}>
                     {displayMessage}
                 </div>

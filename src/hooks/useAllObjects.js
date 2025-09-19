@@ -125,8 +125,38 @@ export function useAllObjects(options = {}) {
 
     // Create a stable key for the current request to prevent unnecessary refetches
     const requestKey = useMemo(() => {
-        return JSON.stringify(options);
-    }, [options]);
+        return JSON.stringify({
+            offset: options.offset,
+            limit: options.limit,
+            sortBy: options.sortBy,
+            sortOrder: options.sortOrder,
+            search: options.search,
+            state: options.state,
+            hasNote: options.hasNote,
+            roomId: options.roomId,
+            buildingId: options.buildingId,
+            storeyId: options.storeyId,
+            noLocation: options.noLocation,
+            eventId: options.eventId,
+            includeImages: options.includeImages,
+            skip: options.skip
+        });
+    }, [
+        options.offset,
+        options.limit,
+        options.sortBy,
+        options.sortOrder,
+        options.search,
+        options.state,
+        options.hasNote,
+        options.roomId,
+        options.buildingId,
+        options.storeyId,
+        options.noLocation,
+        options.eventId,
+        options.includeImages,
+        options.skip
+    ]);
 
     const refetchItems = useCallback(async () => {
         return await fetchItems();
@@ -188,7 +218,7 @@ export function useAllObjects(options = {}) {
                 });
             }
         };
-    }, [requestKey]);
+    }, [requestKey, skip, fetchItems]);
 
     return [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage];
 }

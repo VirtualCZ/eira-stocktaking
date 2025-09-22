@@ -17,9 +17,9 @@ function useLocationName(location) {
 
   if (!location) return null;
 
-  const building = buildings.find(b => b.id === location.building);
-  const storey = storeys.find(s => s.id === location.storey);
-  const room = rooms.find(r => r.id === location.room);
+  const building = Array.isArray(buildings) ? buildings.find(b => b.id === location.building) : undefined;
+  const storey = Array.isArray(storeys) ? storeys.find(s => s.id === location.storey) : undefined;
+  const room = Array.isArray(rooms) ? rooms.find(r => r.id === location.room) : undefined;
 
   const parts = [];
   if (building) parts.push(building.text);

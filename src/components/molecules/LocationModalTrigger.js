@@ -4,11 +4,11 @@ import { useBuildings, useStoreys, useRooms } from "@/hooks/useBuildings";
 
 export default function LocationModalTrigger({ onClick, location, editMode = true, label= "Lokace:" }) {
   const { buildings } = useBuildings();
-  const building = buildings.find(b => b.id === location?.building);
+  const building = Array.isArray(buildings) ? buildings.find(b => b.id === location?.building) : undefined;
   const { storeys } = useStoreys(location?.building);
-  const storey = storeys.find(s => s.id === location?.storey);
+  const storey = Array.isArray(storeys) ? storeys.find(s => s.id === location?.storey) : undefined;
   const { rooms } = useRooms(location?.building, location?.storey);
-  const room = rooms.find(r => r.id === location?.room);
+  const room = Array.isArray(rooms) ? rooms.find(r => r.id === location?.room) : undefined;
 
   const buildingText = building?.text || location?.building || "-";
   const storeyText = storey?.text || location?.storey || "-";

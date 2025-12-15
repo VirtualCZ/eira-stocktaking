@@ -63,15 +63,15 @@ export default function LocationPickerModal({ isOpen, onClose, onSave, initialLo
 
     const buildingOptions = [
         { value: null, text: "-bez výběru-" },
-        ...buildings.map((b) => ({ value: b.id, text: b.text }))
+        ...(Array.isArray(buildings) ? buildings.map((b) => ({ value: b.id, text: b.text })) : [])
     ];
     const storeyOptions = [
         { value: null, text: "-bez výběru-" },
-        ...storeys.map((s) => ({ value: s.id, text: s.text }))
+        ...(Array.isArray(storeys) ? storeys.map((s) => ({ value: s.id, text: s.text })) : [])
     ];
     const roomOptions = [
         { value: null, text: "-bez výběru-" },
-        ...rooms.map((r) => ({ value: r.id, text: r.text }))
+        ...(Array.isArray(rooms) ? rooms.map((r) => ({ value: r.id, text: r.text })) : [])
     ];
 
     const selectedBuildingOption = buildingOptions.find((opt) => opt.value === selectedBuilding) || buildingOptions[0];

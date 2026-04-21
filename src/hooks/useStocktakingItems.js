@@ -1,12 +1,71 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAuthHeadersSafe, isAuthenticated } from '@/utils/token';
 
+const objectsResponseCache = new Map();
+const objectsInFlight = new Map();
+const OBJECTS_CACHE_TTL_MS = 4000;
+const objectImagesCache = new Map();
+const objectImagesInFlight = new Map();
+
+function buildObjectsRequestBody(params, forceIncludeImages = null) {
+    const {
+        offset = 0,
+        limit = 10,
+        sortBy = 'id',
+        sortOrder = 'asc',
+        search = '',
+        state = [],
+        hasNote = [],
+        roomId = null,
+        buildingId = null,
+        storeyId = null,
+        noLocation = false,
+        eventId = null,
+        entregIds = [],
+        includeImages = false
+    } = params;
+
+    const body = {
+        offset,
+        limit,
+        sortBy,
+        sortOrder,
+        search,
+        state,
+        hasNote,
+        includeImages: forceIncludeImages ?? includeImages,
+        thumbnail: true
+    };
+
+    if (roomId) {
+        body.roomId = roomId;
+    }
+    if (buildingId) {
+        body.buildingId = buildingId;
+    }
+    if (storeyId) {
+        body.storeyId = storeyId;
+    }
+    if (noLocation) {
+        body.noLocation = noLocation;
+    }
+    if (eventId) {
+        body.eventId = parseInt(eventId, 10);
+    }
+    if (entregIds && entregIds.length > 0) {
+        body.entregIds = entregIds;
+    }
+
+    return body;
+}
+
 export function useStocktakingItems(options = {}) {
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [hasImagesForCurrentPage, setHasImagesForCurrentPage] = useState(false);
+    const [imagesResolvedForCurrentPage, setImagesResolvedForCurrentPage] = useState(false);
 
     const {
         offset = 0,
@@ -26,7 +85,7 @@ export function useStocktakingItems(options = {}) {
         skip = false
     } = options;
 
-    const fetchItems = useCallback(async () => {
+    const fetchObjects = useCallback(async (forceIncludeImages = null) => {
         if (skip || !isAuthenticated()) {
             setLoading(false);
             return null;
@@ -38,7 +97,7 @@ export function useStocktakingItems(options = {}) {
         let abortController = null;
 
         try {
-            const body = {
+            const body = buildObjectsRequestBody({
                 offset,
                 limit,
                 sortBy,
@@ -46,49 +105,55 @@ export function useStocktakingItems(options = {}) {
                 search,
                 state,
                 hasNote,
-                includeImages,
-                thumbnail: true // Always use thumbnails when including images
-            };
+                roomId,
+                buildingId,
+                storeyId,
+                noLocation,
+                eventId,
+                entregIds,
+                includeImages
+            }, forceIncludeImages);
+            const requestKey = JSON.stringify(body);
+            const cached = objectsResponseCache.get(requestKey);
+            const now = Date.now();
+            if (cached && now - cached.ts < OBJECTS_CACHE_TTL_MS) {
+                setItems(cached.data.items || []);
+                setTotal(cached.data.total || 0);
+                const hasImages = cached.data.items && cached.data.items.length > 0 && cached.data.items.some(item => item.image);
+                setHasImagesForCurrentPage(hasImages);
+                setImagesResolvedForCurrentPage(false);
+                return null;
+            }
 
-            if (roomId) {
-                body.roomId = roomId;
-            }
-            if (buildingId) {
-                body.buildingId = buildingId;
-            }
-            if (storeyId) {
-                body.storeyId = storeyId;
-            }
-            if (noLocation) {
-                body.noLocation = noLocation;
-            }
-            if (eventId) {
-                body.eventId = parseInt(eventId, 10);
-            }
-            if (entregIds && entregIds.length > 0) {
-                body.entregIds = entregIds;
+            if (objectsInFlight.has(requestKey)) {
+                const sharedData = await objectsInFlight.get(requestKey);
+                setItems(sharedData.items || []);
+                setTotal(sharedData.total || 0);
+                const hasImages = sharedData.items && sharedData.items.length > 0 && sharedData.items.some(item => item.image);
+                setHasImagesForCurrentPage(hasImages);
+                setImagesResolvedForCurrentPage(false);
+                return null;
             }
 
             abortController = new AbortController();
-            console.log("Sending to API:", body);
 
-            const res = await fetch(`/api/objects`, {
+            const requestPromise = fetch(`/api/objects`, {
                 method: 'POST',
                 headers: getAuthHeadersSafe(),
                 body: JSON.stringify(body),
                 signal: abortController.signal
+            }).then(async (res) => {
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errorText}`);
+                }
+                return res.json();
             });
 
-            if (abortController.signal.aborted) {
-                return abortController;
-            }
-
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`HTTP ${res.status}: ${errorText}`);
-            }
-
-            const data = await res.json();
+            objectsInFlight.set(requestKey, requestPromise);
+            const data = await requestPromise;
+            objectsResponseCache.set(requestKey, { ts: now, data });
+            objectsInFlight.delete(requestKey);
             
             if (!abortController.signal.aborted) {
                 setItems(data.items || []);
@@ -96,10 +161,29 @@ export function useStocktakingItems(options = {}) {
                 // Track if we have images for the current page by checking actual item data
                 const hasImages = data.items && data.items.length > 0 && data.items.some(item => item.image);
                 setHasImagesForCurrentPage(hasImages);
+                setImagesResolvedForCurrentPage(false);
             }
 
             return abortController;
         } catch (err) {
+            // Ensure failed shared request is not kept in-flight.
+            const body = buildObjectsRequestBody({
+                offset,
+                limit,
+                sortBy,
+                sortOrder,
+                search,
+                state,
+                hasNote,
+                roomId,
+                buildingId,
+                storeyId,
+                noLocation,
+                eventId,
+                entregIds,
+                includeImages
+            }, forceIncludeImages);
+            objectsInFlight.delete(JSON.stringify(body));
             if (err.name === 'AbortError') {
                 return abortController; // Request was cancelled
             }
@@ -111,91 +195,72 @@ export function useStocktakingItems(options = {}) {
                 setLoading(false);
             }
         }
-    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, buildingId, storeyId, noLocation, eventId, skip]); // Removed includeImages and entregIds to prevent infinite loop
+    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, buildingId, storeyId, noLocation, eventId, includeImages, skip]);
 
     const refetchItems = useCallback(async () => {
-        const result = await fetchItems();
+        const result = await fetchObjects();
         return result;
-    }, [fetchItems]);
+    }, [fetchObjects]);
 
-    // Smart refetch that only fetches images if needed
-    const refetchWithImages = useCallback(async () => {
-        if (!hasImagesForCurrentPage) {
-            // We don't have images for current page, so refetch with images
-            // Create a custom fetch with includeImages: true
-            if (skip || !isAuthenticated()) {
-                return null;
-            }
-
-            setLoading(true);
-            setError(null);
-
-            let abortController = null;
-
-            try {
-                const body = {
-                    offset,
-                    limit,
-                    sortBy,
-                    sortOrder,
-                    search,
-                    state,
-                    hasNote,
-                    includeImages: true, // Force images
-                    thumbnail: true
-                };
-
-                if (roomId) {
-                    body.roomId = roomId;
-                }
-                if (eventId) {
-                    body.eventId = parseInt(eventId, 10);
-                }
-
-                abortController = new AbortController();
-                console.log("Refetching with images:", body);
-
-                const res = await fetch(`/api/objects`, {
-                    method: 'POST',
-                    headers: getAuthHeadersSafe(),
-                    body: JSON.stringify(body),
-                    signal: abortController.signal
-                });
-
-                if (abortController.signal.aborted) {
-                    return abortController;
-                }
-
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(`HTTP ${res.status}: ${errorText}`);
-                }
-
-                const data = await res.json();
-                
-                if (!abortController.signal.aborted) {
-                    setItems(data.items || []);
-                    setTotal(data.total || 0);
-                    setHasImagesForCurrentPage(true);
-                }
-
-                return abortController;
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    return abortController;
-                }
-                if (!abortController?.signal.aborted) {
-                    setError(err);
-                }
-            } finally {
-                if (!abortController?.signal.aborted) {
-                    setLoading(false);
-                }
-            }
+    const fetchImagesForItems = useCallback(async () => {
+        // Do not mark images "resolved" with an empty list — list fetch may still be in flight.
+        if (!items || items.length === 0) {
+            return null;
         }
-        // We already have images, no need to refetch
+        const ids = items.map(item => item.id).filter(Boolean);
+        const requestKey = ids.slice().sort((a, b) => a - b).join(",");
+        const cached = objectImagesCache.get(requestKey);
+        if (cached) {
+            setItems(prev =>
+                prev.map(item => ({ ...item, image: cached[item.id] || null }))
+            );
+            setHasImagesForCurrentPage(Object.keys(cached).length > 0);
+            setImagesResolvedForCurrentPage(true);
+            return null;
+        }
+        if (objectImagesInFlight.has(requestKey)) {
+            const shared = await objectImagesInFlight.get(requestKey);
+            setItems(prev =>
+                prev.map(item => ({ ...item, image: shared[item.id] || null }))
+            );
+            setHasImagesForCurrentPage(Object.keys(shared).length > 0);
+            setImagesResolvedForCurrentPage(true);
+            return null;
+        }
+        const requestPromise = fetch('/api/objects/images', {
+            method: 'POST',
+            headers: getAuthHeadersSafe(),
+            body: JSON.stringify({ ids })
+        }).then(async (res) => {
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+            return res.json();
+        });
+        objectImagesInFlight.set(requestKey, requestPromise);
+        try {
+            const imageMap = await requestPromise;
+            objectImagesCache.set(requestKey, imageMap || {});
+            setItems(prev =>
+                prev.map(item => ({ ...item, image: imageMap?.[item.id] || null }))
+            );
+            setHasImagesForCurrentPage(Boolean(imageMap && Object.keys(imageMap).length > 0));
+            setImagesResolvedForCurrentPage(true);
+            return null;
+        } finally {
+            objectImagesInFlight.delete(requestKey);
+        }
+    }, [items]);
+
+    // Smart refetch that fetches images via specialized endpoint
+    const refetchWithImages = useCallback(async () => {
+        if (!imagesResolvedForCurrentPage) {
+            return fetchImagesForItems();
+        }
+        // We already resolved image payload state for current page.
         return null;
-    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, eventId, skip, hasImagesForCurrentPage]);
+    }, [fetchImagesForItems, imagesResolvedForCurrentPage]);
 
     // Debounced search effect with request cancellation
     useEffect(() => {
@@ -203,7 +268,7 @@ export function useStocktakingItems(options = {}) {
         let abortController;
         
         timeoutId = setTimeout(async () => {
-            const result = await fetchItems();
+            const result = await fetchObjects();
             if (result) {
                 abortController = result;
             }
@@ -216,9 +281,9 @@ export function useStocktakingItems(options = {}) {
                 abortController.abort();
             }
         };
-    }, [fetchItems, search]);
+    }, [fetchObjects, search]);
 
-    return [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage];
+    return [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage, imagesResolvedForCurrentPage];
 }
 
 export function useStocktakingItem(id, eventId) {
@@ -241,8 +306,6 @@ export function useStocktakingItem(id, eventId) {
       body.eventId = eventId;
     }
 
-    console.log("Sending to API:", body);
-
     fetch(`/api/object`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
@@ -257,7 +320,6 @@ export function useStocktakingItem(id, eventId) {
       })
       .then((data) => {
         setItem(data);
-        console.log('Fetched item from hook:', data);
         setError(null);
       })
       .catch((err) => setError(err))
@@ -375,13 +437,11 @@ export function useUpdateStocktakingItem(eventId) {
   const [success, setSuccess] = useState(false);
 
   const updateItem = async (item) => {
-    console.log("pawsome",item)
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
       const itemWithEventId = { ...item };
-      console.log(eventId)
       if (eventId) {
         itemWithEventId.eventId = eventId;
       }

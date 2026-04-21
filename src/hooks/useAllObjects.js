@@ -1,13 +1,47 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getAuthHeadersSafe, isAuthenticated } from '@/utils/token';
 
+function buildAllObjectsRequestBody(options, forceIncludeImages = null) {
+    const body = {
+        offset: options.offset ?? 0,
+        limit: options.limit ?? 10,
+        sortBy: options.sortBy ?? 'id',
+        sortOrder: options.sortOrder ?? 'asc',
+        search: options.search ?? '',
+        state: options.state ?? [],
+        hasNote: options.hasNote ?? [],
+        includeImages: forceIncludeImages ?? options.includeImages ?? false,
+        thumbnail: true
+    };
+
+    if (options.entregIds && options.entregIds.length > 0) {
+        body.entregIds = options.entregIds;
+    }
+    if (options.roomId) {
+        body.roomId = options.roomId;
+    }
+    if (options.buildingId) {
+        body.buildingId = options.buildingId;
+    }
+    if (options.storeyId) {
+        body.storeyId = options.storeyId;
+    }
+    if (options.noLocation) {
+        body.noLocation = options.noLocation;
+    }
+    if (options.eventId) {
+        body.eventId = parseInt(options.eventId, 10);
+    }
+
+    return body;
+}
+
 export function useAllObjects(options = {}) {
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [hasImagesForCurrentPage, setHasImagesForCurrentPage] = useState(false);
-    const hasInitialized = useRef(false);
     const currentOptionsRef = useRef(options);
 
     const {
@@ -42,40 +76,9 @@ export function useAllObjects(options = {}) {
         let abortController = null;
 
         try {
-            const body = {
-                offset: currentOptions.offset,
-                limit: currentOptions.limit,
-                sortBy: currentOptions.sortBy,
-                sortOrder: currentOptions.sortOrder,
-                search: currentOptions.search,
-                state: currentOptions.state,
-                hasNote: currentOptions.hasNote,
-                includeImages: currentOptions.includeImages,
-                thumbnail: true // Always use thumbnails when including images
-            };
-
-            if (currentOptions.entregIds && currentOptions.entregIds.length > 0) {
-                body.entregIds = currentOptions.entregIds;
-            }
-
-            if (currentOptions.roomId) {
-                body.roomId = currentOptions.roomId;
-            }
-            if (currentOptions.buildingId) {
-                body.buildingId = currentOptions.buildingId;
-            }
-            if (currentOptions.storeyId) {
-                body.storeyId = currentOptions.storeyId;
-            }
-            if (currentOptions.noLocation) {
-                body.noLocation = currentOptions.noLocation;
-            }
-            if (currentOptions.eventId) {
-                body.eventId = parseInt(currentOptions.eventId, 10);
-            }
+            const body = buildAllObjectsRequestBody(currentOptions);
 
             abortController = new AbortController();
-            console.log("Sending to API:", body);
 
             const res = await fetch(`/api/all-objects`, {
                 method: 'POST',
@@ -133,6 +136,7 @@ export function useAllObjects(options = {}) {
             search: options.search,
             state: options.state,
             hasNote: options.hasNote,
+            entregIds: options.entregIds,
             roomId: options.roomId,
             buildingId: options.buildingId,
             storeyId: options.storeyId,
@@ -149,6 +153,7 @@ export function useAllObjects(options = {}) {
         options.search,
         options.state,
         options.hasNote,
+        options.entregIds,
         options.roomId,
         options.buildingId,
         options.storeyId,
@@ -163,25 +168,7 @@ export function useAllObjects(options = {}) {
     }, [fetchItems]);
 
     const refetchWithImages = useCallback(async () => {
-        const newOptions = { ...options, includeImages: true };
-        const body = {
-            offset: newOptions.offset || 0,
-            limit: newOptions.limit || 10,
-            sortBy: newOptions.sortBy || 'id',
-            sortOrder: newOptions.sortOrder || 'asc',
-            search: newOptions.search || '',
-            state: newOptions.state || [],
-            hasNote: newOptions.hasNote || [],
-            includeImages: true,
-            thumbnail: true
-        };
-
-        if (newOptions.roomId) {
-            body.roomId = newOptions.roomId;
-        }
-        if (newOptions.eventId) {
-            body.eventId = parseInt(newOptions.eventId, 10);
-        }
+        const body = buildAllObjectsRequestBody(options, true);
 
         try {
             const res = await fetch(`/api/all-objects`, {

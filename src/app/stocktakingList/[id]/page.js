@@ -1,8 +1,7 @@
 "use client";
-import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useStocktakingItems, useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
 import { usePageState } from "@/hooks/usePageState";
-import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
 import HeadingCard from "@/components/molecules/HeadingCard";
@@ -13,8 +12,7 @@ import CenteredModal from "@/components/molecules/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
-import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
-import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
+import StocktakingListItemViews from "./StocktakingListItemViews";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from "@/components/atoms/Button";
@@ -30,15 +28,21 @@ const sortOptions = [
     { label: 'Poznámka k inventuře', value: 'note' },
 ];
 
+const viewModes = [
+    { mode: 'grid', icon: 'view_module' },
+    { mode: 'detailed', icon: 'view_list' },
+    { mode: 'compact', icon: 'view_agenda' }
+];
+
 export default function StocktakingList() {
 
     const router = useRouter();
     const params = useParams();
-    const stocktakingId = parseInt(params.id);
+    const stocktakingId = Number.parseInt(String(params?.id ?? ''), 10);
     const { recordStatus } = useSettings();
     
     // Use page state for filters and sorting
-    const [pageState, updatePageState, resetPageState] = usePageState(`stocktakingList_${stocktakingId}`, {
+    const [pageState, updatePageState] = usePageState(`stocktakingList_${stocktakingId}`, {
         sortBy: "id",
         sortOrder: 'asc',
         viewMode: 'detailed',
@@ -61,55 +65,60 @@ export default function StocktakingList() {
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
     const [location, setLocation] = useState(null);
-    const canFetch = location && (location.building || location.storey || location.room);
+    const hasLocationFilter = Boolean(location?.building || location?.storey || location?.room);
+    const canFetch = Number.isFinite(stocktakingId) && stocktakingId > 0;
 
-    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useStocktakingItems(
-        canFetch
-            ? {
-                offset: pageState.currentPage * PAGE_SIZE,
-                limit: PAGE_SIZE,
-                sortBy: pageState.sortBy,
-                sortOrder: pageState.sortOrder,
-                search: pageState.searchTerm,
-                state: pageState.filterState.state,
-                hasNote: pageState.filterState.hasNote,
-                roomId: location.room,
-                buildingId: location.building,
-                storeyId: location.storey,
-                noLocation: !location.building && !location.storey && !location.room,
-                eventId: stocktakingId,
-                includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
-            }
-            : { skip: true }
+    const stocktakingItemsOptions = useMemo(
+        () =>
+            canFetch
+                ? {
+                      offset: pageState.currentPage * PAGE_SIZE,
+                      limit: PAGE_SIZE,
+                      sortBy: pageState.sortBy,
+                      sortOrder: pageState.sortOrder,
+                      search: pageState.searchTerm,
+                      state: pageState.filterState.state,
+                      hasNote: pageState.filterState.hasNote,
+                      roomId: hasLocationFilter ? location.room : null,
+                      buildingId: hasLocationFilter ? location.building : null,
+                      storeyId: hasLocationFilter ? location.storey : null,
+                      eventId: stocktakingId,
+                      includeImages: false
+                  }
+                : { skip: true },
+        [
+            canFetch,
+            pageState.currentPage,
+            pageState.sortBy,
+            pageState.sortOrder,
+            pageState.searchTerm,
+            pageState.filterState.state,
+            pageState.filterState.hasNote,
+            hasLocationFilter,
+            location?.room,
+            location?.building,
+            location?.storey,
+            stocktakingId
+        ]
     );
 
-    const { updateItem, loading: updating, error: updateError, success: updateSuccess } = useUpdateStocktakingItem(stocktakingId);
+    const [items, total, loading, error, refetchItems, refetchWithImages, , imagesResolvedForCurrentPage] =
+        useStocktakingItems(stocktakingItemsOptions);
+
+    const { updateItem } = useUpdateStocktakingItem(stocktakingId);
 
     const [scannedQr, setScannedQr] = useState(null);
     const [apiItem, apiLoading, apiError] = useStocktakingItemByQr(scannedQr, stocktakingId);
-    const [hasMadeApiCall, setHasMadeApiCall] = useState(false);
+    const qrSawLoadingRef = useRef(false);
 
     const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
 
 
 
-    const viewModes = [
-        { mode: 'grid', icon: 'view_module' },
-        { mode: 'detailed', icon: 'view_list' },
-        { mode: 'compact', icon: 'view_agenda' }
-    ];
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
         const newViewMode = viewModes[(currentViewIdx + 1) % viewModes.length].mode;
-        const currentViewMode = pageState.viewMode;
-        
         updatePageState({ viewMode: newViewMode });
-        
-        // Only refetch if switching FROM compact (no images) TO grid/detailed (with images)
-        // AND we don't already have images for current page
-        if (currentViewMode === 'compact' && newViewMode !== 'compact' && !hasImagesForCurrentPage && canFetch) {
-            refetchWithImages();
-        }
     };
 
     const bottomBarRef = useRef(null);
@@ -133,172 +142,185 @@ export default function StocktakingList() {
         return () => window.removeEventListener("resize", updatePadding);
     }, []);
 
-    const showActionModal = (title, message, success) => {
+    const showActionModal = useCallback((title, message, success) => {
         setActionModalContent({ title, message, success });
         setActionModalOpen(true);
-    };
+    }, []);
 
     // Helper function to append status to note
-    const appendStatusToNote = (existingNote, status) => {
+    const appendStatusToNote = useCallback((existingNote, status) => {
         const statusText = status.label;
         if (!existingNote) {
             return `Stav: ${statusText}`;
         }
         return `${existingNote} | Stav: ${statusText}`;
-    };
+    }, []);
 
     // Handle status selection from modal
-    const handleStatusSelect = async (status) => {
-        if (!pendingItem) return;
-        
-        setIsUpdatingItem(true);
-        try {
-            const { image, ...rest } = pendingItem;
-            const updatedNote = appendStatusToNote(rest.note, status);
-            
-            const result = await updateItem({ 
-                ...rest, 
-                stocktakingId: stocktakingId, 
-                state: 'nalezeno',
-                note: updatedNote
-            });
-            
-            setIsPreviewModalOpen(false);
-            setPendingItem(null);
-            
-            if (result) {
-                showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                refetchItems();
-            } else {
-                showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
-            }
-        } finally {
-            setIsUpdatingItem(false);
-        }
-    };
+    const handleStatusSelect = useCallback(
+        async (status) => {
+            if (!pendingItem) return;
 
-    function handleScan(scannedValue) {
-        // Step 1: Close scanner modal
+            setIsUpdatingItem(true);
+            try {
+                const { image, ...rest } = pendingItem;
+                const updatedNote = appendStatusToNote(rest.note, status);
+
+                const result = await updateItem({
+                    ...rest,
+                    stocktakingId: stocktakingId,
+                    state: 'nalezeno',
+                    note: updatedNote
+                });
+
+                setIsPreviewModalOpen(false);
+                setPendingItem(null);
+
+                if (result) {
+                    showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
+                    refetchItems();
+                } else {
+                    showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
+                }
+            } finally {
+                setIsUpdatingItem(false);
+            }
+        },
+        [pendingItem, appendStatusToNote, updateItem, stocktakingId, showActionModal, refetchItems]
+    );
+
+    const handleScan = useCallback((scannedValue) => {
+        qrSawLoadingRef.current = false;
         setIsQRModalOpen(false);
-        
-        // Step 2: Clear previous data and prepare for new scan
         setScannedItem(null);
-        setHasMadeApiCall(false);
-        
-        // Step 3: Show skeleton modal immediately
         setIsPreviewModalOpen(true);
         setIsNotInInventoryModalOpen(false);
-        
-        // Step 4: Trigger API request
         setScannedQr(scannedValue);
-    }
+    }, []);
 
     // Effect to handle API result from QR scan
     useEffect(() => {
-        if (scannedQr) {
-            // Only process when API call is complete (not loading)
-            if (apiLoading) {
-                setHasMadeApiCall(true); // Mark that we've made an API call
-                return;
-            }
-            
-            // Only process if we've actually made an API call
-            if (!hasMadeApiCall) {
-                return;
-            }
-            
-            // API call completed - close skeleton modal and show appropriate modal
-            setScannedQr(null);
-            setHasMadeApiCall(false);
-            
-            if (apiItem) {
-                setScannedItem(apiItem);
-                
-                if (apiItem.location && location && apiItem.location.room !== location.room) {
-                    // Show move modal
-                    setMoveItem(apiItem);
-                    setMoveNewLocation(location);
-                    setIsMoveModalOpen(true);
-                    setIsPreviewModalOpen(false);
-                } else {
-                    // Keep preview modal open with real data (skeleton will be replaced)
-                }
-            } else if (apiError || (!apiLoading && !apiItem)) {
-                // Show not in inventory modal
-                setIsPreviewModalOpen(false);
-                setIsNotInInventoryModalOpen(true);
-            }
+        if (!canFetch || pageState.viewMode === 'compact' || loading) {
+            return;
         }
-    }, [apiItem, apiLoading, apiError, scannedQr, location, hasMadeApiCall]);
+        refetchWithImages();
+    }, [canFetch, pageState.viewMode, loading, refetchWithImages]);
+
+    useEffect(() => {
+        if (!scannedQr) {
+            return;
+        }
+        if (apiLoading) {
+            qrSawLoadingRef.current = true;
+            return;
+        }
+        if (!qrSawLoadingRef.current) {
+            return;
+        }
+        qrSawLoadingRef.current = false;
+
+        setScannedQr(null);
+
+        if (apiItem) {
+            setScannedItem(apiItem);
+
+            if (apiItem.location && location && apiItem.location.room !== location.room) {
+                setMoveItem(apiItem);
+                setMoveNewLocation(location);
+                setIsMoveModalOpen(true);
+                setIsPreviewModalOpen(false);
+            }
+        } else if (apiError || !apiItem) {
+            setIsPreviewModalOpen(false);
+            setIsNotInInventoryModalOpen(true);
+        }
+    }, [apiItem, apiLoading, apiError, scannedQr, location]);
 
     // Function to render item actions (context menu)
-    const renderItemActions = (item) => (
-        <ContextButton>
-            <ContextRow
-                icon="edit"
-                label="Upravit"
-                action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
-            />
-            <ContextRow
-                icon="swap_horiz"
-                label="Přesun"
-                action={() => {
-                  setMoveItem(item);
-                  setMoveNewLocation(item.location);
-                  setIsMoveModalOpen(true);
-                }}
-            />
-            <ContextRow
-                icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
-                label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
-                action={async () => {
-                  if (item.state === 'nalezeno') {
-                    // Toggle to not found
-                    setIsUpdatingItem(true);
-                    try {
-                      const { image, ...rest } = item;
-                      const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
-                      if (result) {
-                        showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
-                        refetchItems();
-                      } else {
-                        showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
-                      }
-                    } finally {
-                      setIsUpdatingItem(false);
-                    }
-                  } else {
-                    // Toggle to found
-                    if (recordStatus) {
-                      // Show status selection modal
-                      setPendingItem(item);
-                      setIsStatusSelectionModalOpen(true);
-                    } else {
-                      // Direct confirmation without status selection
-                      setIsUpdatingItem(true);
-                      try {
-                        const { image, ...rest } = item;
-                        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
-                        if (result) {
-                          showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
-                          refetchItems();
+    const renderItemActions = useCallback(
+        (item) => (
+            <ContextButton>
+                <ContextRow
+                    icon="edit"
+                    label="Upravit"
+                    action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
+                />
+                <ContextRow
+                    icon="swap_horiz"
+                    label="Přesun"
+                    action={() => {
+                        setMoveItem(item);
+                        setMoveNewLocation(item.location);
+                        setIsMoveModalOpen(true);
+                    }}
+                />
+                <ContextRow
+                    icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
+                    label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
+                    action={async () => {
+                        if (item.state === 'nalezeno') {
+                            setIsUpdatingItem(true);
+                            try {
+                                const { image, ...rest } = item;
+                                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
+                                if (result) {
+                                    showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
+                                    refetchItems();
+                                } else {
+                                    showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
+                                }
+                            } finally {
+                                setIsUpdatingItem(false);
+                            }
+                        } else if (recordStatus) {
+                            setPendingItem(item);
+                            setIsStatusSelectionModalOpen(true);
                         } else {
-                          showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+                            setIsUpdatingItem(true);
+                            try {
+                                const { image, ...rest } = item;
+                                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                                if (result) {
+                                    showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                                    refetchItems();
+                                } else {
+                                    showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
+                                }
+                            } finally {
+                                setIsUpdatingItem(false);
+                            }
                         }
-                      } finally {
-                        setIsUpdatingItem(false);
-                      }
-                    }
-                  }
-                }}
-            />
-        </ContextButton>
+                    }}
+                />
+            </ContextButton>
+        ),
+        [router, stocktakingId, updateItem, refetchItems, showActionModal, recordStatus]
     );
 
-    // Reset page to 0 when search or filters change
+    const filterStateKey = useMemo(() => JSON.stringify(pageState.filterState), [pageState.filterState]);
+    const prevSearchFilterRef = useRef(null);
+
+    // Reset page to 0 when search or filters change (skip initial mount so restored page index is kept)
     useEffect(() => {
+        const key = `${pageState.searchTerm}::${filterStateKey}`;
+        if (prevSearchFilterRef.current === null) {
+            prevSearchFilterRef.current = key;
+            return;
+        }
+        if (prevSearchFilterRef.current === key) {
+            return;
+        }
+        prevSearchFilterRef.current = key;
         updatePageState({ currentPage: 0 });
-    }, [pageState.searchTerm, pageState.filterState]);
+    }, [pageState.searchTerm, filterStateKey]);
+
+    if (!canFetch) {
+        return (
+            <main className="relative min-h-screen flex flex-col items-center p-4">
+                <div style={{ color: '#FF6262', fontWeight: 600 }}>Neplatná inventura (chybí nebo je neplatné ID).</div>
+            </main>
+        );
+    }
 
     return (
         <main className="relative min-h-screen flex flex-col items-center">
@@ -325,68 +347,15 @@ export default function StocktakingList() {
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    {loading ? (
-                        // Skeleton loading state
-                        <>
-                                                    {pageState.viewMode === 'grid' && (
-                            <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                {Array.from({ length: PAGE_SIZE }, (_, index) => (
-                                    <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
-                                ))}
-                            </div>
-                        )}
-                        {pageState.viewMode === 'detailed' && (
-                            Array.from({ length: PAGE_SIZE }, (_, index) => (
-                                <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
-                            ))
-                        )}
-                        {pageState.viewMode === 'compact' && (
-                            Array.from({ length: PAGE_SIZE }, (_, index) => (
-                                <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={true} />
-                            ))
-                        )}
-                        </>
-                    ) : (
-                        // Actual items
-                        <>
-                            {pageState.viewMode === 'grid' && (
-                                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                    {items.map(item => (
-                                        <Link
-                                            key={item.id}
-                                            href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                            style={{ textDecoration: "none" }}
-                                        >
-                                            <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                            {pageState.viewMode === 'detailed' && (
-                                items.map(item => (
-                                    <Link
-                                        key={item.id}
-                                        href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                        style={{ textDecoration: "none" }}
-                                    >
-                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
-                                    </Link>
-                                ))
-                            )}
-
-                            {pageState.viewMode === 'compact' && (
-                                items.map(item => (
-                                    <Link
-                                        key={item.id}
-                                        href={`/stocktakingList/${stocktakingId}/${item.id}`}
-                                        style={{ textDecoration: "none" }}
-                                    >
-                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
-                                    </Link>
-                                ))
-                            )}
-                        </>
-                    )}
+                    <StocktakingListItemViews
+                        viewMode={pageState.viewMode}
+                        loading={loading}
+                        items={items}
+                        stocktakingId={stocktakingId}
+                        pageSize={PAGE_SIZE}
+                        renderItemActions={renderItemActions}
+                        imagesResolvedForCurrentPage={imagesResolvedForCurrentPage}
+                    />
                 </div>
                 <Pagination
                     currentPage={pageState.currentPage}

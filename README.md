@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# EIRA Stocktaking (Frontend)
 
-## Getting Started
+Next.js frontend for stocktaking flows.
 
-First, run the development server:
+## Frontend
+
+### Run
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App runs on `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+yarn build
+```
 
-## Learn More
+### Production start
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+yarn start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment (simple)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+yarn
+yarn build
+```
 
-## Deploy on Vercel
+Copy these to the server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `.next`
+- `public`
+- `next.config.mjs`
+- `package.json`
+- `yarn.lock`
+- `.env` (optional)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Start app on server with API base URL:
+
+```bash
+API_BASE_URL=http://172.x.x.x:8090 yarn start
+```
+
+Use `.env` only when you want a backend URL different from fallback.
+
+Example `.env`:
+
+```env
+API_BASE_URL="http://172.x.x.x:8090"
+```
+
+## API Connection
+
+Frontend calls local `/api/*` routes.
+
+Those routes are proxied by `src/app/api/[...path]/route.js` to backend `/api/inventory/*`.
+
+Backend base URL comes from `API_BASE_URL` when the server starts.
+If `API_BASE_URL` is not set, fallback is `http://localhost:8088`.
+To change API target, restart server with a new `API_BASE_URL` (no rebuild needed).
+
+## Backend (surface info)
+
+Backend service is a Spring Boot app (`eira-service`).
+
+Frontend expects backend inventory endpoints under `/api/inventory/*`.
+

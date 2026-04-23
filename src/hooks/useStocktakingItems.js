@@ -340,11 +340,13 @@ export function useStocktakingItemByQr(qr, eventId) {
 
   useEffect(() => {
     if (!qr) return;
+    const normalizedQr = String(qr).trim();
+    if (!normalizedQr) return;
     
     setLoading(true);
     setError(null);
     
-    const body = { qr };
+    const body = { qr: normalizedQr };
     if (eventId) {
       body.eventId = eventId;
     }

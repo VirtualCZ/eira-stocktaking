@@ -43,7 +43,7 @@ export default function LinkItemDetailTemplate({
             </span>
           </Link>
           <PictureInput value={item.image || ""} editMode={false} />
-          <div className="p-4 flex flex-col gap-4">
+          <div className="p-4 flex flex-col gap-4" style={{ paddingBottom: "6rem" }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontWeight: 700, fontSize: 16, color: '#000' }}>{item.name}</span>

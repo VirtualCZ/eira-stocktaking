@@ -58,7 +58,8 @@ export default function LinkItem() {
                 name: baseItemDetails.name,
                 description: baseItemDetails.description,
                 image: baseItemDetails.image,
-                location: baseItemDetails.location
+                location: baseItemDetails.location,
+                qr: baseItemDetails.qr || ""
             }));
         } catch (error) {
             console.error('Error fetching base item details:', error);
@@ -70,7 +71,8 @@ export default function LinkItem() {
                 name: baseItem.name,
                 description: baseItem.description,
                 image: baseItem.image,
-                location: baseItem.location
+                location: baseItem.location,
+                qr: baseItem.qr || ""
             }));
         }
     };

@@ -274,8 +274,9 @@ export default function NewItem() {
                             <QRCodeInput
                                 value={editItem.qr}
                                 onChange={handleQRChange}
-                                editMode={false}
+                                editMode={true}
                             />
+                            <div style={{ height: 88 }} />
                         </div>
                     </div>
                 </main>

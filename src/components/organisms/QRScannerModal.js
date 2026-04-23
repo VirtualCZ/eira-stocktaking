@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import QrScanner from "react-qr-barcode-scanner";
 import CenteredModal from "@/components/molecules/CenteredModal";
 
@@ -7,13 +7,21 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
     const [displayMessage, setDisplayMessage] = useState("Skenujte QR kód...");
     const [showModal, setShowModal] = useState(false);
     const [scannerError, setScannerError] = useState(false);
+    const [scannerSession, setScannerSession] = useState(0);
+    const lastSubmittedRef = useRef(null);
+    const openedAtRef = useRef(0);
 
     useEffect(() => {
         if (!isOpen) {
             setShowModal(false);
+            setScannedDataString(null);
+            setScannerError(false);
+            setDisplayMessage("Skenujte QR kód...");
             return;
         }
         setShowModal(true);
+        setScannerSession((prev) => prev + 1);
+        openedAtRef.current = Date.now();
         setDisplayMessage("Skenujte QR kód...");
         setScannedDataString(null);
         setScannerError(false);
@@ -33,6 +41,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
             } catch (e) { }
             if (result.valid) {
                 setDisplayMessage(result.message || "Naskenováno!");
+                lastSubmittedRef.current = scannedDataString;
                 onScan(scannedDataString, result.data);
                 onClose();
             } else {
@@ -40,6 +49,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
             }
         } else {
             // No validation: just send the scanned string and close
+            lastSubmittedRef.current = scannedDataString;
             onScan(scannedDataString);
             onClose();
         }
@@ -49,7 +59,17 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
 
     const handleScan = (err, result) => {
         if (result && result.text) {
-            setScannedDataString(result.text);
+            const candidate = String(result.text).trim();
+            if (!candidate) {
+                return;
+            }
+            // Some camera stacks can emit the previous frame/code immediately after reopening.
+            // Ignore same-as-last value only during short warmup window.
+            const warmupMs = Date.now() - openedAtRef.current;
+            if (candidate === lastSubmittedRef.current && warmupMs < 1200) {
+                return;
+            }
+            setScannedDataString(candidate);
             setScannerError(false);
         } else if (err) {
             //   console.error("QR Scan Error:", err);
@@ -84,6 +104,7 @@ export default function QRScannerModal({ isOpen, onClose, onScan, validate }) {
                 <div style={{ flexGrow: 1, position: 'relative', width: '100%', overflow: 'hidden', borderRadius: "16px" }}>
                     {isOpen && (
                         <QrScanner
+                            key={scannerSession}
                             onUpdate={handleScan}
                             onError={(error) => handleScan(error, null)}
                             constraints={{ facingMode: "environment" }}

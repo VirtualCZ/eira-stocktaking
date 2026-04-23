@@ -337,14 +337,25 @@ export function useStocktakingItemByQr(qr, eventId) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [resolvedQr, setResolvedQr] = useState(null);
 
   useEffect(() => {
-    if (!qr) return;
+    if (!qr) {
+      setLoading(false);
+      setResolvedQr(null);
+      return;
+    }
     const normalizedQr = String(qr).trim();
-    if (!normalizedQr) return;
+    if (!normalizedQr) {
+      setLoading(false);
+      setResolvedQr(null);
+      return;
+    }
     
+    setItem(null);
     setLoading(true);
     setError(null);
+    setResolvedQr(null);
     
     const body = { qr: normalizedQr };
     if (eventId) {
@@ -372,12 +383,15 @@ export function useStocktakingItemByQr(qr, eventId) {
         if (!abortController.signal.aborted) {
           setItem(data);
           setError(null);
+          setResolvedQr(normalizedQr);
         }
       })
       .catch((err) => {
         // Only update error if this request hasn't been aborted
         if (!abortController.signal.aborted) {
+          setItem(null);
           setError(err);
+          setResolvedQr(normalizedQr);
         }
       })
       .finally(() => {
@@ -390,10 +404,11 @@ export function useStocktakingItemByQr(qr, eventId) {
     // Return cleanup function to abort the request
     return () => {
       abortController.abort();
+      setLoading(false);
     };
   }, [qr, eventId]);
 
-  return [item, loading, error];
+  return [item, loading, error, resolvedQr];
 }
 
 export function useCreateStocktakingItem(eventId) {

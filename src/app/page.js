@@ -115,7 +115,7 @@ export default function Home() {
             
                          {/* Event name and place links */}
              <div style={{ marginTop: 47 }}>
-               <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+               <div style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.25, marginBottom: 10 }}>
                  {selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
                </div>
                

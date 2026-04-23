@@ -224,7 +224,7 @@ export default function NewItem() {
                             onChange={handleImageChange}
                             editMode={true} 
                         />
-                        <div className="p-4 flex flex-col gap-4">
+                        <div className="p-4 flex flex-col gap-4" style={{ paddingBottom: "6rem" }}>
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <TextInput
@@ -276,7 +276,6 @@ export default function NewItem() {
                                 onChange={handleQRChange}
                                 editMode={true}
                             />
-                            <div style={{ height: 88 }} />
                         </div>
                     </div>
                 </main>

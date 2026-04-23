@@ -148,10 +148,7 @@ export default function ItemListDetail() {
         const mainData = {
             id: editItem.id,
             description: editItem.description,
-            note: editItem.note,
             qr: editItem.qr,
-            lastCheck: editItem.date || editItem.lastCheck || null,
-            state: editItem.state,
         };
         const result = await updateItem(mainData);
         if(result) {
@@ -207,6 +204,7 @@ export default function ItemListDetail() {
                 setBottomPadding={setBottomPadding}
                 barRendered={barRendered}
                 setBarRendered={setBarRendered}
+                showInventoryDetails={false}
             />
             <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={updateSuccess ? "Hotovo" : "Chyba"}>
                 <div style={{ color: updateSuccess ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>

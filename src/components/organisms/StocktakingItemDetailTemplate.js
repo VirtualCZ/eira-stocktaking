@@ -30,7 +30,8 @@ export default function StocktakingItemDetailTemplate({
   bottomPadding = 0,
   setBottomPadding,
   barRendered,
-  setBarRendered
+  setBarRendered,
+  showInventoryDetails = true
 }) {
   const bottomBarRef = useRef(null);
   useLayoutEffect(() => {
@@ -89,6 +90,7 @@ export default function StocktakingItemDetailTemplate({
                       />
                     </div>
                     <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
+                  {showInventoryDetails && (
                     <TextInput
                       value={editItem.note}
                       onChange={e => onEditItemChange({ ...editItem, note: e.target.value })}
@@ -96,10 +98,11 @@ export default function StocktakingItemDetailTemplate({
                       placeholder="Poznámka k inventuře"
                       multiline
                     />
-                    <LocationPicker
-                      value={editItem.location}
-                      editMode={false}
-                    />
+                  )}
+                  <LocationPicker
+                    value={editItem.location}
+                    editMode={false}
+                  />
                     <QRCodeInput
                       value={editItem.qr}
                       onChange={code => onEditItemChange({ ...editItem, qr: code })}
@@ -121,7 +124,7 @@ export default function StocktakingItemDetailTemplate({
                       </CardContainer>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                      <div>Poslední úprava {editItem.lastCheck || editItem.date}</div>
+                  {showInventoryDetails && <div>Poslední úprava {editItem.lastCheck || editItem.date}</div>}
                       <div>ID {editItem.id}</div>
                     </div>
                   </div>
@@ -171,10 +174,12 @@ export default function StocktakingItemDetailTemplate({
                   <div style={{ fontSize: 12, color: "#535353" }}>{item.description}</div>
                 </div>
                 <div style={{ width: '100%', height: 2, background: '#F0F1F3' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
-                  <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka k inventuře:</div>
-                  <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
-                </div>
+                {showInventoryDetails && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#535353' }}>
+                    <div style={{ fontWeight: 500, fontSize: 12 }}>Poznámka k inventuře:</div>
+                    <div style={{ fontStyle: 'italic', fontSize: 12 }}>{item.note}</div>
+                  </div>
+                )}
                 <LocationPicker
                   value={item.location}
                   editMode={false}
@@ -199,7 +204,7 @@ export default function StocktakingItemDetailTemplate({
                    </CardContainer>
                  )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
-                  <div>Poslední úprava {item.lastCheck}</div>
+                  {showInventoryDetails && <div>Poslední úprava {item.lastCheck}</div>}
                   <div>ID {item.id}</div>
                 </div>
               </div>

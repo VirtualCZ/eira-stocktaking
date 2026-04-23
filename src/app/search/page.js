@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
 import { useAllObjects } from "@/hooks/useAllObjects";
-import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { usePageState } from "@/hooks/usePageState";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
@@ -28,7 +27,6 @@ const sortOptions = [
 
 export default function SearchPage() {
     const router = useRouter();
-    const { selectedInventura } = useSelectedInventura();
     const [location, setLocation] = useState(null);
     
     // Use page state for filters and sorting
@@ -83,14 +81,13 @@ export default function SearchPage() {
             search: pageState.searchTerm,
             state: pageState.filterState.state,
             hasNote: pageState.filterState.hasNote,
-            eventId: selectedInventura?.id,
             roomId: locationValues.room,
             buildingId: locationValues.building,
             storeyId: locationValues.storey,
-            noLocation: !locationValues.building && !locationValues.storey && !locationValues.room,
+            noLocation: false,
             // entregIds: [123, 456, 789], // Example: Filter by specific object types
             includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
-            skip: !locationInitialized || !selectedInventura?.id, // Skip API calls until location and inventura are ready
+            skip: !locationInitialized,
         };
         return options;
     }, [
@@ -100,7 +97,6 @@ export default function SearchPage() {
         pageState.searchTerm,
         pageState.filterState.state,
         pageState.filterState.hasNote,
-        selectedInventura?.id,
         locationValues.room,
         locationValues.building,
         locationValues.storey,
@@ -164,12 +160,12 @@ export default function SearchPage() {
             <ContextRow
                 icon="edit"
                 label="Upravit"
-                action={() => router.push(`/stocktakingList/${selectedInventura?.id}/${item.id}?edit=1`)}
+                action={() => router.push(`/itemList/${item.id}?edit=1`)}
             />
             <ContextRow
                 icon="visibility"
                 label="Zobrazit detail"
-                action={() => router.push(`/stocktakingList/${selectedInventura?.id}/${item.id}`)}
+                action={() => router.push(`/itemList/${item.id}`)}
             />
         </ContextButton>
     );
@@ -202,12 +198,6 @@ export default function SearchPage() {
 
                     ]}
                 />
-
-                {!selectedInventura && (
-                    <div style={{ color: '#FF6262', fontWeight: 600, padding: '1rem' }}>
-                        Nejprve vyberte inventuru na hlavní stránce.
-                    </div>
-                )}
 
                 {/* Location filter */}
                 <UserLocationPicker onChange={handleLocationChange} />
@@ -243,7 +233,7 @@ export default function SearchPage() {
                                     {items.map(item => (
                                         <Link
                                             key={item.id}
-                                            href={`/stocktakingList/${selectedInventura?.id}/${item.id}`}
+                                            href={`/itemList/${item.id}`}
                                             style={{ textDecoration: "none" }}
                                         >
                                             <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
@@ -255,7 +245,7 @@ export default function SearchPage() {
                                 items.map(item => (
                                     <Link
                                         key={item.id}
-                                        href={`/stocktakingList/${selectedInventura?.id}/${item.id}`}
+                                        href={`/itemList/${item.id}`}
                                         style={{ textDecoration: "none" }}
                                     >
                                         <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
@@ -267,7 +257,7 @@ export default function SearchPage() {
                                 items.map(item => (
                                     <Link
                                         key={item.id}
-                                        href={`/stocktakingList/${selectedInventura?.id}/${item.id}`}
+                                        href={`/itemList/${item.id}`}
                                         style={{ textDecoration: "none" }}
                                     >
                                         <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />

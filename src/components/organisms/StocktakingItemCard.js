@@ -12,18 +12,28 @@ const stateBgColors = {
   novy: "#f8f4e8",       // Very light beige - new items
 };
 
+function detectImageMimeFromBase64(base64) {
+  if (!base64 || typeof base64 !== "string") return "image/jpeg";
+  if (base64.startsWith("/9j/")) return "image/jpeg";
+  if (base64.startsWith("iVBORw0KGgo")) return "image/png";
+  if (base64.startsWith("R0lGOD")) return "image/gif";
+  if (base64.startsWith("UklGR")) return "image/webp";
+  return "image/jpeg";
+}
+
 export default function StocktakingItemCard({ item, renderActions, compact = false, imagesResolvedForCurrentPage = false }) {
   // Determine background color based on item.state
   const bgColor = item.state && stateBgColors[item.state] ? stateBgColors[item.state] : "#f0f1f3";
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
+  const imageRef = React.useRef(null);
 
   const imageSrc = item.image
     ? (
       /^data:image\//.test(item.image)
         ? item.image
         : (/^[A-Za-z0-9+/=]+$/.test(item.image) && item.image.length > 100)
-          ? `data:image/*;base64,${item.image}`
+          ? `data:${detectImageMimeFromBase64(item.image)};base64,${item.image}`
           : item.image
     )
     : null;
@@ -34,8 +44,22 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
   }, [imageSrc, item.id]);
 
   const showImage = !compact && imageSrc && !imageError;
-  const showLoadingPlaceholder = !compact && !imageSrc && !imagesResolvedForCurrentPage;
-  const showNoImagePlaceholder = !compact && (imageError || (!imageSrc && imagesResolvedForCurrentPage));
+  const showLoadingPlaceholder = false;
+  const showNoImagePlaceholder = !compact && (imageError || !imageSrc);
+
+  React.useEffect(() => {
+    if (!showImage) return;
+    const img = imageRef.current;
+    if (!img) return;
+    // Safari may serve cached images without firing onLoad reliably.
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        setImageLoaded(true);
+      } else {
+        setImageError(true);
+      }
+    }
+  }, [showImage, imageSrc]);
 
   return (
     <div
@@ -57,15 +81,18 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
             />
           )}
           <img
+            key={`${item.id}-${imageSrc}`}
+            ref={imageRef}
             src={imageSrc}
             alt={item.name}
+            loading="eager"
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             style={{
               width: "100%",
               height: 100,
               objectFit: "cover",
-              display: imageLoaded ? "block" : "none"
+              visibility: imageLoaded ? "visible" : "hidden"
             }}
           />
         </>

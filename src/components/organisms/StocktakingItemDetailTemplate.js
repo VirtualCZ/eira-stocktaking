@@ -141,17 +141,17 @@ export default function StocktakingItemDetailTemplate({
                     <ContextButton>
                       <ContextRow
                         icon="edit"
-                        label="Edit"
+                        label="Upravit"
                         action={onEditModeChange}
                       />
                       <ContextRow
                         icon="content_copy"
-                        label="Duplicate"
+                        label="Duplikovat"
                         action={onDuplicate}
                       />
                       <ContextRow
                         icon="delete"
-                        label="Delete"
+                        label="Smazat"
                         action={onDelete}
                         color="#FF6262"
                       />

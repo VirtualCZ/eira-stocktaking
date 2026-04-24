@@ -7,7 +7,7 @@ const stateOptions = [
     { label: "Zbývá", value: "zbyva" },
     { label: "Nalezeno", value: "nalezeno" },
     { label: "Přesun", value: "presun" },
-    { label: "Nový", value: "novy" },
+    { label: "Nezkontrolováno", value: "nezkontrolováno" },
 ];
 const hasNoteOptions = [
     { label: "Ano", value: "yes" },

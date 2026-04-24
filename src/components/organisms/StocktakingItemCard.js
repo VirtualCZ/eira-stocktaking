@@ -9,7 +9,8 @@ const stateBgColors = {
   zbyva: "#f0f1f3",      // Default grey - remaining items
   nalezeno: "#e8f5e8",   // Very light green - found items
   presun: "#e8f0f8",     // Very light blue - moved items
-  novy: "#f8f4e8",       // Very light beige - new items
+  nezkontrolováno: "#f8f4e8", // Very light beige - unchecked items
+  novy: "#f8f4e8",       // Backward compatibility for legacy records
 };
 
 function detectImageMimeFromBase64(base64) {

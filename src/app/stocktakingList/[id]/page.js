@@ -232,7 +232,7 @@ export default function StocktakingList() {
             const body = {
                 rmId: notInInventoryItem.id,
                 eventId: stocktakingId,
-                status: "novy",
+                status: "nezkontrolováno",
                 note: notInInventoryItem.note || "",
                 qr: notInInventoryItem.qr || "",
                 location: location || null,

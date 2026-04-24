@@ -95,7 +95,7 @@ export default function LinkItem() {
             const inventoryItem = {
                 rmId: selectedBaseItem.id,
                 eventId: selectedInventura.id,
-                status: "novy",
+                status: "nezkontrolováno",
                 note: editItem.note || "",
                 qr: editItem.qr || "",
                 location: editItem.location || null

@@ -1,25 +1,26 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useFeedScrollRestore({
   storageKey,
   itemCount,
-  hasMore,
-  loading,
-  loadMore,
   enabled = true,
 }) {
   const restoringScrollRef = useRef(false);
   const pendingRestoreScrollYRef = useRef(null);
+  const pendingRestoreAnchorIdRef = useRef(null);
   const isHydratingRef = useRef(true);
-  const hasMoreRef = useRef(false);
-  const loadingRef = useRef(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
-  const persistScrollState = useCallback(() => {
+  const persistScrollState = useCallback((meta = {}) => {
     if (!enabled || typeof window === "undefined" || isHydratingRef.current) return;
     try {
       sessionStorage.setItem(
         storageKey,
-        JSON.stringify({ scrollY: window.scrollY, ts: Date.now() })
+        JSON.stringify({
+          scrollY: window.scrollY,
+          anchorId: meta?.anchorId ?? null,
+          ts: Date.now(),
+        })
       );
     } catch (_e) {}
   }, [enabled, storageKey]);
@@ -28,8 +29,9 @@ export function useFeedScrollRestore({
     (targetY) => {
       if (!enabled || typeof window === "undefined" || typeof targetY !== "number") return;
       restoringScrollRef.current = true;
+      setIsRestoring(true);
       let attempts = 0;
-      const maxAttempts = 300;
+      const maxAttempts = 600;
 
       const tick = () => {
         window.scrollTo(0, targetY);
@@ -37,20 +39,21 @@ export function useFeedScrollRestore({
           0,
           document.documentElement.scrollHeight - window.innerHeight
         );
-        const reached = Math.abs(window.scrollY - Math.min(targetY, maxScrollableY)) <= 2;
         const enoughHeight = maxScrollableY >= targetY - 2;
-        const canStillGrow = hasMoreRef.current || loadingRef.current;
+        const reached = enoughHeight && Math.abs(window.scrollY - targetY) <= 2;
 
         if (reached || (enoughHeight && attempts > 2)) {
           restoringScrollRef.current = false;
           pendingRestoreScrollYRef.current = null;
           isHydratingRef.current = false;
+          setIsRestoring(false);
           return;
         }
-        if (attempts >= maxAttempts && !canStillGrow) {
+        if (attempts >= maxAttempts) {
           restoringScrollRef.current = false;
           pendingRestoreScrollYRef.current = null;
           isHydratingRef.current = false;
+          setIsRestoring(false);
           return;
         }
 
@@ -64,14 +67,6 @@ export function useFeedScrollRestore({
   );
 
   useEffect(() => {
-    hasMoreRef.current = hasMore;
-  }, [hasMore]);
-
-  useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
-
-  useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     isHydratingRef.current = true;
     let hydrationTimeout = null;
@@ -79,19 +74,27 @@ export function useFeedScrollRestore({
       const raw = sessionStorage.getItem(storageKey);
       if (!raw) {
         isHydratingRef.current = false;
+        setIsRestoring(false);
         return;
       }
       const parsed = JSON.parse(raw);
-      if (typeof parsed?.scrollY === "number") {
+      if (parsed?.anchorId != null) {
+        pendingRestoreAnchorIdRef.current = String(parsed.anchorId);
+        setIsRestoring(true);
+      } else if (typeof parsed?.scrollY === "number") {
         pendingRestoreScrollYRef.current = parsed.scrollY;
+        setIsRestoring(true);
       } else {
         isHydratingRef.current = false;
+        setIsRestoring(false);
       }
     } catch (_e) {
       isHydratingRef.current = false;
+      setIsRestoring(false);
     }
     hydrationTimeout = setTimeout(() => {
       isHydratingRef.current = false;
+      setIsRestoring(false);
     }, 5000);
     return () => {
       if (hydrationTimeout) clearTimeout(hydrationTimeout);
@@ -100,21 +103,25 @@ export function useFeedScrollRestore({
 
   useEffect(() => {
     if (!enabled) return;
+    if (pendingRestoreAnchorIdRef.current != null) {
+      const anchorId = pendingRestoreAnchorIdRef.current;
+      if (typeof document !== "undefined") {
+        const target = document.querySelector(`[data-feed-item-id="${anchorId}"]`);
+        if (target) {
+          target.scrollIntoView({ block: "center" });
+          pendingRestoreAnchorIdRef.current = null;
+          pendingRestoreScrollYRef.current = null;
+          isHydratingRef.current = false;
+          restoringScrollRef.current = false;
+          setIsRestoring(false);
+        }
+      }
+      return;
+    }
     if (pendingRestoreScrollYRef.current == null) return;
     if (itemCount === 0) return;
     restoreScrollWithRetry(pendingRestoreScrollYRef.current);
   }, [enabled, itemCount, restoreScrollWithRetry]);
-
-  useEffect(() => {
-    if (!enabled || typeof window === "undefined") return;
-    if (pendingRestoreScrollYRef.current == null) return;
-    if (loading || !hasMore) return;
-    const targetY = pendingRestoreScrollYRef.current;
-    const maxScrollableY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    if (maxScrollableY + 2 < targetY) {
-      loadMore?.();
-    }
-  }, [enabled, itemCount, loading, hasMore, loadMore]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -125,5 +132,5 @@ export function useFeedScrollRestore({
     };
   }, [enabled, persistScrollState]);
 
-  return { persistScrollState };
+  return { persistScrollState, isRestoring };
 }

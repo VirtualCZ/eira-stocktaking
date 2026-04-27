@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 export default function LinkItem() {
     const { selectedInventura } = useSelectedInventura();
-    const [baseItems, total, baseItemsLoading, baseItemsError, refetchBaseItems, fetchBaseItemById, createInventoryItem] = useBaseItems();
+    const [, , baseItemsLoading, , , fetchBaseItemById, createInventoryItem] = useBaseItems({ skip: true });
     const apiLoading = baseItemsLoading;
     const router = useRouter();
     const [isBaseItemPickerOpen, setIsBaseItemPickerOpen] = useState(false);
@@ -48,8 +48,7 @@ export default function LinkItem() {
         try {
             // Fetch full base item details including image
             const baseItemDetails = await fetchBaseItemById(baseItem.id);
-            console.log('Base item details:', baseItemDetails);
-            
+
             // Pre-fill form with complete base item data
             setEditItem(prev => ({
                 ...prev,
@@ -101,10 +100,7 @@ export default function LinkItem() {
                 location: editItem.location || null
             };
 
-            console.log('Creating inventory item:', inventoryItem);
-
             const result = await createInventoryItem(inventoryItem);
-            console.log('Create inventory result:', result);
             showActionModal('Hotovo', 'Položka byla úspěšně přidána do inventury.', true);
             
             // Navigate to the newly created inventory item page

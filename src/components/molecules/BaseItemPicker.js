@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useBaseItems } from '@/hooks/useBaseItems';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { getAuthHeadersSafe, isAuthenticated } from '@/utils/token';
+import { mergeFeedPageIntoItems, parsePagedFeedPage } from '@/utils/feedPagination';
 import { useSelectedInventura } from '@/hooks/useSelectedInventura';
 import { useGetLocation } from '@/hooks/useLocation';
 import { useBuildings, useStoreys, useRooms } from '@/hooks/useBuildings';
 import Button from '@/components/atoms/Button';
-import ButtonGroup from '@/components/atoms/ButtonGroup';
 import TextInput from '@/components/atoms/TextInput';
 import CenteredModal from '@/components/molecules/CenteredModal';
 import LocationPicker from '@/components/organisms/LocationPicker';
+
+const PAGE_SIZE = 20;
 
 // Helper function to get location name from location object
 function useLocationName(location) {
@@ -68,35 +70,149 @@ function BaseItemCard({ item, isSelected, onClick }) {
 export default function BaseItemPicker({ isOpen, onClose, onSelectBaseItem }) {
     const { selectedInventura } = useSelectedInventura();
     const getLocation = useGetLocation();
-    const [location, setLocation] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItem, setSelectedItem] = useState(null);
     const [filterLocation, setFilterLocation] = useState(null);
     const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
     const [sortBy, setSortBy] = useState('id');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [baseItems, setBaseItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [error, setError] = useState(null);
+    const [page, setPage] = useState(0);
+    const [total, setTotal] = useState(0);
+    const [hasMoreNext, setHasMoreNext] = useState(false);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const lastQueryKeyRef = useRef('');
+
+    const excludeEventId = useMemo(() => {
+        const raw = selectedInventura?.id;
+        const n = Number(raw);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }, [selectedInventura?.id]);
 
     // Load location from storage on mount and when getLocation changes
     useEffect(() => {
         const stored = getLocation();
         if (stored) {
-            setLocation(stored);
             setFilterLocation(stored);
         }
     }, [getLocation]);
 
-    const [baseItems, total, loading, error] = useBaseItems({
-        offset: 0,
-        limit: 20,
-        sortBy: sortBy,
-        sortOrder: sortOrder,
-        search: searchTerm,
-        buildingId: filterLocation?.building || null,
-        storeyId: filterLocation?.storey || null,
-        roomId: filterLocation?.room || null,
-        eventId: selectedInventura?.id,
-        skip: !isOpen || !selectedInventura?.id
-    });
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 400);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
+
+    const queryKey = useMemo(
+        () =>
+            JSON.stringify({
+                e: excludeEventId,
+                sortBy,
+                sortOrder,
+                search: debouncedSearch,
+                b: filterLocation?.building ?? null,
+                s: filterLocation?.storey ?? null,
+                r: filterLocation?.room ?? null,
+            }),
+        [
+            excludeEventId,
+            sortBy,
+            sortOrder,
+            debouncedSearch,
+            filterLocation?.building,
+            filterLocation?.storey,
+            filterLocation?.room,
+        ]
+    );
+
+    useEffect(() => {
+        if (!isOpen || excludeEventId == null || !isAuthenticated()) {
+            setBaseItems([]);
+            setLoading(false);
+            setLoadingMore(false);
+            setError(null);
+            setPage(0);
+            setTotal(0);
+            setHasMoreNext(false);
+            lastQueryKeyRef.current = '';
+            return undefined;
+        }
+
+        const queryChanged = lastQueryKeyRef.current !== queryKey;
+        if (queryChanged) {
+            lastQueryKeyRef.current = queryKey;
+            if (page !== 0) {
+                setPage(0);
+                return undefined;
+            }
+        }
+
+        const ac = new AbortController();
+
+        (async () => {
+            if (page === 0) setLoading(true);
+            else setLoadingMore(true);
+            setError(null);
+            try {
+                const body = {
+                    page,
+                    limit: PAGE_SIZE,
+                    sortBy,
+                    sortOrder,
+                    search: debouncedSearch,
+                    excludeEventId,
+                };
+                if (filterLocation?.building) body.buildingId = filterLocation.building;
+                if (filterLocation?.storey) body.storeyId = filterLocation.storey;
+                if (filterLocation?.room) body.roomId = filterLocation.room;
+
+                const res = await fetch('/api/base-items/feed', {
+                    method: 'POST',
+                    headers: getAuthHeadersSafe(),
+                    body: JSON.stringify(body),
+                    signal: ac.signal,
+                });
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errorText}`);
+                }
+                const data = await res.json();
+                if (!ac.signal.aborted) {
+                    const { pageItems, resolvedTotal, hasMoreNext: more } = parsePagedFeedPage(data);
+                    setBaseItems((prev) =>
+                        page === 0 ? pageItems : mergeFeedPageIntoItems(prev, pageItems)
+                    );
+                    setTotal(resolvedTotal);
+                    setHasMoreNext(more);
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                if (!ac.signal.aborted) setError(err);
+            } finally {
+                if (!ac.signal.aborted) {
+                    if (page === 0) setLoading(false);
+                    else setLoadingMore(false);
+                }
+            }
+        })();
+
+        return () => {
+            ac.abort();
+        };
+    }, [
+        isOpen,
+        excludeEventId,
+        page,
+        queryKey,
+        sortBy,
+        sortOrder,
+        debouncedSearch,
+        filterLocation?.building,
+        filterLocation?.storey,
+        filterLocation?.room,
+    ]);
 
     const handleSelectItem = (item) => {
         setSelectedItem(item);
@@ -224,8 +340,15 @@ export default function BaseItemPicker({ isOpen, onClose, onSelectBaseItem }) {
                     minHeight: 0,
                     overflow: "hidden"
                 }}>
+                    {total > 0 && (
+                        <div style={{ fontSize: "11px", color: "#888", marginBottom: "0.35rem" }}>
+                            Celkem: {total}
+                            {baseItems.length > 0 && baseItems.length < total ? ` · zobrazeno ${baseItems.length}` : null}
+                        </div>
+                    )}
+
                     {/* Loading */}
-                    {loading && (
+                    {loading && baseItems.length === 0 && (
                         <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
                             Načítání...
                         </div>
@@ -239,7 +362,7 @@ export default function BaseItemPicker({ isOpen, onClose, onSelectBaseItem }) {
                     )}
 
                     {/* Items List */}
-                    {!loading && !error && (
+                    {!error && (baseItems.length > 0 || !loading) && (
                         <div style={{ 
                             display: "flex", 
                             flexDirection: "column", 
@@ -250,7 +373,9 @@ export default function BaseItemPicker({ isOpen, onClose, onSelectBaseItem }) {
                         }}>
                             {baseItems.length === 0 ? (
                                 <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
-                                    {searchTerm ? `Žádné položky nenalezeny pro "${searchTerm}"` : "Žádné položky v této místnosti"}
+                                    {debouncedSearch
+                                        ? `Žádné položky nenalezeny pro „${debouncedSearch}“`
+                                        : "Žádné položky neodpovídají filtru nebo už jsou v této inventuře."}
                                 </div>
                             ) : (
                                 baseItems.map(item => (
@@ -261,6 +386,17 @@ export default function BaseItemPicker({ isOpen, onClose, onSelectBaseItem }) {
                                         onClick={() => handleSelectItem(item)}
                                     />
                                 ))
+                            )}
+                            {hasMoreNext && baseItems.length > 0 && (
+                                <div style={{ padding: "0.5rem 0", textAlign: "center" }}>
+                                    <Button
+                                        variant="secondary"
+                                        disabled={loadingMore}
+                                        onClick={() => setPage((p) => p + 1)}
+                                    >
+                                        {loadingMore ? "Načítání…" : "Načíst další"}
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     )}

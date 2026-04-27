@@ -52,8 +52,6 @@ export function useBaseItems(options = {}) {
             }
 
             abortController = new AbortController();
-            console.log("useBaseItems - Sending request:", body);
-            console.log("useBaseItems - skip:", skip, "isAuthenticated:", isAuthenticated());
 
             const res = await fetch(`/api/base-items`, {
                 method: 'POST',
@@ -72,8 +70,7 @@ export function useBaseItems(options = {}) {
             }
 
             const data = await res.json();
-            console.log("useBaseItems - Received response:", data);
-            
+
             if (!abortController.signal.aborted) {
                 setItems(data.items || []);
                 setTotal(data.total || 0);
@@ -124,7 +121,6 @@ export function useBaseItems(options = {}) {
     const fetchBaseItemById = useCallback(async (id) => {
         setLoading(true);
         setError(null);
-        console.log(id)
         try {
             const response = await fetch('/api/base-item-by-id', {
                 method: 'POST',
@@ -142,7 +138,7 @@ export function useBaseItems(options = {}) {
             const data = await response.json();
             return data;
         } catch (err) {
-            setError(err.message);
+            setError(err);
             throw err;
         } finally {
             setLoading(false);
@@ -170,7 +166,7 @@ export function useBaseItems(options = {}) {
             const data = await response.json();
             return data;
         } catch (err) {
-            setError(err.message);
+            setError(err);
             throw err;
         } finally {
             setLoading(false);

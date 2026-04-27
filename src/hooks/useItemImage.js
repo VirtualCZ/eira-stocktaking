@@ -40,7 +40,12 @@ export function useItemImage({
   const containerRef = React.useRef(null);
   const [isVisible, setIsVisible] = React.useState(false);
   const [debugDelayMs, setDebugDelayMs] = React.useState(() => getImageDebugDelayMs());
-  const [delayReady, setDelayReady] = React.useState(() => getImageDebugDelayMs() <= 0);
+  const [delayReady, setDelayReady] = React.useState(() => {
+    const d = getImageDebugDelayMs();
+    if (d <= 0) return true;
+    // Dev delay simulates slow thumbnail API only — not data already on the item (cache / list payload).
+    return Boolean(normalizeInlineImage(itemImage));
+  });
 
   React.useEffect(() => {
     const sync = () => setDebugDelayMs(getImageDebugDelayMs());
@@ -56,11 +61,17 @@ export function useItemImage({
 
   React.useEffect(() => {
     setIsVisible(false);
-    setDelayReady(debugDelayMs <= 0);
+    const inline = normalizeInlineImage(itemImage);
+    if (inline) {
+      setDelayReady(true);
+    } else {
+      setDelayReady(debugDelayMs <= 0);
+    }
   }, [itemId, itemImage, compact, enableLazyImageFetch, debugDelayMs]);
 
   React.useEffect(() => {
     if (debugDelayMs <= 0) return;
+    if (normalizeInlineImage(itemImage)) return;
     const timer = setTimeout(() => setDelayReady(true), debugDelayMs);
     return () => clearTimeout(timer);
   }, [itemId, itemImage, compact, enableLazyImageFetch, debugDelayMs]);
@@ -106,12 +117,10 @@ export function useItemImage({
       ? lazyUrlBuilder(itemId)
       : null;
 
-  const delayedInlineImageSrc = delayReady ? inlineImageSrc : null;
-  const imageSrc = delayedInlineImageSrc || lazyImageSrc;
-  const isWaitingForInlineImage = !compact && !!inlineImageSrc && !delayReady;
+  const imageSrc = inlineImageSrc || lazyImageSrc;
   const isWaitingForIdImage =
     shouldAttemptIdFallback && (enableLazyImageFetch ? (!isVisible || !delayReady) : !delayReady);
-  const isWaitingForLazyImage = isWaitingForInlineImage || isWaitingForIdImage;
+  const isWaitingForLazyImage = isWaitingForIdImage;
 
   return {
     containerRef,

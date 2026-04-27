@@ -29,8 +29,9 @@ function ItemLink({ stocktakingId, itemId, children, onNavigate }) {
         <Link
             href={`/stocktakingList/${stocktakingId}/${itemId}`}
             scroll={false}
-            onClick={onNavigate}
+            onClick={() => onNavigate?.(itemId)}
             style={{ textDecoration: "none" }}
+            data-feed-item-id={itemId}
         >
             {children}
         </Link>
@@ -40,9 +41,38 @@ function ItemLink({ stocktakingId, itemId, children, onNavigate }) {
 /**
  * List + skeletons for stocktaking list page (grid / detailed / compact).
  */
+function AppendSkeletonTail({ viewMode, pageSize }) {
+    if (viewMode === "grid") {
+        return (
+            <div className="grid grid-cols-2 gap-4 auto-rows-fr mt-4">
+                {Array.from({ length: pageSize }, (_, index) => (
+                    <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={false} />
+                ))}
+            </div>
+        );
+    }
+    if (viewMode === "detailed") {
+        return (
+            <>
+                {Array.from({ length: pageSize }, (_, index) => (
+                    <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={false} />
+                ))}
+            </>
+        );
+    }
+    return (
+        <>
+            {Array.from({ length: pageSize }, (_, index) => (
+                <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={true} />
+            ))}
+        </>
+    );
+}
+
 export default function StocktakingListItemViews({
     viewMode,
     loading,
+    appendLoading = false,
     items,
     stocktakingId,
     pageSize,
@@ -71,7 +101,27 @@ export default function StocktakingListItemViews({
 
     if (viewMode === "grid") {
         return (
-            <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+            <>
+                <div className="grid grid-cols-2 gap-4 auto-rows-fr">
+                    {items.map((item) => (
+                        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
+                            <MemoStocktakingItemCard
+                                item={item}
+                                renderActions={renderItemActions}
+                                compact={false}
+                                enableLazyImageFetch={true}
+                            />
+                        </ItemLink>
+                    ))}
+                </div>
+                {appendLoading ? <AppendSkeletonTail viewMode="grid" pageSize={pageSize} /> : null}
+            </>
+        );
+    }
+
+    if (viewMode === "detailed") {
+        return (
+            <>
                 {items.map((item) => (
                     <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
                         <MemoStocktakingItemCard
@@ -82,31 +132,24 @@ export default function StocktakingListItemViews({
                         />
                     </ItemLink>
                 ))}
-            </div>
+                {appendLoading ? <AppendSkeletonTail viewMode="detailed" pageSize={pageSize} /> : null}
+            </>
         );
     }
 
-    if (viewMode === "detailed") {
-        return items.map((item) => (
-            <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
-                <MemoStocktakingItemCard
-                    item={item}
-                    renderActions={renderItemActions}
-                    compact={false}
-                    enableLazyImageFetch={true}
-                />
-            </ItemLink>
-        ));
-    }
-
-    return items.map((item) => (
-        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
-            <MemoStocktakingItemCard
-                item={item}
-                renderActions={renderItemActions}
-                compact={true}
-                enableLazyImageFetch={true}
-            />
-        </ItemLink>
-    ));
+    return (
+        <>
+            {items.map((item) => (
+                <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
+                    <MemoStocktakingItemCard
+                        item={item}
+                        renderActions={renderItemActions}
+                        compact={true}
+                        enableLazyImageFetch={true}
+                    />
+                </ItemLink>
+            ))}
+            {appendLoading ? <AppendSkeletonTail viewMode="compact" pageSize={pageSize} /> : null}
+        </>
+    );
 }

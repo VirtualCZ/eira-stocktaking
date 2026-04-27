@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
-import { useStocktakingFeed } from "@/hooks/useStocktakingFeed";
+import { STOCKTAKING_FEED_PAGE_SIZE } from "@/hooks/useStocktakingFeed";
+import { useStocktakingListLayout } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
-import { usePageState } from "@/hooks/usePageState";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
@@ -13,15 +13,15 @@ import CenteredModal from "@/components/molecules/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
+import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import StocktakingListItemViews from "./StocktakingListItemViews";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from "@/components/atoms/Button";
+import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
 import { getAuthHeadersSafe } from "@/utils/token";
 
-
-const PAGE_SIZE = 10;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -39,18 +39,28 @@ const viewModes = [
 export default function StocktakingList() {
 
     const router = useRouter();
-    const params = useParams();
-    const stocktakingId = Number.parseInt(String(params?.id ?? ''), 10);
     const { recordStatus } = useSettings();
-    
-    // Use page state for filters and sorting
-    const [pageState, updatePageState] = usePageState(`stocktakingList_${stocktakingId}`, {
-        sortBy: "id",
-        sortOrder: 'asc',
-        viewMode: 'detailed',
-        searchTerm: '',
-        filterState: { state: [], hasNote: [] }
-    });
+
+    const {
+        stocktakingId,
+        canFetch,
+        pageState,
+        updatePageState,
+        location,
+        setLocation,
+        handleLocationChange,
+        hasLocationFilter,
+        items: feedItems,
+        total: feedTotal,
+        loading,
+        error,
+        goToPage1Based,
+        appendNextChunk,
+        loadMore,
+        reset: resetFeed,
+        highlightPage1Based,
+        canAppendMore,
+    } = useStocktakingListLayout();
 
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -67,43 +77,6 @@ export default function StocktakingList() {
     const [isStatusSelectionModalOpen, setIsStatusSelectionModalOpen] = useState(false);
     const [pendingItem, setPendingItem] = useState(null);
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
-
-    const [location, setLocation] = useState(() => {
-        if (typeof window === "undefined") return null;
-        try {
-            const raw = localStorage.getItem("selectedLocation");
-            return raw ? JSON.parse(raw) : null;
-        } catch (_e) {
-            return null;
-        }
-    });
-    const hasLocationFilter = Boolean(location?.building || location?.storey || location?.room);
-    const canFetch = Number.isFinite(stocktakingId) && stocktakingId > 0;
-
-    const isSameLocation = useCallback((a, b) => {
-        const aBuilding = a?.building ?? null;
-        const aStorey = a?.storey ?? null;
-        const aRoom = a?.room ?? null;
-        const bBuilding = b?.building ?? null;
-        const bStorey = b?.storey ?? null;
-        const bRoom = b?.room ?? null;
-        return aBuilding === bBuilding && aStorey === bStorey && aRoom === bRoom;
-    }, []);
-
-    const handleLocationChange = useCallback((nextLocation) => {
-        setLocation((prev) => (isSameLocation(prev, nextLocation) ? prev : nextLocation));
-    }, [isSameLocation]);
-
-    const { items: feedItems, loading, error, hasMore, loadMore, reset: resetFeed } = useStocktakingFeed({
-        eventId: stocktakingId,
-        sortBy: pageState.sortBy,
-        sortOrder: pageState.sortOrder,
-        searchTerm: pageState.searchTerm,
-        filterState: pageState.filterState,
-        location: hasLocationFilter ? location : null,
-        enabled: canFetch
-    });
-    const listSentinelRef = useRef(null);
 
     const { updateItem } = useUpdateStocktakingItem(stocktakingId);
 
@@ -147,12 +120,9 @@ export default function StocktakingList() {
         [stocktakingId]
     );
 
-    const { persistScrollState } = useFeedScrollRestore({
+    const { persistScrollState, isRestoring } = useFeedScrollRestore({
         storageKey: scrollCacheKey,
         itemCount: feedItems.length,
-        hasMore,
-        loading,
-        loadMore,
         enabled: canFetch
     });
 
@@ -375,30 +345,6 @@ export default function StocktakingList() {
         [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal, recordStatus]
     );
 
-    useEffect(() => {
-        if (!canFetch || loading || feedItems.length > 0) return;
-        loadMore();
-    }, [canFetch, loading, feedItems.length, loadMore]);
-
-    useEffect(() => {
-        if (loading || !hasMore) return;
-        const node = listSentinelRef.current;
-        if (!node) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting && !loading && hasMore) {
-                        loadMore();
-                        break;
-                    }
-                }
-            },
-            { rootMargin: "280px 0px" }
-        );
-        observer.observe(node);
-        return () => observer.disconnect();
-    }, [loading, hasMore, loadMore]);
-
     if (!canFetch) {
         return (
             <main className="relative min-h-screen flex flex-col items-center p-4">
@@ -432,28 +378,37 @@ export default function StocktakingList() {
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    <StocktakingListItemViews
-                        viewMode={pageState.viewMode}
-                        loading={loading && feedItems.length === 0}
-                        items={feedItems}
-                        stocktakingId={stocktakingId}
-                        pageSize={PAGE_SIZE}
-                        renderItemActions={renderItemActions}
-                        onItemNavigate={persistScrollState}
-                    />
+                    {isRestoring && feedItems.length > 0 ? (
+                        Array.from({ length: 8 }, (_, index) => (
+                            <StocktakingItemCardSkeleton
+                                key={`restore-skeleton-${index}`}
+                                compact={pageState.viewMode === "compact"}
+                            />
+                        ))
+                    ) : (
+                        <StocktakingListItemViews
+                            viewMode={pageState.viewMode}
+                            loading={loading && feedItems.length === 0}
+                            appendLoading={loading && feedItems.length > 0}
+                            items={feedItems}
+                            stocktakingId={stocktakingId}
+                            pageSize={STOCKTAKING_FEED_PAGE_SIZE}
+                            renderItemActions={renderItemActions}
+                            onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
+                        />
+                    )}
                 </div>
-                {loading && feedItems.length > 0 && (
-                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
-                        Načítám další položky...
-                    </div>
-                )}
-                {!hasMore && feedItems.length > 0 && (
-                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
-                        Načteny všechny položky
-                    </div>
-                )}
-                <div ref={listSentinelRef} style={{ height: 1 }} />
-                {/* Fixed bottom bar with search and QR button */}
+                <Pagination
+                    variant="feed"
+                    total={feedTotal}
+                    pageSize={STOCKTAKING_FEED_PAGE_SIZE}
+                    highlightPage1Based={highlightPage1Based}
+                    loading={loading}
+                    onPageSelect1Based={goToPage1Based}
+                    onAppendNext={appendNextChunk}
+                    canAppendMore={canAppendMore}
+                    appendNextLabel={`Načíst dalších ${STOCKTAKING_FEED_PAGE_SIZE}`}
+                />
                 <div
                     ref={bottomBarRef}
                     className="fixed left-0 right-0 bottom-0 z-[100] flex justify-center backdrop-blur-md"

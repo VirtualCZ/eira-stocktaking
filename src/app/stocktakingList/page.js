@@ -64,12 +64,10 @@ export default function StocktakingOperationsList() {
                 </div>
 
                 <Pagination
+                    variant="nav"
                     currentPage={page}
                     totalPages={totalPages}
-                    onPageChange={(newPage) => {
-                        setPage(newPage);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
+                    onPageChange={(newPage) => setPage(newPage)}
                 />
 
                 <SortOptionsModal

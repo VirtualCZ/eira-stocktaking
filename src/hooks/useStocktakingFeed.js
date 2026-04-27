@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { getAuthHeadersSafe } from "@/utils/token";
+import {
+  feedCanAppendMore,
+  feedHighlightPage1Based,
+  mergeFeedPageIntoItems,
+  parsePagedFeedPage,
+} from "@/utils/feedPagination";
 
-const PAGE_SIZE = 10;
+/** Page size for objects feed; exported for pagination UI. */
+export const STOCKTAKING_FEED_PAGE_SIZE = 10;
 const FEED_CACHE_TTL_MS = 30000;
 const feedResponseCache = new Map();
 const feedInFlight = new Map();
@@ -16,10 +24,12 @@ export function useStocktakingFeed({
   enabled = true,
 }) {
   const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [viewPageIndex, setViewPageIndex] = useState(0);
+  const [nextAppendPage0, setNextAppendPage0] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const cursorRef = useRef({ id: null, sortValue: null });
 
   const queryKey = useMemo(
     () =>
@@ -36,54 +46,27 @@ export function useStocktakingFeed({
       }),
     [eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, location?.room, location?.storey, location?.building]
   );
-  const cacheKey = useMemo(() => `stocktakingFeedCache_${queryKey}`, [queryKey]);
+  const cacheKey = useMemo(() => `stocktakingFeedCache_v5_${queryKey}`, [queryKey]);
+
+  const feedRequestId = useRef(0);
+  const appendLock = useRef(false);
 
   const reset = useCallback(() => {
     setItems([]);
+    setTotal(0);
+    setViewPageIndex(0);
+    setNextAppendPage0(0);
     setHasMore(true);
     setError(null);
-    cursorRef.current = { id: null, sortValue: null };
   }, []);
 
-  useEffect(() => {
-    reset();
-    if (typeof window === "undefined") return;
-    try {
-      const raw = sessionStorage.getItem(cacheKey);
-      if (!raw) return;
-      const cached = JSON.parse(raw);
-      if (!cached || !Array.isArray(cached.items)) return;
-      setItems(cached.items);
-      setHasMore(Boolean(cached.hasMore));
-      cursorRef.current = cached.cursor && cached.cursor.id
-        ? { id: cached.cursor.id, sortValue: cached.cursor.sortValue ?? null }
-        : { id: null, sortValue: null };
-    } catch (_e) {}
-  }, [queryKey, cacheKey, reset]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      sessionStorage.setItem(
-        cacheKey,
-        JSON.stringify({
-          items,
-          hasMore,
-          cursor: cursorRef.current,
-          ts: Date.now(),
-        })
-      );
-    } catch (_e) {}
-  }, [cacheKey, items, hasMore]);
-
-  const loadMore = useCallback(async () => {
-    if (!enabled || loading || !hasMore || !eventId) return;
-    setLoading(true);
-    setError(null);
-    try {
+  const loadPageFromApi = useCallback(
+    async (pageIndex0) => {
+      if (!enabled || !eventId) throw new Error("feed disabled");
       const body = {
         eventId,
-        limit: PAGE_SIZE,
+        page: pageIndex0,
+        limit: STOCKTAKING_FEED_PAGE_SIZE,
         sortBy,
         sortOrder,
         search: searchTerm || "",
@@ -92,12 +75,7 @@ export function useStocktakingFeed({
         roomId: location?.room || null,
         storeyId: location?.storey || null,
         buildingId: location?.building || null,
-        noLocation: false,
       };
-      if (cursorRef.current.id) {
-        body.cursorId = cursorRef.current.id;
-        body.cursorSortValue = cursorRef.current.sortValue ?? null;
-      }
       const requestKey = JSON.stringify(body);
       const now = Date.now();
       const cached = feedResponseCache.get(requestKey);
@@ -123,22 +101,156 @@ export function useStocktakingFeed({
           feedInFlight.delete(requestKey);
         }
       }
-      const nextItems = data.items || [];
-      setItems((prev) => {
-        const seen = new Set(prev.map((x) => x.id));
-        const appended = nextItems.filter((x) => !seen.has(x.id));
-        return [...prev, ...appended];
-      });
-      cursorRef.current = data.nextCursorId
-        ? { id: data.nextCursorId, sortValue: data.nextCursorSortValue ?? null }
-        : { id: null, sortValue: null };
-      setHasMore(Boolean(data.hasMore));
-    } catch (e) {
-      setError(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [enabled, loading, hasMore, eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, location?.room, location?.storey, location?.building]);
+      return parsePagedFeedPage(data);
+    },
+    [enabled, eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, location?.room, location?.storey, location?.building]
+  );
 
-  return { items, loading, error, hasMore, loadMore, reset };
+  const replaceToPage0 = useCallback(
+    async (pageIndex0, opts = {}) => {
+      if (!enabled || !eventId) return;
+      const syncPaint = opts?.syncPaint !== false;
+      const id = ++feedRequestId.current;
+      const applyPendingUi = () => {
+        setViewPageIndex(pageIndex0);
+        setItems([]);
+        setLoading(true);
+        setError(null);
+      };
+      if (syncPaint) {
+        flushSync(applyPendingUi);
+      } else {
+        applyPendingUi();
+      }
+      try {
+        const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageIndex0);
+        if (id !== feedRequestId.current) return;
+        setTotal(resolvedTotal);
+        setItems(pageItems);
+        setNextAppendPage0(pageIndex0 + 1);
+        setHasMore(hasMoreNext);
+      } catch (e) {
+        if (id === feedRequestId.current) setError(e);
+      } finally {
+        if (id === feedRequestId.current) setLoading(false);
+      }
+    },
+    [enabled, eventId, loadPageFromApi]
+  );
+
+  const appendNextChunk = useCallback(async () => {
+    if (!enabled || !eventId) return;
+    if (!feedCanAppendMore(nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE)) return;
+    if (appendLock.current) return;
+    appendLock.current = true;
+    const id = ++feedRequestId.current;
+    const pageToFetch = nextAppendPage0;
+    flushSync(() => {
+      setLoading(true);
+      setError(null);
+    });
+    try {
+      const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageToFetch);
+      if (id !== feedRequestId.current) return;
+      setTotal(resolvedTotal);
+      setItems((prev) => mergeFeedPageIntoItems(prev, pageItems));
+      setNextAppendPage0((p) => p + 1);
+      setHasMore(hasMoreNext);
+    } catch (e) {
+      if (id === feedRequestId.current) setError(e);
+    } finally {
+      appendLock.current = false;
+      if (id === feedRequestId.current) setLoading(false);
+    }
+  }, [enabled, eventId, total, nextAppendPage0, loadPageFromApi]);
+
+  const replaceToPage0Ref = useRef(replaceToPage0);
+  replaceToPage0Ref.current = replaceToPage0;
+
+  const goToPage1Based = useCallback((page1Based) => {
+    const p0 = page1Based - 1;
+    if (p0 < 0) return;
+    void replaceToPage0(p0);
+  }, [replaceToPage0]);
+
+  /** Re-fetch page 0 (e.g. after mutations). Name kept for callers; not infinite-scroll append. */
+  const loadMore = useCallback(() => {
+    void replaceToPage0(0, { syncPaint: false });
+  }, [replaceToPage0]);
+
+  useLayoutEffect(() => {
+    let fromCache = false;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const cached = JSON.parse(raw);
+          const vp = Number(cached.viewPageIndex);
+          if (Array.isArray(cached.items) && cached.items.length > 0 && Number.isInteger(vp) && vp >= 0) {
+            const nap = Number(cached.nextAppendPage0);
+            const derivedNext =
+              Number.isInteger(nap) && nap >= 0
+                ? nap
+                : Math.max(vp + 1, Math.ceil(cached.items.length / STOCKTAKING_FEED_PAGE_SIZE));
+            setItems(cached.items);
+            setTotal(Number(cached.total) || 0);
+            setViewPageIndex(vp);
+            setNextAppendPage0(derivedNext);
+            setHasMore(Boolean(cached.hasMoreNext));
+            setError(null);
+            fromCache = true;
+          }
+        }
+      } catch (_e) {}
+    }
+    if (!fromCache) {
+      reset();
+      if (enabled && eventId) {
+        void replaceToPage0Ref.current(0);
+      }
+    }
+  }, [queryKey, cacheKey, reset, enabled, eventId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (loading && items.length === 0) return;
+    try {
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          items,
+          total,
+          viewPageIndex,
+          nextAppendPage0,
+          hasMoreNext: hasMore,
+          ts: Date.now(),
+        })
+      );
+    } catch (_e) {}
+  }, [cacheKey, items, total, viewPageIndex, nextAppendPage0, hasMore, loading]);
+
+  const highlightPage1Based = useMemo(
+    () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE),
+    [viewPageIndex, nextAppendPage0, total]
+  );
+  const canAppendMore = useMemo(
+    () => feedCanAppendMore(nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE),
+    [nextAppendPage0, total]
+  );
+
+  return {
+    items,
+    total,
+    viewPageIndex,
+    nextAppendPage0,
+    loading,
+    error,
+    hasMore,
+    goToPage1Based,
+    appendNextChunk,
+    reset,
+    loadMore,
+    highlightPage1Based,
+    canAppendMore,
+  };
 }

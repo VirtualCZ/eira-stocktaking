@@ -46,9 +46,9 @@ export default function BaseItemsPage() {
     });
 
     const locationValues = useMemo(() => ({
-        building: location?.building,
-        storey: location?.storey,
-        room: location?.room
+        building: location?.building ?? null,
+        storey: location?.storey ?? null,
+        room: location?.room ?? null
     }), [location?.building, location?.storey, location?.room]);
 
     // Allow feed loading even when no location is selected.
@@ -266,7 +266,16 @@ export default function BaseItemsPage() {
                     pageCursorsRef.current = new Map(
                         Array.isArray(cached.pageCursors) ? cached.pageCursors : [[0, null]]
                     );
-                    return;
+                    const cachedItems = Array.isArray(cached.items) ? cached.items : [];
+                    if (cachedItems.length > 0) {
+                        return;
+                    }
+                    // Cache metadata can become inconsistent (e.g., page 0 marked loaded but no items).
+                    // Reset cursors/loaded-pages so first page is fetched again.
+                    requestedPagesRef.current = new Set();
+                    pageCursorsRef.current = new Map([[0, null]]);
+                    setLastLoadedPage(-1);
+                    setHasMore(true);
                 } catch (_e) {}
             }
         }

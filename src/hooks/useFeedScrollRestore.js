@@ -120,9 +120,7 @@ export function useFeedScrollRestore({
     if (!enabled || typeof window === "undefined") return;
     const onScroll = () => persistScrollState();
     window.addEventListener("scroll", onScroll, { passive: true });
-    persistScrollState();
     return () => {
-      persistScrollState();
       window.removeEventListener("scroll", onScroll);
     };
   }, [enabled, persistScrollState]);

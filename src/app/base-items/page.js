@@ -13,6 +13,7 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 import Button from "@/components/atoms/Button";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import { getAuthHeadersSafe } from "@/utils/token";
+import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 
 const PAGE_SIZE = 10;
 
@@ -103,12 +104,9 @@ export default function BaseItemsPage() {
     const listSentinelRef = useRef(null);
     const requestedPagesRef = useRef(new Set());
     const pageCursorsRef = useRef(new Map([[0, null]]));
-    const restoringScrollRef = useRef(false);
-    const isHydratingRef = useRef(true);
-    const pendingRestoreScrollYRef = useRef(null);
 
     const persistFeedState = useCallback(() => {
-        if (typeof window === "undefined" || isHydratingRef.current) return;
+        if (typeof window === "undefined") return;
         sessionStorage.setItem(cacheKey, JSON.stringify({
             items,
             total,
@@ -116,36 +114,18 @@ export default function BaseItemsPage() {
             hasMore,
             loadedPages: Array.from(requestedPagesRef.current),
             pageCursors: Array.from(pageCursorsRef.current.entries()),
-            scrollY: window.scrollY,
             ts: Date.now(),
         }));
     }, [cacheKey, items, total, lastLoadedPage, hasMore]);
-
-    const restoreScrollWithRetry = useCallback((targetY) => {
-        if (typeof window === "undefined" || typeof targetY !== "number") return;
-        restoringScrollRef.current = true;
-        let attempts = 0;
-        const maxAttempts = 40;
-
-        const tick = () => {
-            window.scrollTo(0, targetY);
-            const maxScrollableY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-            const reached = Math.abs(window.scrollY - Math.min(targetY, maxScrollableY)) <= 2;
-            const enoughHeight = maxScrollableY >= targetY - 2;
-
-            if (reached || (enoughHeight && attempts > 2) || attempts >= maxAttempts) {
-                restoringScrollRef.current = false;
-                isHydratingRef.current = false;
-                pendingRestoreScrollYRef.current = null;
-                return;
-            }
-
-            attempts += 1;
-            requestAnimationFrame(tick);
-        };
-
-        requestAnimationFrame(tick);
-    }, []);
+    const scrollCacheKey = useMemo(() => `baseItemsScroll_${queryKey}`, [queryKey]);
+    const { persistScrollState } = useFeedScrollRestore({
+        storageKey: scrollCacheKey,
+        itemCount: items.length,
+        hasMore,
+        loading,
+        loadMore: () => loadPage(lastLoadedPage + 1),
+        enabled: locationInitialized
+    });
 
     const loadPage = useCallback(async (pageIndex, { replace = false } = {}) => {
         if (!locationInitialized) return;
@@ -260,7 +240,6 @@ export default function BaseItemsPage() {
     );
 
     useEffect(() => {
-        isHydratingRef.current = true;
         requestedPagesRef.current = new Set();
         pageCursorsRef.current = new Map([[0, null]]);
         setItems([]);
@@ -283,11 +262,6 @@ export default function BaseItemsPage() {
                     pageCursorsRef.current = new Map(
                         Array.isArray(cached.pageCursors) ? cached.pageCursors : [[0, null]]
                     );
-                    if (typeof cached.scrollY === "number") {
-                        pendingRestoreScrollYRef.current = cached.scrollY;
-                    } else {
-                        isHydratingRef.current = false;
-                    }
                     return;
                 } catch (_e) {}
             }
@@ -296,13 +270,7 @@ export default function BaseItemsPage() {
         if (locationInitialized) {
             loadPage(0, { replace: true });
         }
-        isHydratingRef.current = false;
     }, [cacheKey, locationInitialized, loadPage]);
-
-    useEffect(() => {
-        if (pendingRestoreScrollYRef.current == null) return;
-        restoreScrollWithRetry(pendingRestoreScrollYRef.current);
-    }, [items.length, restoreScrollWithRetry]);
 
     useEffect(() => {
         if (!locationInitialized || loading || !hasMore) return;
@@ -313,7 +281,7 @@ export default function BaseItemsPage() {
         const observer = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
-                    if (entry.isIntersecting && !restoringScrollRef.current && !loading && hasMore) {
+                    if (entry.isIntersecting && !loading && hasMore) {
                         loadPage(lastLoadedPage + 1);
                         break;
                     }
@@ -326,13 +294,9 @@ export default function BaseItemsPage() {
     }, [items.length, hasMore, loading, lastLoadedPage, loadPage, locationInitialized]);
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
-        const onScroll = () => persistFeedState();
         persistFeedState();
-        window.addEventListener("scroll", onScroll, { passive: true });
         return () => {
             persistFeedState();
-            window.removeEventListener("scroll", onScroll);
         };
     }, [persistFeedState]);
 
@@ -383,7 +347,7 @@ export default function BaseItemsPage() {
                             {pageState.viewMode === 'grid' && (
                                 <div className="grid grid-cols-2 gap-4 auto-rows-fr">
                                     {items.map(item => (
-                                        <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={persistFeedState} style={{ textDecoration: "none" }}>
+                                        <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={() => { persistFeedState(); persistScrollState(); }} style={{ textDecoration: "none" }}>
                                             <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} enableLazyImageFetch={true} showInventoryDetails={false} useStateColor={false} />
                                         </Link>
                                     ))}
@@ -391,7 +355,7 @@ export default function BaseItemsPage() {
                             )}
                             {pageState.viewMode === 'detailed' && (
                                 items.map(item => (
-                                    <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={persistFeedState} style={{ textDecoration: "none" }}>
+                                    <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={() => { persistFeedState(); persistScrollState(); }} style={{ textDecoration: "none" }}>
                                         <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} enableLazyImageFetch={true} showInventoryDetails={false} useStateColor={false} />
                                     </Link>
                                 ))
@@ -399,7 +363,7 @@ export default function BaseItemsPage() {
 
                             {pageState.viewMode === 'compact' && (
                                 items.map(item => (
-                                    <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={persistFeedState} style={{ textDecoration: "none" }}>
+                                    <Link key={item.id} href={`/itemList/${item.id}`} scroll={false} onClick={() => { persistFeedState(); persistScrollState(); }} style={{ textDecoration: "none" }}>
                                         <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} enableLazyImageFetch={true} showInventoryDetails={false} useStateColor={false} />
                                     </Link>
                                 ))

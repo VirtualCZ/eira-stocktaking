@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useItemImage } from "@/hooks/useItemImage";
 
 function PictureInputButton({ onClick, title, children, style = {}, ...rest }) {
     return (
@@ -25,10 +26,13 @@ function PictureInputButton({ onClick, title, children, style = {}, ...rest }) {
     );
 }
 
-export default function PictureInput({ label, onChange, value, editMode = false }) {
+export default function PictureInput({ label, onChange, value, editMode = false, itemId = null }) {
     const [preview, setPreview] = useState(null);
     const [objectFit, setObjectFit] = useState("cover");
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const inputRef = useRef();
+    const imageRef = useRef();
 
     useEffect(() => {
         if (!value) {
@@ -49,6 +53,30 @@ export default function PictureInput({ label, onChange, value, editMode = false 
             return () => URL.revokeObjectURL(url);
         }
     }, [value]);
+
+    const { containerRef, imageSrc, isWaitingForLazyImage } = useItemImage({
+        itemId,
+        itemImage: preview,
+        compact: false,
+        enableLazyImageFetch: false,
+        fetchByIdWhenMissing: true,
+    });
+    const showLoadingPlaceholder = isWaitingForLazyImage || (!!imageSrc && !imageLoaded && !imageError);
+
+    useEffect(() => {
+        setImageLoaded(false);
+        setImageError(false);
+    }, [imageSrc, itemId]);
+
+    useEffect(() => {
+        if (!imageSrc) return;
+        const img = imageRef.current;
+        if (!img) return;
+        if (img.complete) {
+            if (img.naturalWidth > 0) setImageLoaded(true);
+            else setImageError(true);
+        }
+    }, [imageSrc]);
 
     const handleFile = e => {
         const file = e.target.files[0];
@@ -82,11 +110,54 @@ export default function PictureInput({ label, onChange, value, editMode = false 
                 height: 280,
                 position: "relative",
                 overflow: "hidden"
-            }}>
-                {preview ? (
-                    <img src={preview} alt="preview" style={{ width: "100%", height: "100%", objectFit, borderRadius: 12 }} />
+            }}
+            ref={containerRef}
+            >
+                {imageSrc && !imageError ? (
+                    <>
+                        {showLoadingPlaceholder && (
+                            <div
+                                className="image-placeholder-pulse"
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    background: "linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%)",
+                                    backgroundSize: "200% 100%",
+                                    borderRadius: 12
+                                }}
+                            />
+                        )}
+                        <img
+                            ref={imageRef}
+                            src={imageSrc}
+                            alt="preview"
+                            loading="eager"
+                            onLoad={() => setImageLoaded(true)}
+                            onError={() => setImageError(true)}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit,
+                                borderRadius: 12,
+                                visibility: imageLoaded ? "visible" : "hidden"
+                            }}
+                        />
+                    </>
                 ) : (
-                    <span style={{ color: "#000", opacity: "50%", fontSize: 32 }} className="material-icons-round">broken_image</span>
+                    isWaitingForLazyImage ? (
+                        <div
+                            className="image-placeholder-pulse"
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                background: "linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%)",
+                                backgroundSize: "200% 100%",
+                                borderRadius: 12
+                            }}
+                        />
+                    ) : (
+                        <span style={{ color: "#000", opacity: "50%", fontSize: 32 }} className="material-icons-round">image_not_supported</span>
+                    )
                 )}
                 {/* Absolute top right: camera/plus, fit switch, and trash buttons */}
                 <div style={{
@@ -116,6 +187,15 @@ export default function PictureInput({ label, onChange, value, editMode = false 
                     )}
                 </div>
             </picture>
+            <style jsx>{`
+                .image-placeholder-pulse {
+                    animation: imagePlaceholderPulse 1.2s linear infinite;
+                }
+                @keyframes imagePlaceholderPulse {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            `}</style>
         </div>
     );
 }

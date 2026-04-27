@@ -15,6 +15,22 @@ function buildForwardHeaders(requestHeaders) {
   const headers = new Headers(requestHeaders);
   headers.delete("host");
   headers.delete("content-length");
+
+  // Keep proxy auth behavior consistent for all callers (fetch, img, etc.).
+  // If Authorization is missing but auth_token cookie exists, promote it.
+  if (!headers.get("authorization")) {
+    const cookieHeader = headers.get("cookie") || "";
+    const tokenCookie = cookieHeader
+      .split(";")
+      .map((c) => c.trim())
+      .find((c) => c.startsWith("auth_token="));
+    if (tokenCookie) {
+      const token = tokenCookie.slice("auth_token=".length);
+      if (token) {
+        headers.set("authorization", `Bearer ${token}`);
+      }
+    }
+  }
   return headers;
 }
 

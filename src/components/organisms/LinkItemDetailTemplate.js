@@ -42,7 +42,7 @@ export default function LinkItemDetailTemplate({
               {returnTo === "/" ? "home" : "arrow_back"}
             </span>
           </Link>
-          <PictureInput value={item.image || ""} editMode={false} />
+          <PictureInput value={item.image || ""} itemId={item.id} editMode={false} />
           <div className="p-4 flex flex-col gap-4" style={{ paddingBottom: "6rem" }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

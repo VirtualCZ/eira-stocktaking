@@ -18,7 +18,14 @@ const recordStatusOptions = [
 ];
 
 export default function SettingsModal({ isOpen, onClose }) {
-    const { recordStatus, setRecordStatus } = useSettings();
+    const {
+        recordStatus,
+        setRecordStatus,
+        imageDebugDelayEnabled,
+        setImageDebugDelayEnabled,
+        imageDebugDelayMs,
+        setImageDebugDelayMs
+    } = useSettings();
 
     const handleSave = () => {
         onClose();
@@ -50,6 +57,42 @@ export default function SettingsModal({ isOpen, onClose }) {
                         lineHeight: "1.4"
                     }}>
                         Po potvrzení nalezení se zobrazí okno s volbami stavu položky
+                    </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                        Dev: Zpomalení načítání obrázků
+                    </div>
+                    <ButtonGroup
+                        options={recordStatusOptions}
+                        value={imageDebugDelayEnabled}
+                        onChange={setImageDebugDelayEnabled}
+                        iconPosition="left"
+                        orientation="horizontal"
+                    />
+                    {imageDebugDelayEnabled && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <input
+                                type="range"
+                                min={0}
+                                max={3000}
+                                step={100}
+                                value={imageDebugDelayMs}
+                                onChange={(e) => setImageDebugDelayMs(Number(e.target.value))}
+                            />
+                            <div style={{ fontSize: "12px", color: "#666" }}>
+                                Zpoždění: {imageDebugDelayMs} ms
+                            </div>
+                        </div>
+                    )}
+                    <div style={{
+                        fontSize: "0.75rem",
+                        color: "#666",
+                        fontStyle: "italic",
+                        lineHeight: "1.4"
+                    }}>
+                        Používá se pro testování skeleton/no-image stavů.
                     </div>
                 </div>
                 

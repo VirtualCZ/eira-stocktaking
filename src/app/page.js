@@ -152,7 +152,7 @@ export default function Home() {
                text="Najdi majetek"
                size="small"
                icon="search"
-               href="search"
+               href="base-items"
                disabled={!selectedInventura}
              />
 

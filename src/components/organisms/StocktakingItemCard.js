@@ -3,6 +3,7 @@ import CardItemName from "@/components/atoms/CardItemName";
 import CardItemDescription from "@/components/atoms/CardItemDescription";
 import CardItemNote from "@/components/atoms/CardItemNote";
 import CardItemDate from "@/components/atoms/CardItemDate";
+import { useItemImage } from "@/hooks/useItemImage";
 
 // Map state to background color - using subtle, professional colors
 const stateBgColors = {
@@ -13,31 +14,28 @@ const stateBgColors = {
   novy: "#f8f4e8",       // Backward compatibility for legacy records
 };
 
-function detectImageMimeFromBase64(base64) {
-  if (!base64 || typeof base64 !== "string") return "image/jpeg";
-  if (base64.startsWith("/9j/")) return "image/jpeg";
-  if (base64.startsWith("iVBORw0KGgo")) return "image/png";
-  if (base64.startsWith("R0lGOD")) return "image/gif";
-  if (base64.startsWith("UklGR")) return "image/webp";
-  return "image/jpeg";
-}
-
-export default function StocktakingItemCard({ item, renderActions, compact = false, imagesResolvedForCurrentPage = false }) {
-  // Determine background color based on item.state
-  const bgColor = item.state && stateBgColors[item.state] ? stateBgColors[item.state] : "#f0f1f3";
+export default function StocktakingItemCard({
+  item,
+  renderActions,
+  compact = false,
+  imagesResolvedForCurrentPage = false,
+  enableLazyImageFetch = false,
+  showInventoryDetails = true,
+  useStateColor = true
+}) {
+  // In base-RM contexts, we must ignore inventory state colorization completely.
+  const bgColor = useStateColor && item.state && stateBgColors[item.state]
+    ? stateBgColors[item.state]
+    : "#f0f1f3";
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const imageRef = React.useRef(null);
-
-  const imageSrc = item.image
-    ? (
-      /^data:image\//.test(item.image)
-        ? item.image
-        : (/^[A-Za-z0-9+/=]+$/.test(item.image) && item.image.length > 100)
-          ? `data:${detectImageMimeFromBase64(item.image)};base64,${item.image}`
-          : item.image
-    )
-    : null;
+  const { containerRef, imageSrc, isWaitingForLazyImage } = useItemImage({
+    itemId: item?.id,
+    itemImage: item?.image,
+    compact,
+    enableLazyImageFetch,
+  });
 
   React.useEffect(() => {
     setImageLoaded(false);
@@ -45,8 +43,8 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
   }, [imageSrc, item.id]);
 
   const showImage = !compact && imageSrc && !imageError;
-  const showLoadingPlaceholder = false;
-  const showNoImagePlaceholder = !compact && (imageError || !imageSrc);
+  const showLoadingPlaceholder = !compact && isWaitingForLazyImage;
+  const showNoImagePlaceholder = !compact && !isWaitingForLazyImage && (imageError || !imageSrc);
 
   React.useEffect(() => {
     if (!showImage) return;
@@ -64,6 +62,7 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
 
   return (
     <div
+      ref={containerRef}
       className={compact ? "flex flex-col rounded-2xl overflow-hidden p-4" : "flex flex-col rounded-2xl overflow-hidden h-full"}
       style={{ background: bgColor }}
     >
@@ -143,12 +142,16 @@ export default function StocktakingItemCard({ item, renderActions, compact = fal
             {renderActions && renderActions(item)}
           </div>
           <CardItemDescription>{item.description}</CardItemDescription>
-          <CardItemNote showLabel={false}>{item.note}</CardItemNote>
+          {showInventoryDetails ? (
+            <CardItemNote showLabel={false}>{item.note}</CardItemNote>
+          ) : null}
         </div>
         {/* Second part */}
-        <CardItemDate>
-          Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
-        </CardItemDate>
+        {showInventoryDetails ? (
+          <CardItemDate>
+            Poslední kontrola {item.lastCheck ? new Date(item.lastCheck).toLocaleString() : ""}
+          </CardItemDate>
+        ) : null}
       </div>
     </div>
   );

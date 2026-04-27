@@ -1,33 +1,38 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
-import { useAllObjects } from "@/hooks/useAllObjects";
 import { usePageState } from "@/hooks/usePageState";
 import Link from "next/link";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter } from "next/navigation";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
-import { Pagination } from "@/components/molecules/Pagination";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
-import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
+import { getAuthHeadersSafe } from "@/utils/token";
 
 const PAGE_SIZE = 10;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
     { label: 'Jméno', value: 'name' },
-    { label: 'Datum', value: 'lastCheck' },
-    { label: 'Poznámka k inventuře', value: 'note' },
+    { label: 'Popisek', value: 'description' },
 ];
 
 export default function SearchPage() {
     const router = useRouter();
-    const [location, setLocation] = useState(null);
+    const [location, setLocation] = useState(() => {
+        if (typeof window === "undefined") return null;
+        try {
+            const raw = localStorage.getItem("searchPage_location");
+            return raw ? JSON.parse(raw) : null;
+        } catch (_e) {
+            return null;
+        }
+    });
     
     // Use page state for filters and sorting
     const [pageState, updatePageState, resetPageState] = usePageState('searchPage', {
@@ -47,12 +52,21 @@ export default function SearchPage() {
     }), [location?.building, location?.storey, location?.room]);
 
     // Track if location has been initialized to prevent premature API calls
-    const [locationInitialized, setLocationInitialized] = useState(false);
+    const [locationInitialized, setLocationInitialized] = useState(() => location != null);
 
     // Stable location change handler
     const handleLocationChange = useCallback((newLocation) => {
         setLocation(newLocation);
         setLocationInitialized(true);
+        if (typeof window !== "undefined") {
+            try {
+                if (newLocation) {
+                    localStorage.setItem("searchPage_location", JSON.stringify(newLocation));
+                } else {
+                    localStorage.removeItem("searchPage_location");
+                }
+            } catch (_e) {}
+        }
     }, []);
 
     // Mark location as initialized when it's first set
@@ -67,46 +81,151 @@ export default function SearchPage() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
-    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
 
-    const hookOptions = useMemo(() => {
-        const options = {
-            offset: pageState.currentPage * PAGE_SIZE,
-            limit: PAGE_SIZE,
-            sortBy: pageState.sortBy,
-            sortOrder: pageState.sortOrder,
-            search: pageState.searchTerm,
-            state: pageState.filterState.state,
-            hasNote: pageState.filterState.hasNote,
-            roomId: locationValues.room,
-            buildingId: locationValues.building,
-            storeyId: locationValues.storey,
-            noLocation: false,
-            // entregIds: [123, 456, 789], // Example: Filter by specific object types
-            includeImages: pageState.viewMode !== 'compact', // Start with current view mode preference
-            skip: !locationInitialized,
-        };
-        return options;
-    }, [
-        pageState.currentPage,
+    const queryKey = useMemo(() => JSON.stringify({
+        sortBy: pageState.sortBy,
+        sortOrder: pageState.sortOrder,
+        searchTerm: pageState.searchTerm,
+        room: locationValues.room,
+        building: locationValues.building,
+        storey: locationValues.storey
+    }), [
         pageState.sortBy,
         pageState.sortOrder,
         pageState.searchTerm,
-        pageState.filterState.state,
-        pageState.filterState.hasNote,
         locationValues.room,
         locationValues.building,
         locationValues.storey,
-        pageState.viewMode,
-        locationInitialized
     ]);
 
-    const [items, total, loading, error, refetchItems, refetchWithImages, hasImagesForCurrentPage] = useAllObjects(hookOptions);
+    const cacheKey = useMemo(() => `searchFeedCache_${queryKey}`, [queryKey]);
+    const [items, setItems] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [lastLoadedPage, setLastLoadedPage] = useState(-1);
+    const [hasMore, setHasMore] = useState(true);
+    const listSentinelRef = useRef(null);
+    const requestedPagesRef = useRef(new Set());
+    const pageCursorsRef = useRef(new Map([[0, null]]));
+    const restoringScrollRef = useRef(false);
+    const isHydratingRef = useRef(true);
+    const pendingRestoreScrollYRef = useRef(null);
 
-    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+    const persistFeedState = useCallback(() => {
+        if (typeof window === "undefined" || isHydratingRef.current) return;
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            items,
+            total,
+            lastLoadedPage,
+            hasMore,
+            loadedPages: Array.from(requestedPagesRef.current),
+            pageCursors: Array.from(pageCursorsRef.current.entries()),
+            scrollY: window.scrollY,
+            ts: Date.now(),
+        }));
+    }, [cacheKey, items, total, lastLoadedPage, hasMore]);
+
+    const restoreScrollWithRetry = useCallback((targetY) => {
+        if (typeof window === "undefined" || typeof targetY !== "number") return;
+        restoringScrollRef.current = true;
+        let attempts = 0;
+        const maxAttempts = 40;
+
+        const tick = () => {
+            window.scrollTo(0, targetY);
+            const maxScrollableY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            const reached = Math.abs(window.scrollY - Math.min(targetY, maxScrollableY)) <= 2;
+            const enoughHeight = maxScrollableY >= targetY - 2;
+
+            if (reached || (enoughHeight && attempts > 2) || attempts >= maxAttempts) {
+                restoringScrollRef.current = false;
+                isHydratingRef.current = false;
+                pendingRestoreScrollYRef.current = null;
+                return;
+            }
+
+            attempts += 1;
+            requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+    }, []);
+
+    const loadPage = useCallback(async (pageIndex, { replace = false } = {}) => {
+        if (!locationInitialized) return;
+        if (requestedPagesRef.current.has(pageIndex)) return;
+        const cursor = pageCursorsRef.current.get(pageIndex);
+        if (pageIndex > 0 && !cursor) return;
+        requestedPagesRef.current.add(pageIndex);
+
+        setLoading(true);
+        setError(null);
+        try {
+            const body = {
+                limit: PAGE_SIZE,
+                sortBy: pageState.sortBy,
+                sortOrder: pageState.sortOrder,
+                search: pageState.searchTerm || "",
+                roomId: locationValues.room,
+                buildingId: locationValues.building,
+                storeyId: locationValues.storey,
+                noLocation: false
+            };
+            if (cursor?.id) {
+                body.cursorId = cursor.id;
+                body.cursorSortValue = cursor.sortValue ?? null;
+            }
+
+            const res = await fetch("/api/base-items/feed", {
+                method: "POST",
+                headers: getAuthHeadersSafe(),
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`HTTP ${res.status}: ${errorText}`);
+            }
+            const data = await res.json();
+            const pageItems = data.items || [];
+            const nextTotal = data.total || ((pageIndex * PAGE_SIZE) + pageItems.length + (data.hasMore ? 1 : 0));
+            setTotal(nextTotal);
+            setLastLoadedPage((prev) => Math.max(prev, pageIndex));
+            let nextCount = 0;
+            setItems((prev) => {
+                if (replace) {
+                    nextCount = pageItems.length;
+                    return pageItems;
+                }
+                const seen = new Set(prev.map((i) => i.id));
+                const appended = pageItems.filter((i) => !seen.has(i.id));
+                const nextItems = [...prev, ...appended];
+                nextCount = nextItems.length;
+                return nextItems;
+            });
+            const nextCursor = data.nextCursorId
+                ? { id: data.nextCursorId, sortValue: data.nextCursorSortValue ?? null }
+                : null;
+            pageCursorsRef.current.set(pageIndex + 1, nextCursor);
+            setHasMore(Boolean(data.hasMore));
+        } catch (err) {
+            setError(err);
+            requestedPagesRef.current.delete(pageIndex);
+        } finally {
+            setLoading(false);
+        }
+    }, [
+        locationInitialized,
+        pageState.sortBy,
+        pageState.sortOrder,
+        pageState.searchTerm,
+        locationValues.room,
+        locationValues.building,
+        locationValues.storey,
+    ]);
 
 
     const viewModes = [
@@ -117,15 +236,7 @@ export default function SearchPage() {
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
         const newViewMode = viewModes[(currentViewIdx + 1) % viewModes.length].mode;
-        const currentViewMode = pageState.viewMode;
-        
         updatePageState({ viewMode: newViewMode });
-        
-        // Only refetch if switching FROM compact (no images) TO grid/detailed (with images)
-        // AND we don't already have images for current page
-        if (currentViewMode === 'compact' && newViewMode !== 'compact' && !hasImagesForCurrentPage) {
-            refetchWithImages();
-        }
     };
 
     const bottomBarRef = useRef(null);
@@ -172,10 +283,84 @@ export default function SearchPage() {
 
 
 
-    // Reset page to 0 when search, filters, or location change
+    // Reset list when search/sort/location query changes
     useEffect(() => {
-        updatePageState({ currentPage: 0 });
-    }, [pageState.searchTerm, pageState.filterState, location]);
+        isHydratingRef.current = true;
+        requestedPagesRef.current = new Set();
+        pageCursorsRef.current = new Map([[0, null]]);
+        setItems([]);
+        setTotal(0);
+        setLastLoadedPage(-1);
+        setHasMore(true);
+
+        if (typeof window !== "undefined") {
+            const cachedRaw = sessionStorage.getItem(cacheKey);
+            if (cachedRaw) {
+                try {
+                    const cached = JSON.parse(cachedRaw);
+                    setItems(cached.items || []);
+                    setTotal(cached.total || 0);
+                    setLastLoadedPage(cached.lastLoadedPage ?? -1);
+                    setHasMore(cached.hasMore ?? true);
+                    requestedPagesRef.current = new Set(
+                        Array.isArray(cached.loadedPages) ? cached.loadedPages : []
+                    );
+                    pageCursorsRef.current = new Map(
+                        Array.isArray(cached.pageCursors) ? cached.pageCursors : [[0, null]]
+                    );
+                    if (typeof cached.scrollY === "number") {
+                        pendingRestoreScrollYRef.current = cached.scrollY;
+                    } else {
+                        isHydratingRef.current = false;
+                    }
+                    return;
+                } catch (_e) {}
+            }
+        }
+
+        if (locationInitialized) {
+            loadPage(0, { replace: true });
+        }
+        isHydratingRef.current = false;
+    }, [cacheKey, locationInitialized, loadPage]);
+
+    useEffect(() => {
+        if (pendingRestoreScrollYRef.current == null) return;
+        // Trigger restore after list content has a chance to render.
+        restoreScrollWithRetry(pendingRestoreScrollYRef.current);
+    }, [items.length, restoreScrollWithRetry]);
+
+    useEffect(() => {
+        if (!locationInitialized || loading || !hasMore) return;
+        if (items.length === 0 && lastLoadedPage < 0) return;
+        const node = listSentinelRef.current;
+        if (!node) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting && !restoringScrollRef.current && !loading && hasMore) {
+                        loadPage(lastLoadedPage + 1);
+                        break;
+                    }
+                }
+            },
+            { rootMargin: "300px 0px" }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [items.length, hasMore, loading, lastLoadedPage, loadPage, locationInitialized]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const onScroll = () => persistFeedState();
+        persistFeedState();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            persistFeedState();
+            window.removeEventListener("scroll", onScroll);
+        };
+    }, [persistFeedState]);
 
     return (
         <main className="relative min-h-screen flex flex-col items-center">
@@ -194,7 +379,6 @@ export default function SearchPage() {
                             title: 'Změnit zobrazení'
                         },
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) },
-                        { icon: "filter_alt", onClick: () => setIsFilterModalOpen(true) },
 
                     ]}
                 />
@@ -204,7 +388,7 @@ export default function SearchPage() {
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    {loading ? (
+                    {loading && items.length === 0 ? (
                         // Skeleton loading state
                         <>
                             {pageState.viewMode === 'grid' && (
@@ -234,9 +418,18 @@ export default function SearchPage() {
                                         <Link
                                             key={item.id}
                                             href={`/itemList/${item.id}`}
+                                            scroll={false}
+                                            onClick={persistFeedState}
                                             style={{ textDecoration: "none" }}
                                         >
-                                            <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
+                                            <StocktakingItemCard
+                                                item={item}
+                                                renderActions={renderItemActions}
+                                                compact={false}
+                                                enableLazyImageFetch={true}
+                                                showInventoryDetails={false}
+                                                useStateColor={false}
+                                            />
                                         </Link>
                                     ))}
                                 </div>
@@ -246,9 +439,18 @@ export default function SearchPage() {
                                     <Link
                                         key={item.id}
                                         href={`/itemList/${item.id}`}
+                                        scroll={false}
+                                        onClick={persistFeedState}
                                         style={{ textDecoration: "none" }}
                                     >
-                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={false} />
+                                        <StocktakingItemCard
+                                            item={item}
+                                            renderActions={renderItemActions}
+                                            compact={false}
+                                            enableLazyImageFetch={true}
+                                            showInventoryDetails={false}
+                                            useStateColor={false}
+                                        />
                                     </Link>
                                 ))
                             )}
@@ -258,20 +460,35 @@ export default function SearchPage() {
                                     <Link
                                         key={item.id}
                                         href={`/itemList/${item.id}`}
+                                        scroll={false}
+                                        onClick={persistFeedState}
                                         style={{ textDecoration: "none" }}
                                     >
-                                        <StocktakingItemCard item={item} renderActions={renderItemActions} compact={true} />
+                                        <StocktakingItemCard
+                                            item={item}
+                                            renderActions={renderItemActions}
+                                            compact={true}
+                                            enableLazyImageFetch={true}
+                                            showInventoryDetails={false}
+                                            useStateColor={false}
+                                        />
                                     </Link>
                                 ))
                             )}
                         </>
                     )}
                 </div>
-                <Pagination
-                    currentPage={pageState.currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => updatePageState({ currentPage: page })}
-                />
+                {loading && items.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
+                        Načítám další položky...
+                    </div>
+                )}
+                {!hasMore && items.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
+                        Načteny všechny položky ({total})
+                    </div>
+                )}
+                <div ref={listSentinelRef} style={{ height: 1 }} />
                 {/* Fixed bottom bar with search and QR button */}
                 <div
                     ref={bottomBarRef}
@@ -313,18 +530,6 @@ export default function SearchPage() {
                         updatePageState({ 
                             sortBy: newSortBy, 
                             sortOrder: newSortOrder, 
-                            currentPage: 0 
-                        });
-                    }}
-                />
-                <FilterOptionsModal
-                    isOpen={isFilterModalOpen}
-                    onClose={() => setIsFilterModalOpen(false)}
-                    initialState={pageState.filterState.state}
-                    initialHasNote={pageState.filterState.hasNote}
-                    onChange={({ state, hasNote }) => {
-                        updatePageState({ 
-                            filterState: { state, hasNote },
                             currentPage: 0 
                         });
                     }}

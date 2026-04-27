@@ -76,7 +76,7 @@ export default function StocktakingItemDetailTemplate({
             <>
               {editItem && (
                 <>
-                  <PictureInput value={editItem.image || ""} editMode={false} />
+                  <PictureInput value={editItem.image || ""} itemId={editItem.id} editMode={false} />
                   <div className="p-4 flex flex-col gap-4">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -133,7 +133,7 @@ export default function StocktakingItemDetailTemplate({
             </>
           ) : (
             <>
-              <PictureInput value={item.image || ""} editMode={false} />
+              <PictureInput value={item.image || ""} itemId={item.id} editMode={false} />
               <div className="p-4 flex flex-col gap-4">
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

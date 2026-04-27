@@ -7,7 +7,6 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 
 const MemoStocktakingItemCard = memo(StocktakingItemCard, (prev, next) => {
     if (prev.compact !== next.compact) return false;
-    if (prev.imagesResolvedForCurrentPage !== next.imagesResolvedForCurrentPage) return false;
     if (prev.renderActions !== next.renderActions) return false;
     const a = prev.item;
     const b = next.item;
@@ -25,9 +24,14 @@ const MemoStocktakingItemCard = memo(StocktakingItemCard, (prev, next) => {
 });
 MemoStocktakingItemCard.displayName = "MemoStocktakingItemCard";
 
-function ItemLink({ stocktakingId, itemId, children }) {
+function ItemLink({ stocktakingId, itemId, children, onNavigate }) {
     return (
-        <Link href={`/stocktakingList/${stocktakingId}/${itemId}`} style={{ textDecoration: "none" }}>
+        <Link
+            href={`/stocktakingList/${stocktakingId}/${itemId}`}
+            scroll={false}
+            onClick={onNavigate}
+            style={{ textDecoration: "none" }}
+        >
             {children}
         </Link>
     );
@@ -43,7 +47,7 @@ export default function StocktakingListItemViews({
     stocktakingId,
     pageSize,
     renderItemActions,
-    imagesResolvedForCurrentPage
+    onItemNavigate
 }) {
     if (loading) {
         if (viewMode === "grid") {
@@ -69,12 +73,12 @@ export default function StocktakingListItemViews({
         return (
             <div className="grid grid-cols-2 gap-4 auto-rows-fr">
                 {items.map((item) => (
-                    <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id}>
+                    <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
                         <MemoStocktakingItemCard
                             item={item}
                             renderActions={renderItemActions}
                             compact={false}
-                            imagesResolvedForCurrentPage={imagesResolvedForCurrentPage}
+                            enableLazyImageFetch={true}
                         />
                     </ItemLink>
                 ))}
@@ -84,24 +88,24 @@ export default function StocktakingListItemViews({
 
     if (viewMode === "detailed") {
         return items.map((item) => (
-            <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id}>
+            <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
                 <MemoStocktakingItemCard
                     item={item}
                     renderActions={renderItemActions}
                     compact={false}
-                    imagesResolvedForCurrentPage={imagesResolvedForCurrentPage}
+                    enableLazyImageFetch={true}
                 />
             </ItemLink>
         ));
     }
 
     return items.map((item) => (
-        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id}>
+        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
             <MemoStocktakingItemCard
                 item={item}
                 renderActions={renderItemActions}
                 compact={true}
-                imagesResolvedForCurrentPage={imagesResolvedForCurrentPage}
+                enableLazyImageFetch={true}
             />
         </ItemLink>
     ));

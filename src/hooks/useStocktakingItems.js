@@ -22,7 +22,8 @@ function buildObjectsRequestBody(params, forceIncludeImages = null) {
         noLocation = false,
         eventId = null,
         entregIds = [],
-        includeImages = false
+        includeImages = false,
+        includeProperties = false
     } = params;
 
     const body = {
@@ -34,6 +35,7 @@ function buildObjectsRequestBody(params, forceIncludeImages = null) {
         state,
         hasNote,
         includeImages: forceIncludeImages ?? includeImages,
+        includeProperties,
         thumbnail: true
     };
 
@@ -82,6 +84,7 @@ export function useStocktakingItems(options = {}) {
         eventId = null,
         entregIds = [],
         includeImages = false,
+        includeProperties = false,
         skip = false
     } = options;
 
@@ -111,7 +114,8 @@ export function useStocktakingItems(options = {}) {
                 noLocation,
                 eventId,
                 entregIds,
-                includeImages
+                includeImages,
+                includeProperties
             }, forceIncludeImages);
             const requestKey = JSON.stringify(body);
             const cached = objectsResponseCache.get(requestKey);
@@ -181,7 +185,8 @@ export function useStocktakingItems(options = {}) {
                 noLocation,
                 eventId,
                 entregIds,
-                includeImages
+                includeImages,
+                includeProperties
             }, forceIncludeImages);
             objectsInFlight.delete(JSON.stringify(body));
             if (err.name === 'AbortError') {
@@ -195,7 +200,7 @@ export function useStocktakingItems(options = {}) {
                 setLoading(false);
             }
         }
-    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, buildingId, storeyId, noLocation, eventId, includeImages, skip]);
+    }, [offset, limit, sortBy, sortOrder, search, state, hasNote, roomId, buildingId, storeyId, noLocation, eventId, includeImages, includeProperties, skip]);
 
     const refetchItems = useCallback(async () => {
         const result = await fetchObjects();

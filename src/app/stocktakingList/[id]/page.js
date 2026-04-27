@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
-import { useStocktakingItems, useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
+import { useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
+import { useStocktakingFeed } from "@/hooks/useStocktakingFeed";
+import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import { usePageState } from "@/hooks/usePageState";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter, useParams } from "next/navigation";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
-import { Pagination } from "@/components/molecules/Pagination";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
@@ -48,8 +49,7 @@ export default function StocktakingList() {
         sortOrder: 'asc',
         viewMode: 'detailed',
         searchTerm: '',
-        filterState: { state: [], hasNote: [] },
-        currentPage: 0
+        filterState: { state: [], hasNote: [] }
     });
 
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
@@ -68,55 +68,47 @@ export default function StocktakingList() {
     const [pendingItem, setPendingItem] = useState(null);
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
-    const [location, setLocation] = useState(null);
+    const [location, setLocation] = useState(() => {
+        if (typeof window === "undefined") return null;
+        try {
+            const raw = localStorage.getItem("selectedLocation");
+            return raw ? JSON.parse(raw) : null;
+        } catch (_e) {
+            return null;
+        }
+    });
     const hasLocationFilter = Boolean(location?.building || location?.storey || location?.room);
     const canFetch = Number.isFinite(stocktakingId) && stocktakingId > 0;
 
-    const stocktakingItemsOptions = useMemo(
-        () =>
-            canFetch
-                ? {
-                      offset: pageState.currentPage * PAGE_SIZE,
-                      limit: PAGE_SIZE,
-                      sortBy: pageState.sortBy,
-                      sortOrder: pageState.sortOrder,
-                      search: pageState.searchTerm,
-                      state: pageState.filterState.state,
-                      hasNote: pageState.filterState.hasNote,
-                      roomId: hasLocationFilter ? location.room : null,
-                      buildingId: hasLocationFilter ? location.building : null,
-                      storeyId: hasLocationFilter ? location.storey : null,
-                      eventId: stocktakingId,
-                      includeImages: false
-                  }
-                : { skip: true },
-        [
-            canFetch,
-            pageState.currentPage,
-            pageState.sortBy,
-            pageState.sortOrder,
-            pageState.searchTerm,
-            pageState.filterState.state,
-            pageState.filterState.hasNote,
-            hasLocationFilter,
-            location?.room,
-            location?.building,
-            location?.storey,
-            stocktakingId
-        ]
-    );
+    const isSameLocation = useCallback((a, b) => {
+        const aBuilding = a?.building ?? null;
+        const aStorey = a?.storey ?? null;
+        const aRoom = a?.room ?? null;
+        const bBuilding = b?.building ?? null;
+        const bStorey = b?.storey ?? null;
+        const bRoom = b?.room ?? null;
+        return aBuilding === bBuilding && aStorey === bStorey && aRoom === bRoom;
+    }, []);
 
-    const [items, total, loading, error, refetchItems, refetchWithImages, , imagesResolvedForCurrentPage] =
-        useStocktakingItems(stocktakingItemsOptions);
+    const handleLocationChange = useCallback((nextLocation) => {
+        setLocation((prev) => (isSameLocation(prev, nextLocation) ? prev : nextLocation));
+    }, [isSameLocation]);
+
+    const { items: feedItems, loading, error, hasMore, loadMore, reset: resetFeed } = useStocktakingFeed({
+        eventId: stocktakingId,
+        sortBy: pageState.sortBy,
+        sortOrder: pageState.sortOrder,
+        searchTerm: pageState.searchTerm,
+        filterState: pageState.filterState,
+        location: hasLocationFilter ? location : null,
+        enabled: canFetch
+    });
+    const listSentinelRef = useRef(null);
 
     const { updateItem } = useUpdateStocktakingItem(stocktakingId);
 
     const [scannedQr, setScannedQr] = useState(null);
     const [apiItem, apiLoading, apiError, resolvedQr] = useStocktakingItemByQr(scannedQr, stocktakingId);
-
-    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
-
-
 
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
@@ -150,6 +142,20 @@ export default function StocktakingList() {
         setActionModalOpen(true);
     }, []);
 
+    const scrollCacheKey = useMemo(
+        () => `stocktakingListScroll_${stocktakingId}`,
+        [stocktakingId]
+    );
+
+    const { persistScrollState } = useFeedScrollRestore({
+        storageKey: scrollCacheKey,
+        itemCount: feedItems.length,
+        hasMore,
+        loading,
+        loadMore,
+        enabled: canFetch
+    });
+
     // Helper function to append status to note
     const appendStatusToNote = useCallback((existingNote, status) => {
         const statusText = status.label;
@@ -181,7 +187,8 @@ export default function StocktakingList() {
 
                 if (result) {
                     showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                    refetchItems();
+                    resetFeed();
+                    await loadMore();
                 } else {
                     showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
                 }
@@ -189,7 +196,7 @@ export default function StocktakingList() {
                 setIsUpdatingItem(false);
             }
         },
-        [pendingItem, appendStatusToNote, updateItem, stocktakingId, showActionModal, refetchItems]
+        [pendingItem, appendStatusToNote, updateItem, stocktakingId, showActionModal, resetFeed, loadMore]
     );
 
     const handleScan = useCallback((scannedValue) => {
@@ -255,7 +262,8 @@ export default function StocktakingList() {
             setIsNotInInventoryModalOpen(false);
             setNotInInventoryItem(null);
             showActionModal('Hotovo', 'Položka byla přidána do aktuální inventury.', true);
-            refetchItems();
+            resetFeed();
+            await loadMore();
 
             if (created?.id) {
                 router.push(`/stocktakingList/${stocktakingId}/${created.id}`);
@@ -265,15 +273,7 @@ export default function StocktakingList() {
         } finally {
             setIsAddingScannedItem(false);
         }
-    }, [notInInventoryItem, stocktakingId, location, showActionModal, refetchItems, router]);
-
-    // Effect to handle API result from QR scan
-    useEffect(() => {
-        if (!canFetch || pageState.viewMode === 'compact' || loading) {
-            return;
-        }
-        refetchWithImages();
-    }, [canFetch, pageState.viewMode, loading, refetchWithImages]);
+    }, [notInInventoryItem, stocktakingId, location, showActionModal, resetFeed, loadMore, router]);
 
     useEffect(() => {
         if (!scannedQr) {
@@ -341,7 +341,8 @@ export default function StocktakingList() {
                                 const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
                                 if (result) {
                                     showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
-                                    refetchItems();
+                                    resetFeed();
+                                    loadMore();
                                 } else {
                                     showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
                                 }
@@ -358,7 +359,8 @@ export default function StocktakingList() {
                                 const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
                                 if (result) {
                                     showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
-                                    refetchItems();
+                                    resetFeed();
+                                    loadMore();
                                 } else {
                                     showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
                                 }
@@ -370,25 +372,32 @@ export default function StocktakingList() {
                 />
             </ContextButton>
         ),
-        [router, stocktakingId, updateItem, refetchItems, showActionModal, recordStatus]
+        [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal, recordStatus]
     );
 
-    const filterStateKey = useMemo(() => JSON.stringify(pageState.filterState), [pageState.filterState]);
-    const prevSearchFilterRef = useRef(null);
-
-    // Reset page to 0 when search or filters change (skip initial mount so restored page index is kept)
     useEffect(() => {
-        const key = `${pageState.searchTerm}::${filterStateKey}`;
-        if (prevSearchFilterRef.current === null) {
-            prevSearchFilterRef.current = key;
-            return;
-        }
-        if (prevSearchFilterRef.current === key) {
-            return;
-        }
-        prevSearchFilterRef.current = key;
-        updatePageState({ currentPage: 0 });
-    }, [pageState.searchTerm, filterStateKey]);
+        if (!canFetch || loading || feedItems.length > 0) return;
+        loadMore();
+    }, [canFetch, loading, feedItems.length, loadMore]);
+
+    useEffect(() => {
+        if (loading || !hasMore) return;
+        const node = listSentinelRef.current;
+        if (!node) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting && !loading && hasMore) {
+                        loadMore();
+                        break;
+                    }
+                }
+            },
+            { rootMargin: "280px 0px" }
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [loading, hasMore, loadMore]);
 
     if (!canFetch) {
         return (
@@ -419,25 +428,31 @@ export default function StocktakingList() {
                     ]}
                 />
 
-                <UserLocationPicker onChange={setLocation} />
+                <UserLocationPicker onChange={handleLocationChange} />
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
                     <StocktakingListItemViews
                         viewMode={pageState.viewMode}
-                        loading={loading}
-                        items={items}
+                        loading={loading && feedItems.length === 0}
+                        items={feedItems}
                         stocktakingId={stocktakingId}
                         pageSize={PAGE_SIZE}
                         renderItemActions={renderItemActions}
-                        imagesResolvedForCurrentPage={imagesResolvedForCurrentPage}
+                        onItemNavigate={persistScrollState}
                     />
                 </div>
-                <Pagination
-                    currentPage={pageState.currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => updatePageState({ currentPage: page })}
-                />
+                {loading && feedItems.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
+                        Načítám další položky...
+                    </div>
+                )}
+                {!hasMore && feedItems.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "1rem", color: "#666" }}>
+                        Načteny všechny položky
+                    </div>
+                )}
+                <div ref={listSentinelRef} style={{ height: 1 }} />
                 {/* Fixed bottom bar with search and QR button */}
                 <div
                     ref={bottomBarRef}
@@ -478,8 +493,7 @@ export default function StocktakingList() {
                     onChange={({ sortBy: newSortBy, sortOrder: newSortOrder }) => {
                         updatePageState({ 
                             sortBy: newSortBy, 
-                            sortOrder: newSortOrder, 
-                            currentPage: 0 
+                            sortOrder: newSortOrder
                         });
                     }}
                 />
@@ -490,8 +504,7 @@ export default function StocktakingList() {
                     initialHasNote={pageState.filterState.hasNote}
                     onChange={({ state, hasNote }) => {
                         updatePageState({ 
-                            filterState: { state, hasNote },
-                            currentPage: 0 
+                            filterState: { state, hasNote }
                         });
                     }}
                 />
@@ -684,7 +697,8 @@ export default function StocktakingList() {
                                             setIsPreviewModalOpen(false);
                                             if (result) {
                                                 showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                                                refetchItems();
+                                    resetFeed();
+                                    loadMore();
                                             } else {
                                                 showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
                                             }
@@ -763,7 +777,8 @@ export default function StocktakingList() {
                           setMoveNewLocation(null);
                           if (result) {
                             showActionModal('Hotovo', 'Položka byla úspěšně přesunuta.', true);
-                            refetchItems();
+                            resetFeed();
+                            loadMore();
                           } else {
                             showActionModal('Chyba', 'Položku se nepodařilo přesunout.', false);
                           }

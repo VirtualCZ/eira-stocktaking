@@ -16,6 +16,7 @@ import { getAuthHeadersSafe } from "@/utils/token";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 
 const PAGE_SIZE = 10;
+const BASE_ITEMS_FEED_CACHE_VERSION = 2;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -50,7 +51,8 @@ export default function BaseItemsPage() {
         room: location?.room
     }), [location?.building, location?.storey, location?.room]);
 
-    const [locationInitialized, setLocationInitialized] = useState(() => location != null);
+    // Allow feed loading even when no location is selected.
+    const [locationInitialized, setLocationInitialized] = useState(true);
 
     const handleLocationChange = useCallback((newLocation) => {
         setLocation(newLocation);
@@ -94,7 +96,10 @@ export default function BaseItemsPage() {
         locationValues.storey,
     ]);
 
-    const cacheKey = useMemo(() => `baseItemsFeedCache_${queryKey}`, [queryKey]);
+    const cacheKey = useMemo(
+        () => `baseItemsFeedCache_v${BASE_ITEMS_FEED_CACHE_VERSION}_${queryKey}`,
+        [queryKey]
+    );
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -142,11 +147,10 @@ export default function BaseItemsPage() {
                 sortBy: pageState.sortBy,
                 sortOrder: pageState.sortOrder,
                 search: pageState.searchTerm || "",
-                roomId: locationValues.room,
-                buildingId: locationValues.building,
-                storeyId: locationValues.storey,
-                noLocation: false
             };
+            if (locationValues.room) body.roomId = locationValues.room;
+            if (locationValues.storey) body.storeyId = locationValues.storey;
+            if (locationValues.building) body.buildingId = locationValues.building;
             if (cursor?.id) {
                 body.cursorId = cursor.id;
                 body.cursorSortValue = cursor.sortValue ?? null;

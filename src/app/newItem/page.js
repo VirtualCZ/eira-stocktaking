@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
-import { useCreateStocktakingItem } from "@/hooks/useStocktakingItems";
+import { useCreateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export default function NewItem() {
     const [editMode, setEditMode] = useState(true);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const { createItem, loading, error, success } = useCreateStocktakingItem(selectedInventura?.id || null);
+    const { createItem, loading, error, success } = useCreateInventoryObject(selectedInventura?.id || null);
 
     // Helper to show modal
     const showActionModal = (title, message, success) => {

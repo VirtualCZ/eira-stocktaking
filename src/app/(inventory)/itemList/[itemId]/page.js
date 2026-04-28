@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { useStocktakingItem, useUpdateStocktakingItem, useDeleteStocktakingItem, useDuplicateStocktakingItem } from "@/hooks/useStocktakingItems";
+import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject, useDuplicateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import { useGetLocation } from "@/hooks/useLocation";
@@ -25,9 +25,9 @@ export default function ItemListDetail() {
     const getLocation = useGetLocation();
 
     const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId, null);
-    const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateStocktakingItem(null);
-    const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteStocktakingItem(null);
-    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateStocktakingItem(null);
+    const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateInventoryObject(null);
+    const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteInventoryObject(null);
+    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateInventoryObject(null);
 
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");

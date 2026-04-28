@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
-import { useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
+import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useStocktakingItems";
 import { useStocktakingListLayout } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
@@ -78,10 +78,10 @@ export default function StocktakingList() {
     const [pendingItem, setPendingItem] = useState(null);
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
-    const { updateItem } = useUpdateStocktakingItem(stocktakingId);
+    const { updateItem } = useUpdateInventoryObject(stocktakingId);
 
     const [scannedQr, setScannedQr] = useState(null);
-    const [apiItem, apiLoading, apiError, resolvedQr] = useStocktakingItemByQr(scannedQr, stocktakingId);
+    const [apiItem, apiLoading, apiError, resolvedQr] = useInventoryObjectByQr(scannedQr, stocktakingId);
 
     const currentViewIdx = viewModes.findIndex(vm => vm.mode === pageState.viewMode);
     const nextViewMode = () => {
@@ -183,7 +183,7 @@ export default function StocktakingList() {
         setIsLookingUpOutsideInventory(true);
         setNotInInventoryItem(null);
         try {
-            const response = await fetch('/api/object/by-qr-any', {
+            const response = await fetch('/api/objects/by-qr-any', {
                 method: 'POST',
                 headers: getAuthHeadersSafe(),
                 body: JSON.stringify({ qr: qrValue }),
@@ -215,7 +215,7 @@ export default function StocktakingList() {
                 location: location || null,
             };
 
-            const response = await fetch('/api/base-item/create-inventory', {
+            const response = await fetch('/api/inventory-items/create-from-base-item', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeadersSafe(),

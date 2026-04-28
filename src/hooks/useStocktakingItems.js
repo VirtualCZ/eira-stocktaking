@@ -21,7 +21,7 @@ export function useStocktakingItem(id, eventId) {
       body.eventId = eventId;
     }
 
-    fetch(`/api/object`, {
+    fetch(`/api/objects/by-id`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
       body: JSON.stringify(body)
@@ -48,7 +48,7 @@ export function useStocktakingItem(id, eventId) {
   return [item, loading, error, fetchItem];
 }
 
-export function useStocktakingItemByQr(qr, eventId) {
+export function useInventoryObjectByQr(qr, eventId) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -80,7 +80,7 @@ export function useStocktakingItemByQr(qr, eventId) {
     // Create AbortController for this request
     const abortController = new AbortController();
     
-    fetch(`/api/object/by-qr`, {
+    fetch(`/api/objects/by-qr`, {
       method: 'POST',
       headers: getAuthHeadersSafe(),
       body: JSON.stringify(body),
@@ -126,7 +126,7 @@ export function useStocktakingItemByQr(qr, eventId) {
   return [item, loading, error, resolvedQr];
 }
 
-export function useCreateStocktakingItem(eventId) {
+export function useCreateInventoryObject(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -163,7 +163,7 @@ export function useCreateStocktakingItem(eventId) {
   return { createItem, loading, error, success };
 }
 
-export function useUpdateStocktakingItem(eventId) {
+export function useUpdateInventoryObject(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -200,7 +200,7 @@ export function useUpdateStocktakingItem(eventId) {
   return { updateItem, loading, error, success };
 }
 
-export function useDeleteStocktakingItem(eventId) {
+export function useDeleteInventoryObject(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -224,8 +224,7 @@ export function useDeleteStocktakingItem(eventId) {
         throw new Error(`Failed to delete item - HTTP ${res.status}: ${errorText || res.statusText}`);
       }
       setSuccess(true);
-      const text = await res.text();
-      return text;
+      return await res.json();
     } catch (err) {
       setError(err);
       setSuccess(false);
@@ -238,7 +237,7 @@ export function useDeleteStocktakingItem(eventId) {
   return { deleteItem, loading, error, success };
 }
 
-export function useDuplicateStocktakingItem(eventId) {
+export function useDuplicateInventoryObject(eventId) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -262,8 +261,7 @@ export function useDuplicateStocktakingItem(eventId) {
         throw new Error(`Failed to duplicate item - HTTP ${res.status}: ${errorText || res.statusText}`);
       }
       setSuccess(true);
-      const text = await res.text();
-      return text;
+      return await res.json();
     } catch (err) {
       setError(err);
       setSuccess(false);

@@ -118,11 +118,11 @@ export function useBaseItems(options = {}) {
     }, [fetchBaseItems, search]);
 
     // Additional operations for individual base items
-    const fetchBaseItemById = useCallback(async (id) => {
+    const fetchBaseItemDetailsById = useCallback(async (id) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/base-item-by-id', {
+            const response = await fetch('/api/base-items/by-id', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeadersSafe(),
@@ -145,12 +145,12 @@ export function useBaseItems(options = {}) {
         }
     }, []);
 
-    const createInventoryItem = useCallback(async (inventoryData) => {
+    const createInventoryItemFromBaseItem = useCallback(async (inventoryData) => {
         setLoading(true);
         setError(null);
         
         try {
-            const response = await fetch('/api/base-item/create-inventory', {
+            const response = await fetch('/api/inventory-items/create-from-base-item', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeadersSafe(),
@@ -173,5 +173,5 @@ export function useBaseItems(options = {}) {
         }
     }, []);
 
-    return [items, total, loading, error, refetchItems, fetchBaseItemById, createInventoryItem];
+    return [items, total, loading, error, refetchItems, fetchBaseItemDetailsById, createInventoryItemFromBaseItem];
 }

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useUpdateStocktakingItem, useStocktakingItemByQr } from "@/hooks/useStocktakingItems";
-import { STOCKTAKING_FEED_PAGE_SIZE } from "@/hooks/useStocktakingFeed";
 import { useStocktakingListLayout } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
@@ -58,6 +57,7 @@ export default function StocktakingList() {
         appendNextChunk,
         loadMore,
         reset: resetFeed,
+        pageSize,
         highlightPage1Based,
         canAppendMore,
     } = useStocktakingListLayout();
@@ -392,7 +392,7 @@ export default function StocktakingList() {
                             appendLoading={loading && feedItems.length > 0}
                             items={feedItems}
                             stocktakingId={stocktakingId}
-                            pageSize={STOCKTAKING_FEED_PAGE_SIZE}
+                            pageSize={pageSize}
                             renderItemActions={renderItemActions}
                             onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
                         />
@@ -401,13 +401,13 @@ export default function StocktakingList() {
                 <Pagination
                     variant="feed"
                     total={feedTotal}
-                    pageSize={STOCKTAKING_FEED_PAGE_SIZE}
+                    pageSize={pageSize}
                     highlightPage1Based={highlightPage1Based}
                     loading={loading}
                     onPageSelect1Based={goToPage1Based}
                     onAppendNext={appendNextChunk}
                     canAppendMore={canAppendMore}
-                    appendNextLabel={`Načíst dalších ${STOCKTAKING_FEED_PAGE_SIZE}`}
+                    appendNextLabel={`Načíst dalších ${pageSize}`}
                 />
                 <div
                     ref={bottomBarRef}

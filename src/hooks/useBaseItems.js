@@ -8,7 +8,7 @@ export function useBaseItems(options = {}) {
     const [error, setError] = useState(null);
 
     const {
-        offset = 0,
+        page = 0,
         limit = 20,
         sortBy = 'name',
         sortOrder = 'asc',
@@ -33,7 +33,7 @@ export function useBaseItems(options = {}) {
 
         try {
             const body = {
-                offset,
+                page,
                 limit,
                 sortBy,
                 sortOrder,
@@ -89,7 +89,7 @@ export function useBaseItems(options = {}) {
                 setLoading(false);
             }
         }
-    }, [offset, limit, sortBy, sortOrder, search, buildingId, storeyId, roomId, eventId, skip]);
+    }, [page, limit, sortBy, sortOrder, search, buildingId, storeyId, roomId, eventId, skip]);
 
     const refetchItems = useCallback(async () => {
         const result = await fetchBaseItems();

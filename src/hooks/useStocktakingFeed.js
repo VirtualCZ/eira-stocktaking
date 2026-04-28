@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { getAuthHeadersSafe } from "@/utils/token";
+import { useSettings } from "@/hooks/useSettings";
 import {
   feedCanAppendMore,
   feedHighlightPage1Based,
@@ -8,8 +9,6 @@ import {
   parsePagedFeedPage,
 } from "@/utils/feedPagination";
 
-/** Page size for objects feed; exported for pagination UI. */
-export const STOCKTAKING_FEED_PAGE_SIZE = 10;
 const FEED_CACHE_TTL_MS = 30000;
 const feedResponseCache = new Map();
 const feedInFlight = new Map();
@@ -23,6 +22,8 @@ export function useStocktakingFeed({
   location,
   enabled = true,
 }) {
+  const { itemsPerPage } = useSettings();
+  const pageSize = itemsPerPage;
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [viewPageIndex, setViewPageIndex] = useState(0);
@@ -40,13 +41,14 @@ export function useStocktakingFeed({
         searchTerm,
         state: filterState?.state || [],
         hasNote: filterState?.hasNote || [],
+        pageSize,
         room: location?.room || null,
         storey: location?.storey || null,
         building: location?.building || null,
       }),
-    [eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, location?.room, location?.storey, location?.building]
+    [eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
   );
-  const cacheKey = useMemo(() => `stocktakingFeedCache_v5_${queryKey}`, [queryKey]);
+  const cacheKey = useMemo(() => `stocktakingFeedCache_v6_${queryKey}`, [queryKey]);
 
   const feedRequestId = useRef(0);
   const appendLock = useRef(false);
@@ -66,7 +68,7 @@ export function useStocktakingFeed({
       const body = {
         eventId,
         page: pageIndex0,
-        limit: STOCKTAKING_FEED_PAGE_SIZE,
+        limit: pageSize,
         sortBy,
         sortOrder,
         search: searchTerm || "",
@@ -103,7 +105,7 @@ export function useStocktakingFeed({
       }
       return parsePagedFeedPage(data);
     },
-    [enabled, eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, location?.room, location?.storey, location?.building]
+    [enabled, eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
   );
 
   const replaceToPage0 = useCallback(
@@ -140,7 +142,7 @@ export function useStocktakingFeed({
 
   const appendNextChunk = useCallback(async () => {
     if (!enabled || !eventId) return;
-    if (!feedCanAppendMore(nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE)) return;
+    if (!feedCanAppendMore(nextAppendPage0, total, pageSize)) return;
     if (appendLock.current) return;
     appendLock.current = true;
     const id = ++feedRequestId.current;
@@ -162,7 +164,7 @@ export function useStocktakingFeed({
       appendLock.current = false;
       if (id === feedRequestId.current) setLoading(false);
     }
-  }, [enabled, eventId, total, nextAppendPage0, loadPageFromApi]);
+  }, [enabled, eventId, total, nextAppendPage0, pageSize, loadPageFromApi]);
 
   const replaceToPage0Ref = useRef(replaceToPage0);
   replaceToPage0Ref.current = replaceToPage0;
@@ -191,7 +193,7 @@ export function useStocktakingFeed({
             const derivedNext =
               Number.isInteger(nap) && nap >= 0
                 ? nap
-                : Math.max(vp + 1, Math.ceil(cached.items.length / STOCKTAKING_FEED_PAGE_SIZE));
+                : Math.max(vp + 1, Math.ceil(cached.items.length / pageSize));
             setItems(cached.items);
             setTotal(Number(cached.total) || 0);
             setViewPageIndex(vp);
@@ -230,12 +232,12 @@ export function useStocktakingFeed({
   }, [cacheKey, items, total, viewPageIndex, nextAppendPage0, hasMore, loading]);
 
   const highlightPage1Based = useMemo(
-    () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE),
-    [viewPageIndex, nextAppendPage0, total]
+    () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, pageSize),
+    [viewPageIndex, nextAppendPage0, total, pageSize]
   );
   const canAppendMore = useMemo(
-    () => feedCanAppendMore(nextAppendPage0, total, STOCKTAKING_FEED_PAGE_SIZE),
-    [nextAppendPage0, total]
+    () => feedCanAppendMore(nextAppendPage0, total, pageSize),
+    [nextAppendPage0, total, pageSize]
   );
 
   return {
@@ -250,6 +252,7 @@ export function useStocktakingFeed({
     appendNextChunk,
     reset,
     loadMore,
+    pageSize,
     highlightPage1Based,
     canAppendMore,
   };

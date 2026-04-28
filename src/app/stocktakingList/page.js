@@ -5,9 +5,8 @@ import HeadingCard from "@/components/molecules/HeadingCard";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
+import { useSettings } from "@/hooks/useSettings";
 import StocktakingListCard from "@/components/organisms/StocktakingListCard";
-
-const PAGE_SIZE = 10;
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -16,6 +15,7 @@ const sortOptions = [
 ];
 
 export default function StocktakingOperationsList() {
+    const { itemsPerPage } = useSettings();
     const [sortBy, setSortBy] = useState("id");
     const [sortOrder, setSortOrder] = useState('asc');
     const [page, setPage] = useState(0);
@@ -23,13 +23,13 @@ export default function StocktakingOperationsList() {
     const { selectInventura } = useSelectedInventura();
 
     const [operations, total, loading, error] = useStocktakingLists({ 
-        offset: page * PAGE_SIZE, 
-        limit: PAGE_SIZE,
+        page,
+        limit: itemsPerPage,
         sortBy: sortBy,
         sortOrder: sortOrder,
     });
 
-    const totalPages = total > 0 ? Math.ceil(total / PAGE_SIZE) : 1;
+    const totalPages = total > 0 ? Math.ceil(total / itemsPerPage) : 1;
 
     const handleInventuraClick = (op) => {
         selectInventura(op);

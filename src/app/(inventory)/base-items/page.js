@@ -12,10 +12,7 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
-import {
-    useBaseItemsInventoryLayout,
-    BASE_ITEMS_PAGE_SIZE,
-} from "@/contexts/BaseItemsInventoryLayoutContext";
+import { useBaseItemsInventoryLayout } from "@/contexts/BaseItemsInventoryLayoutContext";
 
 const sortOptions = [
     { label: "ID", value: "id" },
@@ -28,6 +25,7 @@ export default function BaseItemsPage() {
     const {
         pageState,
         updatePageState,
+        pageSize,
         handleLocationChange,
         items,
         total,
@@ -136,17 +134,17 @@ export default function BaseItemsPage() {
                         <>
                             {pageState.viewMode === "grid" && (
                                 <div className="grid grid-cols-2 gap-4 auto-rows-fr">
-                                    {Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                    {Array.from({ length: pageSize }, (_, index) => (
                                         <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
                                     ))}
                                 </div>
                             )}
                             {pageState.viewMode === "detailed" &&
-                                Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                Array.from({ length: pageSize }, (_, index) => (
                                     <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={false} />
                                 ))}
                             {pageState.viewMode === "compact" &&
-                                Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                Array.from({ length: pageSize }, (_, index) => (
                                     <StocktakingItemCardSkeleton key={`skeleton-${index}`} compact={true} />
                                 ))}
                         </>
@@ -180,7 +178,7 @@ export default function BaseItemsPage() {
                                     </div>
                                     {loading && items.length > 0 ? (
                                         <div className="grid grid-cols-2 gap-4 auto-rows-fr mt-4">
-                                            {Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                            {Array.from({ length: pageSize }, (_, index) => (
                                                 <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={false} />
                                             ))}
                                         </div>
@@ -212,7 +210,7 @@ export default function BaseItemsPage() {
                                         </Link>
                                     ))}
                                     {loading && items.length > 0
-                                        ? Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                        ? Array.from({ length: pageSize }, (_, index) => (
                                               <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={false} />
                                           ))
                                         : null}
@@ -244,7 +242,7 @@ export default function BaseItemsPage() {
                                         </Link>
                                     ))}
                                     {loading && items.length > 0
-                                        ? Array.from({ length: BASE_ITEMS_PAGE_SIZE }, (_, index) => (
+                                        ? Array.from({ length: pageSize }, (_, index) => (
                                               <StocktakingItemCardSkeleton key={`append-skel-${index}`} compact={true} />
                                           ))
                                         : null}
@@ -256,13 +254,13 @@ export default function BaseItemsPage() {
                 <Pagination
                     variant="feed"
                     total={total}
-                    pageSize={BASE_ITEMS_PAGE_SIZE}
+                    pageSize={pageSize}
                     highlightPage1Based={highlightPage1Based}
                     loading={loading}
                     onPageSelect1Based={goToPage1Based}
                     onAppendNext={appendNextChunk}
                     canAppendMore={canAppendMore}
-                    appendNextLabel={`Načíst dalších ${BASE_ITEMS_PAGE_SIZE}`}
+                    appendNextLabel={`Načíst dalších ${pageSize}`}
                 />
                 <div
                     ref={bottomBarRef}

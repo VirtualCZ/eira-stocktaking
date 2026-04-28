@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 
+const PAGE_SIZE_MIN = 5;
+const PAGE_SIZE_MAX = 50;
+const PAGE_SIZE_DEFAULT = 10;
+
+function normalizePageSize(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return PAGE_SIZE_DEFAULT;
+    return Math.max(PAGE_SIZE_MIN, Math.min(Math.trunc(parsed), PAGE_SIZE_MAX));
+}
+
 export function useSettings() {
     const [imageDebugDelayEnabled, setImageDebugDelayEnabled] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -22,6 +32,13 @@ export function useSettings() {
             return saved !== null ? JSON.parse(saved) : false;
         }
         return false;
+    });
+    const [itemsPerPage, setItemsPerPage] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('settings_itemsPerPage');
+            return normalizePageSize(saved !== null ? saved : PAGE_SIZE_DEFAULT);
+        }
+        return PAGE_SIZE_DEFAULT;
     });
 
     // Save settings to localStorage when changed
@@ -46,12 +63,21 @@ export function useSettings() {
         }
     }, [imageDebugDelayMs]);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('settings_itemsPerPage', String(normalizePageSize(itemsPerPage)));
+            window.dispatchEvent(new CustomEvent('settings-updated'));
+        }
+    }, [itemsPerPage]);
+
     return {
         recordStatus,
         setRecordStatus,
         imageDebugDelayEnabled,
         setImageDebugDelayEnabled,
         imageDebugDelayMs,
-        setImageDebugDelayMs
+        setImageDebugDelayMs,
+        itemsPerPage,
+        setItemsPerPage: (next) => setItemsPerPage(normalizePageSize(next))
     };
 }

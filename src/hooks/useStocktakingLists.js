@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
-export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
+export function useStocktakingLists({ page = 0, limit = 10, sortBy = "id", sortOrder = "asc" } = {}) {
   const [lists, setLists] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,13 +15,15 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
     }
 
     setLoading(true);
-    const params = new URLSearchParams({
-      offset: offset.toString(),
-      limit: limit.toString()
-    });
-
-    fetch(`/api/events?${params}`, {
-      headers: getAuthHeadersSafe()
+    fetch(`/api/events`, {
+      method: "POST",
+      headers: getAuthHeadersSafe(),
+      body: JSON.stringify({
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+      }),
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch stocktaking lists");
@@ -34,7 +36,7 @@ export function useStocktakingLists({ offset = 0, limit = 10 } = {}) {
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  }, [offset, limit]);
+  }, [page, limit, sortBy, sortOrder]);
 
   return [lists, total, loading, error];
 } 

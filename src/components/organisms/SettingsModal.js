@@ -24,7 +24,9 @@ export default function SettingsModal({ isOpen, onClose }) {
         imageDebugDelayEnabled,
         setImageDebugDelayEnabled,
         imageDebugDelayMs,
-        setImageDebugDelayMs
+        setImageDebugDelayMs,
+        itemsPerPage,
+        setItemsPerPage
     } = useSettings();
 
     const handleSave = () => {
@@ -57,6 +59,32 @@ export default function SettingsModal({ isOpen, onClose }) {
                         lineHeight: "1.4"
                     }}>
                         Po potvrzení nalezení se zobrazí okno s volbami stavu položky
+                    </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
+                        Počet položek na stránku:
+                    </div>
+                    <ButtonGroup
+                        options={[
+                            { value: 10, label: "10" },
+                            { value: 20, label: "20" },
+                            { value: 30, label: "30" },
+                            { value: 50, label: "50" },
+                        ]}
+                        value={itemsPerPage}
+                        onChange={setItemsPerPage}
+                        iconPosition="left"
+                        orientation="horizontal"
+                    />
+                    <div style={{
+                        fontSize: "0.75rem",
+                        color: "#666",
+                        fontStyle: "italic",
+                        lineHeight: "1.4"
+                    }}>
+                        Ovlivní stránkování seznamů (inventury, položky, vyhledávání majetku).
                     </div>
                 </div>
 

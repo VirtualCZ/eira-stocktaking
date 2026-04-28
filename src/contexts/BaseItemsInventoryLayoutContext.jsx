@@ -15,6 +15,7 @@ import { usePathname } from "next/navigation";
 import { usePageState } from "@/hooks/usePageState";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
+import { useSettings } from "@/hooks/useSettings";
 import {
     feedCanAppendMore,
     feedHighlightPage1Based,
@@ -22,12 +23,13 @@ import {
     parsePagedFeedPage,
 } from "@/utils/feedPagination";
 
-export const BASE_ITEMS_PAGE_SIZE = 10;
-const BASE_ITEMS_FEED_CACHE_VERSION = 9;
+const BASE_ITEMS_FEED_CACHE_VERSION = 10;
 
 const BaseItemsInventoryLayoutContext = createContext(null);
 
 export function BaseItemsInventoryLayoutProvider({ children }) {
+    const { itemsPerPage } = useSettings();
+    const pageSize = itemsPerPage;
     const pathname = usePathname();
     const scrollRestoreActive = pathname === "/base-items";
 
@@ -87,6 +89,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
                 sortBy: pageState.sortBy,
                 sortOrder: pageState.sortOrder,
                 searchTerm: pageState.searchTerm,
+                pageSize,
                 room: locationValues.room,
                 building: locationValues.building,
                 storey: locationValues.storey,
@@ -95,6 +98,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
             pageState.sortBy,
             pageState.sortOrder,
             pageState.searchTerm,
+            pageSize,
             locationValues.room,
             locationValues.building,
             locationValues.storey,
@@ -146,7 +150,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
         async (pageIndex0) => {
             const body = {
                 page: pageIndex0,
-                limit: BASE_ITEMS_PAGE_SIZE,
+                limit: pageSize,
                 sortBy: pageState.sortBy,
                 sortOrder: pageState.sortOrder,
                 search: pageState.searchTerm || "",
@@ -171,6 +175,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
             pageState.sortBy,
             pageState.sortOrder,
             pageState.searchTerm,
+            pageSize,
             locationValues.room,
             locationValues.building,
             locationValues.storey,
@@ -205,7 +210,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
 
     const appendNextChunk = useCallback(async () => {
         if (!locationInitialized) return;
-        if (!feedCanAppendMore(nextAppendPage0, total, BASE_ITEMS_PAGE_SIZE)) return;
+        if (!feedCanAppendMore(nextAppendPage0, total, pageSize)) return;
         if (appendLock.current) return;
         appendLock.current = true;
         const id = ++feedRequestId.current;
@@ -227,7 +232,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
             appendLock.current = false;
             if (id === feedRequestId.current) setLoading(false);
         }
-    }, [locationInitialized, loadPageFromApi, nextAppendPage0, total]);
+    }, [locationInitialized, loadPageFromApi, nextAppendPage0, total, pageSize]);
 
     const goToPage1Based = useCallback(
         (page1Based) => {
@@ -239,12 +244,12 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
     );
 
     const highlightPage1Based = useMemo(
-        () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, BASE_ITEMS_PAGE_SIZE),
-        [viewPageIndex, nextAppendPage0, total]
+        () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, pageSize),
+        [viewPageIndex, nextAppendPage0, total, pageSize]
     );
     const canAppendMore = useMemo(
-        () => feedCanAppendMore(nextAppendPage0, total, BASE_ITEMS_PAGE_SIZE),
-        [nextAppendPage0, total]
+        () => feedCanAppendMore(nextAppendPage0, total, pageSize),
+        [nextAppendPage0, total, pageSize]
     );
 
     const replaceToPage0Ref = useRef(replaceToPage0);
@@ -263,7 +268,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
                         const derivedNext =
                             Number.isInteger(nap) && nap >= 0
                                 ? nap
-                                : Math.max(vp + 1, Math.ceil(cachedItems.length / BASE_ITEMS_PAGE_SIZE));
+                                : Math.max(vp + 1, Math.ceil(cachedItems.length / pageSize));
                         setItems(cachedItems);
                         setTotal(Number(cached.total) || 0);
                         setViewPageIndex(vp);
@@ -294,6 +299,7 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
     const value = {
         pageState,
         updatePageState,
+        pageSize,
         handleLocationChange,
         locationInitialized,
         queryKey,

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { isAuthenticated } from "@/utils/token";
+import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
 export default function AuthGuard({ children }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,20 +10,60 @@ export default function AuthGuard({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === "undefined") return;
+
+    const checkAuthAndBackend = async () => {
       const authenticated = isAuthenticated();
       setIsAuth(authenticated);
-      
-      if (!authenticated && pathname !== '/error') {
-        router.push('/error');
-      }
-      
-      setIsLoading(false);
-    }
-  }, [router, pathname]);
 
-  // Don't show loading for error page
-  if (pathname === '/error') {
+      if (!authenticated) {
+        if (pathname !== "/error") {
+          router.push("/error");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/user/current", {
+          method: "GET",
+          headers: getAuthHeadersSafe(),
+          cache: "no-store",
+        });
+
+        if (response.status === 401) {
+          if (pathname !== "/error") {
+            router.push("/error");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          if (pathname !== "/unavailable") {
+            router.push("/unavailable");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        if (pathname === "/unavailable") {
+          router.push("/");
+        }
+      } catch (_err) {
+        if (pathname !== "/unavailable") {
+          router.push("/unavailable");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthAndBackend();
+  }, []);
+
+  // Don't show loading for dedicated guard pages.
+  if (pathname === "/error" || pathname === "/unavailable") {
     return children;
   }
 
@@ -46,4 +86,4 @@ export default function AuthGuard({ children }) {
   }
 
   return children;
-} 
+}

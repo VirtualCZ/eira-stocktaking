@@ -34,6 +34,10 @@ function buildForwardHeaders(requestHeaders) {
   return headers;
 }
 
+function buildExpiredAuthCookieHeader() {
+  return "auth_token=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+}
+
 async function proxy(request, context) {
   try {
     const params = await context?.params;
@@ -54,6 +58,11 @@ async function proxy(request, context) {
     const responseHeaders = new Headers(upstreamResponse.headers);
     responseHeaders.delete("content-encoding");
     responseHeaders.delete("content-length");
+
+    // If backend rejects token, clear client auth cookie so UI exits quickly.
+    if (upstreamResponse.status === 401) {
+      responseHeaders.append("Set-Cookie", buildExpiredAuthCookieHeader());
+    }
 
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,

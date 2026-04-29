@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 export default function LinkItem() {
     const { selectedInventura } = useSelectedInventura();
-    const [, , baseItemsLoading, , , fetchBaseItemDetailsById, createInventoryItemFromBaseItem] = useBaseItems({ skip: true });
+    const [, , baseItemsLoading, , , fetchBaseItemDetailsById, linkBaseItemToEvent] = useBaseItems({ skip: true });
     const apiLoading = baseItemsLoading;
     const router = useRouter();
     const [isBaseItemPickerOpen, setIsBaseItemPickerOpen] = useState(false);
@@ -100,7 +100,7 @@ export default function LinkItem() {
                 location: editItem.location || null
             };
 
-            const result = await createInventoryItemFromBaseItem(inventoryItem);
+            const result = await linkBaseItemToEvent(inventoryItem);
             showActionModal('Hotovo', 'Položka byla úspěšně přidána do inventury.', true);
             
             // Navigate to the newly created inventory item page

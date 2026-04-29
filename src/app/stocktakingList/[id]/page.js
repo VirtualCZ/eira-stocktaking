@@ -215,7 +215,7 @@ export default function StocktakingList() {
                 location: location || null,
             };
 
-            const response = await fetch('/api/inventory-items/create-from-base-item', {
+            const response = await fetch('/api/base-items/link-to-event', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeadersSafe(),

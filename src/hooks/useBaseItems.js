@@ -145,12 +145,12 @@ export function useBaseItems(options = {}) {
         }
     }, []);
 
-    const createInventoryItemFromBaseItem = useCallback(async (inventoryData) => {
+    const linkBaseItemToEvent = useCallback(async (inventoryData) => {
         setLoading(true);
         setError(null);
         
         try {
-            const response = await fetch('/api/inventory-items/create-from-base-item', {
+            const response = await fetch('/api/base-items/link-to-event', {
                 method: 'POST',
                 headers: {
                     ...getAuthHeadersSafe(),
@@ -173,5 +173,5 @@ export function useBaseItems(options = {}) {
         }
     }, []);
 
-    return [items, total, loading, error, refetchItems, fetchBaseItemDetailsById, createInventoryItemFromBaseItem];
+    return [items, total, loading, error, refetchItems, fetchBaseItemDetailsById, linkBaseItemToEvent];
 }

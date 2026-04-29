@@ -4,14 +4,15 @@ import CardItemDescription from "@/components/atoms/CardItemDescription";
 import CardItemNote from "@/components/atoms/CardItemNote";
 import CardItemDate from "@/components/atoms/CardItemDate";
 import { useItemImage } from "@/hooks/useItemImage";
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
 
 // Map state to background color - using subtle, professional colors
 const stateBgColors = {
-  zbyva: "#f0f1f3",      // Default grey - remaining items
-  nalezeno: "#e8f5e8",   // Very light green - found items
-  presun: "#e8f0f8",     // Very light blue - moved items
-  nezkontrolováno: "#f8f4e8", // Very light beige - unchecked items
-  novy: "#f8f4e8",       // Backward compatibility for legacy records
+  [INVENTORY_STATES.NOT_FOUND]: "#fbe9e9",
+  [INVENTORY_STATES.FOUND]: "#e7f6ec",
+  [INVENTORY_STATES.MOVED]: "#e8f1fc",
+  [INVENTORY_STATES.NEW]: "#e6f4f1",
+  [INVENTORY_STATES.UNCHECKED]: "#eef1f5",
 };
 
 export default function StocktakingItemCard({
@@ -26,7 +27,7 @@ export default function StocktakingItemCard({
   // In base-RM contexts, we must ignore inventory state colorization completely.
   const bgColor = useStateColor && item.state && stateBgColors[item.state]
     ? stateBgColors[item.state]
-    : "#f0f1f3";
+    : stateBgColors[INVENTORY_STATES.UNCHECKED];
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const imageRef = React.useRef(null);

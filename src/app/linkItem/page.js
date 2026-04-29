@@ -6,6 +6,7 @@ import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplat
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useBaseItems } from "@/hooks/useBaseItems";
 import { useRouter } from "next/navigation";
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
 
 export default function LinkItem() {
     const { selectedInventura } = useSelectedInventura();
@@ -94,7 +95,7 @@ export default function LinkItem() {
             const inventoryItem = {
                 rmId: selectedBaseItem.id,
                 eventId: selectedInventura.id,
-                status: "nezkontrolováno",
+                status: INVENTORY_STATES.UNCHECKED,
                 note: editItem.note || "",
                 qr: editItem.qr || "",
                 location: editItem.location || null

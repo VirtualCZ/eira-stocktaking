@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import CardContainer from "../atoms/CardContainer";
 import CenteredModal from "../molecules/CenteredModal";
 import Checkbox from "../atoms/Checkbox";
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
 
 const stateOptions = [
-    { label: "Zbývá", value: "zbyva" },
-    { label: "Nalezeno", value: "nalezeno" },
-    { label: "Přesun", value: "presun" },
-    { label: "Nezkontrolováno", value: "nezkontrolováno" },
+    { label: "Nenalezeno", value: INVENTORY_STATES.NOT_FOUND },
+    { label: "Nalezeno", value: INVENTORY_STATES.FOUND },
+    { label: "Přesun", value: INVENTORY_STATES.MOVED },
+    { label: "Nový", value: INVENTORY_STATES.NEW },
+    { label: "Nezkontrolováno", value: INVENTORY_STATES.UNCHECKED },
 ];
 const hasNoteOptions = [
     { label: "Ano", value: "yes" },

@@ -1,27 +1,8 @@
 import React, { useState } from "react";
 import CenteredModal from "../molecules/CenteredModal";
 import Button from "../atoms/Button";
-
-const statusOptions = [
-    { 
-        value: 'v_poradku', 
-        label: 'V pořádku', 
-        icon: 'check_circle',
-        color: '#282828'
-    },
-    { 
-        value: 'poskozen_majetek', 
-        label: 'Poškozen majetek', 
-        icon: 'warning',
-        color: '#666'
-    },
-    { 
-        value: 'poskozeno_oznaceni', 
-        label: 'Poškozeno označení', 
-        icon: 'label_off',
-        color: '#999'
-    }
-];
+import { useInventoryStates } from "@/hooks/useInventoryStates";
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
 
 export default function StatusSelectionModal({ 
     isOpen, 
@@ -29,7 +10,8 @@ export default function StatusSelectionModal({
     onStatusSelect, 
     itemName 
 }) {
-    const [selectedStatus, setSelectedStatus] = useState('v_poradku');
+    const statusOptions = useInventoryStates();
+    const [selectedStatus, setSelectedStatus] = useState(INVENTORY_STATES.FOUND);
 
     const handleConfirm = () => {
         const status = statusOptions.find(opt => opt.value === selectedStatus);
@@ -85,15 +67,6 @@ export default function StatusSelectionModal({
                                 }
                             }}
                         >
-                            <span 
-                                className="material-icons-round" 
-                                style={{ 
-                                    fontSize: 20, 
-                                    color: option.color 
-                                }}
-                            >
-                                {option.icon}
-                            </span>
                             <span style={{ fontWeight: selectedStatus === option.value ? 600 : 500 }}>
                                 {option.label}
                             </span>

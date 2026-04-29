@@ -11,6 +11,7 @@ import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
+import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
 
 
 export default function StocktakingListItemDetail() {
@@ -120,7 +121,7 @@ export default function StocktakingListItemDetail() {
         const result = await updateItem({ 
             ...rest, 
             stocktakingId: stocktakingId, 
-            state: 'nalezeno',
+            state: INVENTORY_STATES.FOUND,
             note: updatedNote
         });
         
@@ -143,10 +144,10 @@ export default function StocktakingListItemDetail() {
     const handleFound = async () => {
         if (!item) return;
         
-        if (item.state === 'nalezeno') {
+        if (isFoundState(item.state)) {
             // Toggle to 'zbyva' - no status selection needed
             const { image, ...rest } = item;
-            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
+            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.NOT_FOUND });
             if(result) {
                 showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
                 if (refetchItem) refetchItem();
@@ -161,7 +162,7 @@ export default function StocktakingListItemDetail() {
             } else {
                 // Direct confirmation without status selection
                 const { image, ...rest } = item;
-                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
                 if(result) {
                     showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
                     if (refetchItem) refetchItem();
@@ -175,7 +176,7 @@ export default function StocktakingListItemDetail() {
     const handleMoveConfirm = async () => {
         if (!item || !moveNewLocation) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: mapLocationToApi(moveNewLocation), state: 'presun' });
+        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: mapLocationToApi(moveNewLocation), state: INVENTORY_STATES.MOVED });
         setIsMoveModalOpen(false);
         if(result) {
             showActionModal('Hotovo', 'Položka byla přesunuta.', true);

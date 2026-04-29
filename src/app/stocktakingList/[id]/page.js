@@ -20,6 +20,7 @@ import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
 import { getAuthHeadersSafe } from "@/utils/token";
+import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
 
 
 const sortOptions = [
@@ -148,7 +149,7 @@ export default function StocktakingList() {
                 const result = await updateItem({
                     ...rest,
                     stocktakingId: stocktakingId,
-                    state: 'nalezeno',
+                    state: INVENTORY_STATES.FOUND,
                     note: updatedNote
                 });
 
@@ -209,7 +210,7 @@ export default function StocktakingList() {
             const body = {
                 rmId: notInInventoryItem.id,
                 eventId: stocktakingId,
-                status: "nezkontrolováno",
+                status: INVENTORY_STATES.UNCHECKED,
                 note: notInInventoryItem.note || "",
                 qr: notInInventoryItem.qr || "",
                 location: location || null,
@@ -301,14 +302,14 @@ export default function StocktakingList() {
                     }}
                 />
                 <ContextRow
-                    icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
-                    label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
+                    icon={isFoundState(item.state) ? 'visibility_off' : 'visibility'}
+                    label={isFoundState(item.state) ? 'Nenalezeno' : 'Nalezeno'}
                     action={async () => {
-                        if (item.state === 'nalezeno') {
+                        if (isFoundState(item.state)) {
                             setIsUpdatingItem(true);
                             try {
                                 const { image, ...rest } = item;
-                                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'zbyva' });
+                                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.NOT_FOUND });
                                 if (result) {
                                     showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
                                     resetFeed();
@@ -326,7 +327,7 @@ export default function StocktakingList() {
                             setIsUpdatingItem(true);
                             try {
                                 const { image, ...rest } = item;
-                                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
                                 if (result) {
                                     showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
                                     resetFeed();
@@ -648,7 +649,7 @@ export default function StocktakingList() {
                                         setIsUpdatingItem(true);
                                         try {
                                             const { image, ...rest } = scannedItem;
-                                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: 'nalezeno' });
+                                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
                                             setIsPreviewModalOpen(false);
                                             if (result) {
                                                 showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
@@ -726,7 +727,7 @@ export default function StocktakingList() {
                         <Button icon="check" iconPosition="right" onClick={async () => {
                           if (!moveNewLocation) return;
                           const { image, ...rest } = moveItem;
-                          const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: moveNewLocation, state: 'presun' });
+                          const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: moveNewLocation, state: INVENTORY_STATES.MOVED });
                           setIsMoveModalOpen(false);
                           setMoveItem(null);
                           setMoveNewLocation(null);

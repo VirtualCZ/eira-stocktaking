@@ -8,6 +8,7 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
 import ItemPropertyEditor from "@/components/molecules/ItemPropertyEditor";
+import { isFoundState } from "@/utils/inventoryStates";
 
 export default function StocktakingItemDetailTemplate({
   item,
@@ -164,8 +165,8 @@ export default function StocktakingItemDetailTemplate({
                       )}
                       {showFound && (
                         <ContextRow
-                          icon={item.state === 'nalezeno' ? 'visibility_off' : 'visibility'}
-                          label={item.state === 'nalezeno' ? 'Nenalezeno' : 'Nalezeno'}
+                          icon={isFoundState(item.state) ? 'visibility_off' : 'visibility'}
+                          label={isFoundState(item.state) ? 'Nenalezeno' : 'Nalezeno'}
                           action={onFound}
                         />
                       )}

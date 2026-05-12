@@ -1,11 +1,14 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useItemImage } from "@/hooks/useItemImage";
+import { processImageForEira } from "@/utils/processImageForEira";
+import CenteredModal from "@/components/molecules/CenteredModal";
 
-function PictureInputButton({ onClick, title, children, style = {}, ...rest }) {
+function PictureInputButton({ onClick, title, children, style = {}, disabled = false, ...rest }) {
     return (
         <button
             type="button"
             onClick={onClick}
+            disabled={disabled}
             style={{
                 borderRadius: "1rem",
                 padding: "0.75rem",
@@ -31,8 +34,22 @@ export default function PictureInput({ label, onChange, value, editMode = false,
     const [objectFit, setObjectFit] = useState("cover");
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
-    const inputRef = useRef();
+    const [processing, setProcessing] = useState(false);
+    const [messageModal, setMessageModal] = useState({ open: false, title: "", message: "" });
+    const fileInputRef = useRef();
     const imageRef = useRef();
+
+    const closeMessageModal = useCallback(() => {
+        setMessageModal((m) => ({ ...m, open: false }));
+    }, []);
+
+    const openMessageModal = useCallback((title, message) => {
+        setMessageModal({ open: true, title, message });
+    }, []);
+
+    const clearFileInput = () => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
     useEffect(() => {
         if (!value) {
@@ -78,21 +95,41 @@ export default function PictureInput({ label, onChange, value, editMode = false,
         }
     }, [imageSrc]);
 
-    const handleFile = e => {
-        const file = e.target.files[0];
-        if (file) {
-            // Check if file type is allowed
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Povolené formáty obrázků jsou: JPEG, PNG, GIF, WebP');
-                return;
-            }
-            onChange && onChange(file);
+    const handleFile = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const name = (file.name || "").toLowerCase();
+        const looksImage =
+            (file.type && file.type.startsWith("image/")) ||
+            /\.(jpe?g|png|gif|webp|bmp|heic|heif|tif{1,2})$/i.test(name);
+
+        if (!looksImage) {
+            openMessageModal(
+                "Vyberte obrázek",
+                "Vyberte prosím obrázek.\n\n" +
+                    "Formáty, které se ukládají přímo: JPEG, PNG, GIF, WebP.\n\n" +
+                    "Z jiných formátů (např. HEIC nebo HEIF z iPhonu, BMP, TIFF) se fotka před nahráním " +
+                    "automaticky převede na JPEG a upraví se velikost."
+            );
+            clearFileInput();
+            return;
+        }
+
+        setProcessing(true);
+        try {
+            const dataUrl = await processImageForEira(file);
+            onChange && onChange(dataUrl);
+        } catch (err) {
+            openMessageModal("Chyba", err instanceof Error ? err.message : String(err));
+        } finally {
+            setProcessing(false);
+            clearFileInput();
         }
     };
     const handleDelete = () => {
         setPreview(null);
-        if (inputRef.current) inputRef.current.value = "";
+        clearFileInput();
         onChange && onChange(null);
     };
     const toggleObjectFit = () => {
@@ -101,7 +138,14 @@ export default function PictureInput({ label, onChange, value, editMode = false,
     return (
         <div style={{ position: "relative", width: "100%" }}>
             {label && <label style={{ display: "block", fontWeight: 600, marginBottom: "1rem" }}>{label}</label>}
-            <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment" style={{ display: "none" }} onChange={handleFile} />
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.heic,.heif"
+                style={{ display: "none" }}
+                onChange={handleFile}
+                disabled={processing}
+            />
             <picture style={{
                 display: "flex",
                 alignItems: "center",
@@ -113,6 +157,25 @@ export default function PictureInput({ label, onChange, value, editMode = false,
             }}
             ref={containerRef}
             >
+                {processing ? (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "rgba(255,255,255,0.85)",
+                            borderRadius: 12,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: "#333",
+                            zIndex: 3
+                        }}
+                    >
+                        Zpracovávám fotku…
+                    </div>
+                ) : null}
                 {imageSrc && !imageError ? (
                     <>
                         {showLoadingPlaceholder && (
@@ -159,7 +222,7 @@ export default function PictureInput({ label, onChange, value, editMode = false,
                         <span style={{ color: "#000", opacity: "50%", fontSize: 32 }} className="material-icons-round">image_not_supported</span>
                     )
                 )}
-                {/* Absolute top right: camera/plus, fit switch, and trash buttons */}
+                {/* Absolute top right: pick photo, fit switch, trash */}
                 <div style={{
                     position: "absolute",
                     top: "1rem",
@@ -177,8 +240,12 @@ export default function PictureInput({ label, onChange, value, editMode = false,
                     </PictureInputButton>
                     {editMode && (
                         <>
-                            <PictureInputButton onClick={() => inputRef.current.click()}>
-                                <span className="material-icons-round" style={{ color: "#fff", fontSize: 14 }}>add_a_photo</span>
+                            <PictureInputButton
+                                onClick={() => !processing && fileInputRef.current?.click()}
+                                disabled={processing}
+                                title="Vybrat fotku (galerie nebo fotoaparát)"
+                            >
+                                <span className="material-icons-round" style={{ color: "#fff", fontSize: 14 }}>photo_library</span>
                             </PictureInputButton>
                             <PictureInputButton onClick={handleDelete}>
                                 <span className="material-icons-round" style={{ color: "#FF6262", fontSize: 14 }}>delete</span>
@@ -196,6 +263,18 @@ export default function PictureInput({ label, onChange, value, editMode = false,
                     100% { background-position: -200% 0; }
                 }
             `}</style>
+            <CenteredModal isOpen={messageModal.open} onClose={closeMessageModal} title={messageModal.title}>
+                <div
+                    style={{
+                        fontSize: 15,
+                        lineHeight: 1.55,
+                        color: "#333",
+                        whiteSpace: "pre-line",
+                    }}
+                >
+                    {messageModal.message}
+                </div>
+            </CenteredModal>
         </div>
     );
 }

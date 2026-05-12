@@ -10,5 +10,7 @@
 			"path": "../../../../Downloads/EIRA/jiraservice"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"java.compile.nullAnalysis.mode": "disabled"
+	}
 }

@@ -222,7 +222,11 @@ export default function StocktakingListItemDetail() {
     // Save handler
     const handleSave = async () => {
         if (!editItem) return;
-        
+
+        const origImage = originalImageRef.current ?? null;
+        const curImage = editItem.image ?? null;
+        const imageChanged = curImage !== origImage;
+
         const mainData = {
             id: editItem.id,
             stocktakingId: stocktakingId,
@@ -231,7 +235,13 @@ export default function StocktakingListItemDetail() {
             qr: editItem.qr,
             lastCheck: editItem.date || editItem.lastCheck || null,
             state: editItem.state,
+            location: mapLocationToApi(editItem.location),
         };
+        mainData.imgChanged = imageChanged;
+        if (imageChanged) {
+            mainData.image = editItem.image;
+        }
+
         const result = await updateItem(mainData);
         if(result) {
             setEditMode(false);

@@ -145,11 +145,29 @@ export default function ItemListDetail() {
     // Save handler
     const handleSave = async () => {
         if (!editItem) return;
+
+        const origImage = originalImageRef.current ?? null;
+        const curImage = editItem.image ?? null;
+        const imageChanged = curImage !== origImage;
+
         const mainData = {
             id: editItem.id,
+            name: editItem.name,
             description: editItem.description,
+            note: editItem.note,
             qr: editItem.qr,
+            lastCheck: editItem.date || editItem.lastCheck || null,
+            state: editItem.state,
+            location: mapLocationToApi(editItem.location),
         };
+        if (editItem.eventId != null && editItem.eventId !== undefined) {
+            mainData.eventId = editItem.eventId;
+        }
+        mainData.imgChanged = imageChanged;
+        if (imageChanged) {
+            mainData.image = editItem.image;
+        }
+
         const result = await updateItem(mainData);
         if(result) {
             setEditMode(false);

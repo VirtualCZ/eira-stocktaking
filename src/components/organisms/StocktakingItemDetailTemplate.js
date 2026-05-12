@@ -77,7 +77,12 @@ export default function StocktakingItemDetailTemplate({
             <>
               {editItem && (
                 <>
-                  <PictureInput value={editItem.image || ""} itemId={editItem.id} editMode={false} />
+                  <PictureInput
+                    value={editItem.image || ""}
+                    itemId={editItem.id}
+                    editMode={true}
+                    onChange={(img) => onEditItemChange({ ...editItem, image: img })}
+                  />
                   <div className="p-4 flex flex-col gap-4">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

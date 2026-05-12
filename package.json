@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "heic2any": "0.0.4",
     "next": "15.1.11",
     "react": "^19.1.2",
     "react-dom": "^19.1.2",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "typescript": "^5.8.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.11",
     "postcss": "^8",

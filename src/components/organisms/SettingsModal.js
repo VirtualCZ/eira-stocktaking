@@ -3,30 +3,28 @@ import CenteredModal from "../molecules/CenteredModal";
 import ButtonGroup from "../atoms/ButtonGroup";
 import Button from "../atoms/Button";
 import { useSettings } from "@/hooks/useSettings";
+import { INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
 
-const recordStatusOptions = [
-    { 
-        value: false, 
-        label: 'Ne', 
-        icon: 'close'
-    },
-    { 
-        value: true, 
-        label: 'Ano', 
-        icon: 'check'
-    }
+const yesNoOptions = [
+    { value: false, label: "Ne", icon: "close" },
+    { value: true, label: "Ano", icon: "check" },
+];
+
+const inventoryModeOptions = [
+    { value: INVENTORY_DISPLAY_MODE.FULL, label: "Úplný", icon: "view_list" },
+    { value: INVENTORY_DISPLAY_MODE.WORKFLOW, label: "Pracovní", icon: "task_alt" },
 ];
 
 export default function SettingsModal({ isOpen, onClose }) {
     const {
-        recordStatus,
-        setRecordStatus,
+        inventoryDisplayMode,
+        setInventoryDisplayMode,
         imageDebugDelayEnabled,
         setImageDebugDelayEnabled,
         imageDebugDelayMs,
         setImageDebugDelayMs,
         itemsPerPage,
-        setItemsPerPage
+        setItemsPerPage,
     } = useSettings();
 
     const handleSave = () => {
@@ -34,31 +32,27 @@ export default function SettingsModal({ isOpen, onClose }) {
     };
 
     return (
-        <CenteredModal 
-            isOpen={isOpen} 
-            onClose={onClose} 
-            title="Nastavení"
-            width="90vw"
-        >
+        <CenteredModal isOpen={isOpen} onClose={onClose} title="Nastavení" width="90vw">
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", width: "100%" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>
-                        Zaznamenat stav:
-                    </div>
+                    <div style={{ fontSize: "14px", color: "#666", fontWeight: 500 }}>Režim inventury</div>
                     <ButtonGroup
-                        options={recordStatusOptions}
-                        value={recordStatus}
-                        onChange={setRecordStatus}
+                        options={inventoryModeOptions}
+                        value={inventoryDisplayMode}
+                        onChange={setInventoryDisplayMode}
                         iconPosition="left"
                         orientation="horizontal"
                     />
-                    <div style={{ 
-                        fontSize: "0.75rem", 
-                        color: "#666", 
-                        fontStyle: "italic",
-                        lineHeight: "1.4"
-                    }}>
-                        Po potvrzení nalezení se zobrazí okno s volbami stavu položky
+                    <div
+                        style={{
+                            fontSize: "0.75rem",
+                            color: "#666",
+                            fontStyle: "italic",
+                            lineHeight: "1.4",
+                        }}
+                    >
+                        Úplný: vše včetně položek ve stavu Nezkontrolováno. Pracovní: tyto položky se v seznamu
+                        nezobrazují a ve filtru stavu nejsou k dispozici.
                     </div>
                 </div>
 
@@ -78,12 +72,14 @@ export default function SettingsModal({ isOpen, onClose }) {
                         iconPosition="left"
                         orientation="horizontal"
                     />
-                    <div style={{
-                        fontSize: "0.75rem",
-                        color: "#666",
-                        fontStyle: "italic",
-                        lineHeight: "1.4"
-                    }}>
+                    <div
+                        style={{
+                            fontSize: "0.75rem",
+                            color: "#666",
+                            fontStyle: "italic",
+                            lineHeight: "1.4",
+                        }}
+                    >
                         Ovlivní stránkování seznamů (inventury, položky, vyhledávání majetku).
                     </div>
                 </div>
@@ -93,7 +89,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                         Dev: Zpomalení načítání obrázků
                     </div>
                     <ButtonGroup
-                        options={recordStatusOptions}
+                        options={yesNoOptions}
                         value={imageDebugDelayEnabled}
                         onChange={setImageDebugDelayEnabled}
                         iconPosition="left"
@@ -114,37 +110,32 @@ export default function SettingsModal({ isOpen, onClose }) {
                             </div>
                         </div>
                     )}
-                    <div style={{
-                        fontSize: "0.75rem",
-                        color: "#666",
-                        fontStyle: "italic",
-                        lineHeight: "1.4"
-                    }}>
+                    <div
+                        style={{
+                            fontSize: "0.75rem",
+                            color: "#666",
+                            fontStyle: "italic",
+                            lineHeight: "1.4",
+                        }}
+                    >
                         Používá se pro testování skeleton/no-image stavů.
                     </div>
                 </div>
-                
-                <div style={{ 
-                    display: "flex", 
-                    gap: "0.5rem", 
-                    justifyContent: "flex-end", 
-                    paddingTop: "0.75rem", 
-                    borderTop: "1px solid #e0e0e0", 
-                    marginTop: "0.75rem"
-                }}>
-                    <Button 
-                        variant="secondary" 
-                        icon="close" 
-                        iconPosition="right" 
-                        onClick={onClose}
-                    >
+
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        justifyContent: "flex-end",
+                        paddingTop: "0.75rem",
+                        borderTop: "1px solid #e0e0e0",
+                        marginTop: "0.75rem",
+                    }}
+                >
+                    <Button variant="secondary" icon="close" iconPosition="right" onClick={onClose}>
                         Zrušit
                     </Button>
-                    <Button 
-                        icon="check" 
-                        iconPosition="right" 
-                        onClick={handleSave}
-                    >
+                    <Button icon="check" iconPosition="right" onClick={handleSave}>
                         Uložit
                     </Button>
                 </div>

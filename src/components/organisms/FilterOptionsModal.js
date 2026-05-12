@@ -21,7 +21,8 @@ export default function FilterOptionsModal({
     onClose,
     initialState = [],
     initialHasNote = [],
-    onChange
+    onChange,
+    omitNezkontrolovano = false,
 }) {
     const [state, setState] = useState(initialState);
     const [hasNote, setHasNote] = useState(initialHasNote);
@@ -29,11 +30,14 @@ export default function FilterOptionsModal({
 
     useEffect(() => {
         if (!prevIsOpen.current && isOpen) {
-            setState(initialState);
+            const nextState = omitNezkontrolovano
+                ? (initialState || []).filter((v) => v !== INVENTORY_STATES.UNCHECKED)
+                : (initialState || []);
+            setState(nextState);
             setHasNote(initialHasNote);
         }
         prevIsOpen.current = isOpen;
-    }, [isOpen, initialState, initialHasNote]);
+    }, [isOpen, initialState, initialHasNote, omitNezkontrolovano]);
 
     const handleStateChange = (value) => {
         setState((prev) =>
@@ -76,7 +80,10 @@ export default function FilterOptionsModal({
                             Stav:
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                            {stateOptions.map((opt) => (
+                            {(omitNezkontrolovano
+                                ? stateOptions.filter((opt) => opt.value !== INVENTORY_STATES.UNCHECKED)
+                                : stateOptions
+                            ).map((opt) => (
                                 <label
                                     key={opt.value}
                                     style={{

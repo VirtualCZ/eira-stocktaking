@@ -200,6 +200,7 @@ export function NavLink({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 12,
                 padding: 16,
                 borderRadius: 16,
                 background: bgColor,
@@ -207,8 +208,15 @@ export function NavLink({
                 color: textColor,
             }}
         >
-            <span style={{ fontWeight: 600, fontSize: 12 }}>{text}</span>
-            <span className="material-icons-round" style={{ fontSize: 14, color: textColor }}>arrow_forward_ios</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                {icon ? (
+                    <span className="material-icons-round" style={{ fontSize: 20, color: textColor, flexShrink: 0 }}>
+                        {icon}
+                    </span>
+                ) : null}
+                <span style={{ fontWeight: 600, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis" }}>{text}</span>
+            </div>
+            <span className="material-icons-round" style={{ fontSize: 14, color: textColor, flexShrink: 0 }}>arrow_forward_ios</span>
         </Link>
     );
 }

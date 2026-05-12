@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useStocktakingItems";
-import { useStocktakingListLayout } from "@/contexts/StocktakingListLayoutContext";
+import { useStocktakingListLayout, StocktakingListLayoutProvider } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import { useRouter } from "next/navigation";
@@ -15,12 +15,11 @@ import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 import StocktakingListItemViews from "./StocktakingListItemViews";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
-import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
 import { getAuthHeadersSafe } from "@/utils/token";
-import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
+import { INVENTORY_STATES, isFoundState, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
 
 
 const sortOptions = [
@@ -36,10 +35,10 @@ const viewModes = [
     { mode: 'compact', icon: 'view_agenda' }
 ];
 
-export default function StocktakingList() {
+function StocktakingListContent() {
 
     const router = useRouter();
-    const { recordStatus } = useSettings();
+    const { inventoryDisplayMode } = useSettings();
 
     const {
         stocktakingId,
@@ -63,6 +62,18 @@ export default function StocktakingList() {
         canAppendMore,
     } = useStocktakingListLayout();
 
+    useEffect(() => {
+        if (inventoryDisplayMode !== INVENTORY_DISPLAY_MODE.WORKFLOW) return;
+        const st = pageState.filterState?.state ?? [];
+        if (!st.includes(INVENTORY_STATES.UNCHECKED)) return;
+        updatePageState({
+            filterState: {
+                ...pageState.filterState,
+                state: st.filter((s) => s !== INVENTORY_STATES.UNCHECKED),
+            },
+        });
+    }, [inventoryDisplayMode, JSON.stringify(pageState.filterState?.state || [])]);
+
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [scannedItem, setScannedItem] = useState(null);
@@ -75,8 +86,6 @@ export default function StocktakingList() {
 
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const [isStatusSelectionModalOpen, setIsStatusSelectionModalOpen] = useState(false);
-    const [pendingItem, setPendingItem] = useState(null);
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
     const { updateItem } = useUpdateInventoryObject(stocktakingId);
@@ -126,49 +135,6 @@ export default function StocktakingList() {
         itemCount: feedItems.length,
         enabled: canFetch
     });
-
-    // Helper function to append status to note
-    const appendStatusToNote = useCallback((existingNote, status) => {
-        const statusText = status.label;
-        if (!existingNote) {
-            return `Stav: ${statusText}`;
-        }
-        return `${existingNote} | Stav: ${statusText}`;
-    }, []);
-
-    // Handle status selection from modal
-    const handleStatusSelect = useCallback(
-        async (status) => {
-            if (!pendingItem) return;
-
-            setIsUpdatingItem(true);
-            try {
-                const { image, ...rest } = pendingItem;
-                const updatedNote = appendStatusToNote(rest.note, status);
-
-                const result = await updateItem({
-                    ...rest,
-                    stocktakingId: stocktakingId,
-                    state: INVENTORY_STATES.FOUND,
-                    note: updatedNote
-                });
-
-                setIsPreviewModalOpen(false);
-                setPendingItem(null);
-
-                if (result) {
-                    showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                    resetFeed();
-                    await loadMore();
-                } else {
-                    showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
-                }
-            } finally {
-                setIsUpdatingItem(false);
-            }
-        },
-        [pendingItem, appendStatusToNote, updateItem, stocktakingId, showActionModal, resetFeed, loadMore]
-    );
 
     const handleScan = useCallback((scannedValue) => {
         setIsQRModalOpen(false);
@@ -320,9 +286,6 @@ export default function StocktakingList() {
                             } finally {
                                 setIsUpdatingItem(false);
                             }
-                        } else if (recordStatus) {
-                            setPendingItem(item);
-                            setIsStatusSelectionModalOpen(true);
                         } else {
                             setIsUpdatingItem(true);
                             try {
@@ -343,7 +306,7 @@ export default function StocktakingList() {
                 />
             </ContextButton>
         ),
-        [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal, recordStatus]
+        [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal]
     );
 
     if (!canFetch) {
@@ -458,6 +421,7 @@ export default function StocktakingList() {
                     onClose={() => setIsFilterModalOpen(false)}
                     initialState={pageState.filterState.state}
                     initialHasNote={pageState.filterState.hasNote}
+                    omitNezkontrolovano={inventoryDisplayMode === INVENTORY_DISPLAY_MODE.WORKFLOW}
                     onChange={({ state, hasNote }) => {
                         updatePageState({ 
                             filterState: { state, hasNote }
@@ -639,13 +603,6 @@ export default function StocktakingList() {
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
                                 <Button icon="check" iconPosition="right" onClick={async () => {
                                     if (!scannedItem || !scannedItem.id) return;
-                                    
-                                    if (recordStatus) {
-                                        // Show status selection modal
-                                        setPendingItem(scannedItem);
-                                        setIsStatusSelectionModalOpen(true);
-                                    } else {
-                                        // Direct confirmation without status selection
                                         setIsUpdatingItem(true);
                                         try {
                                             const { image, ...rest } = scannedItem;
@@ -661,7 +618,6 @@ export default function StocktakingList() {
                                         } finally {
                                             setIsUpdatingItem(false);
                                         }
-                                    }
                                 }}>
                                     Označit jako nalezeno
                                 </Button>
@@ -755,16 +711,6 @@ export default function StocktakingList() {
                     </div>
                 </CenteredModal>
 
-                <StatusSelectionModal
-                    isOpen={isStatusSelectionModalOpen}
-                    onClose={() => {
-                        setIsStatusSelectionModalOpen(false);
-                        setPendingItem(null);
-                    }}
-                    onStatusSelect={handleStatusSelect}
-                    itemName={pendingItem?.name || ''}
-                />
-
                 {/* Loading modal for item updates */}
                 <CenteredModal isOpen={isUpdatingItem} title="Probíhá akce...">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
@@ -774,5 +720,13 @@ export default function StocktakingList() {
                 </CenteredModal>
             </div>
         </main>
+    );
+}
+
+export default function StocktakingList() {
+    return (
+        <StocktakingListLayoutProvider>
+            <StocktakingListContent />
+        </StocktakingListLayoutProvider>
     );
 }

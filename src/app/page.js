@@ -1,21 +1,17 @@
-"use client"
+"use client";
+
 import { NavLink } from "@/components/molecules/NavCard";
 import HeadingCard from "@/components/molecules/HeadingCard";
-import Link from "next/link";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthToken } from "@/utils/token";
-import { useRouter } from "next/navigation";
 import SettingsModal from "@/components/organisms/SettingsModal";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
   const { user, loading: userLoading } = useCurrentUser();
-  const router = useRouter();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-
-
 
   const handleLogout = () => {
     clearAuthToken();
@@ -83,15 +79,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ; Content */}
-      <main
-        className="flex flex-col gap-4 container"
-      >
-
+      {/* Content */}
+      <main className="flex flex-col gap-4 container">
         <HeadingCard
           heading="Dobrý den,"
-          // actions={[{ icon: "home", onClick: () => alert("Home") }]}
-          extraRow={`dnes je ${dayName} ${formattedDate}`} // Only for first page
+          extraRow={`dnes je ${dayName} ${formattedDate}`}
         />
         <nav className="flex flex-col gap-2">
           {/* Event display card - non-clickable */}
@@ -105,76 +97,76 @@ export default function Home() {
               justifyContent: "space-between",
               alignItems: "stretch",
               color: "#fff",
-              minHeight: "auto"
+              minHeight: "auto",
             }}
           >
-            {/* Event name row */}
             <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", minHeight: 32 }}>
-              <span className="material-icons-round" style={{ fontSize: 32, color: "#fff" }}>assignment</span>
+              <span className="material-icons-round" style={{ fontSize: 32, color: "#fff" }}>
+                assignment
+              </span>
             </div>
-            
-                         {/* Event name and place links */}
-             <div style={{ marginTop: 47 }}>
-               <div style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.25, marginBottom: 10 }}>
-                 {selectedInventura ? (selectedInventura.name || `Inventura #${selectedInventura.id}`) : "Vyberte inventuru"}
-               </div>
-               
-               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                 <NavLink
-                   text="Změnit inventuru"
-                   href="stocktakingList"
-                   size="small"
-                   variant="dark"
-                 />
-                 
-                 {selectedInventura && (
-                   <NavLink
-                     text="Začít inventuru"
-                     href={`stocktakingList/${selectedInventura.id}`}
-                     size="small"
-                     variant="dark"
-                   />
-                 )}
-               </div>
-             </div>
+
+            <div style={{ marginTop: 47 }}>
+              <div style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.25, marginBottom: 10 }}>
+                {selectedInventura
+                  ? selectedInventura.name || `Inventura #${selectedInventura.id}`
+                  : "Vyberte inventuru"}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <NavLink text="Změnit inventuru" href="stocktakingList" size="small" variant="dark" />
+
+                {selectedInventura && (
+                  <>
+                    <NavLink
+                      text="Začít inventuru"
+                      href={`stocktakingList/${selectedInventura.id}`}
+                      size="small"
+                      variant="dark"
+                    />
+                    <NavLink
+                      text="Skener (QR)"
+                      href={`stocktakingList/${selectedInventura.id}/scan`}
+                      size="small"
+                      variant="dark"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-                    {/* Divider */}
-          <div style={{ width: '100%', height: 2, background: '#F0F1F3', margin: '8px 0' }} />
-          
-                     {/* Operations section */}
-           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-             <div style={{ fontWeight: 700, fontSize: 14, color: '#535353' }}>
-               Operace s majetkem
-             </div>
+          <div style={{ width: "100%", height: 2, background: "#F0F1F3", margin: "8px 0" }} />
 
-             <NavLink
-               text="Najdi majetek"
-               size="small"
-               icon="search"
-               href="base-items"
-               disabled={!selectedInventura}
-             />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#535353" }}>Operace s majetkem</div>
 
-             <NavLink
-               text="Přidat nový předmět"
-               size="small"
-               href="newItem"
-               disabled={!selectedInventura}
-             />
+            <NavLink
+              text="Najdi majetek"
+              size="small"
+              icon="search"
+              href="base-items"
+              disabled={!selectedInventura}
+            />
 
-             <NavLink
-               text="Propojit existující položku"
-               size="small"
-               href="linkItem"
-               disabled={!selectedInventura}
-             />
-           </div>
+            <NavLink
+              text="Přidat nový předmět"
+              size="small"
+              icon="add"
+              href="newItem"
+              disabled={!selectedInventura}
+            />
+
+            <NavLink
+              text="Propojit existující položku"
+              size="small"
+              icon="link"
+              href="linkItem"
+              disabled={!selectedInventura}
+            />
+          </div>
         </nav>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-      </footer>
-      
       <SettingsModal 
         isOpen={isSettingsModalOpen} 
         onClose={() => setIsSettingsModalOpen(false)} 

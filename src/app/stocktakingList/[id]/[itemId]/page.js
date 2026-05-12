@@ -5,9 +5,7 @@ import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject,
 import CenteredModal from "@/components/molecules/CenteredModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import { useGetLocation } from "@/hooks/useLocation";
-import { useSettings } from "@/hooks/useSettings";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
-import StatusSelectionModal from "@/components/organisms/StatusSelectionModal";
 import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
@@ -18,7 +16,6 @@ export default function StocktakingListItemDetail() {
     const params = useParams();
     const stocktakingId = parseInt(params.id);
     const itemId = parseInt(params.itemId);
-    const { recordStatus } = useSettings();
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
     const [editMode, setEditMode] = useState(false);
@@ -43,7 +40,6 @@ export default function StocktakingListItemDetail() {
     const [errorMessage, setErrorMessage] = useState("");
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const [isStatusSelectionModalOpen, setIsStatusSelectionModalOpen] = useState(false);
 
     // Store the original image for comparison
     const originalImageRef = useRef(null);
@@ -102,39 +98,6 @@ export default function StocktakingListItemDetail() {
         setActionModalOpen(true);
     };
 
-    // Helper function to append status to note
-    const appendStatusToNote = (existingNote, status) => {
-        const statusText = status.label;
-        if (!existingNote) {
-            return `Stav: ${statusText}`;
-        }
-        return `${existingNote} | Stav: ${statusText}`;
-    };
-
-    // Handle status selection from modal
-    const handleStatusSelect = async (status) => {
-        if (!item) return;
-        
-        const { image, ...rest } = item;
-        const updatedNote = appendStatusToNote(rest.note, status);
-        
-        const result = await updateItem({ 
-            ...rest, 
-            stocktakingId: stocktakingId, 
-            state: INVENTORY_STATES.FOUND,
-            note: updatedNote
-        });
-        
-        setIsStatusSelectionModalOpen(false);
-        
-        if (result) {
-            showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-            if (refetchItem) refetchItem();
-        } else {
-            showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
-        }
-    };
-
     if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
     if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
     if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
@@ -155,20 +118,13 @@ export default function StocktakingListItemDetail() {
                 showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
             }
         } else {
-            // Toggle to 'nalezeno' - check if status selection is enabled
-            if (recordStatus) {
-                // Show status selection modal
-                setIsStatusSelectionModalOpen(true);
+            const { image, ...rest } = item;
+            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
+            if (result) {
+                showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
+                if (refetchItem) refetchItem();
             } else {
-                // Direct confirmation without status selection
-                const { image, ...rest } = item;
-                const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
-                if(result) {
-                    showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
-                    if (refetchItem) refetchItem();
-                } else {
-                    showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
-                }
+                showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
             }
         }
     };
@@ -400,12 +356,6 @@ export default function StocktakingListItemDetail() {
                 </div>
             )}
 
-            <StatusSelectionModal
-                isOpen={isStatusSelectionModalOpen}
-                onClose={() => setIsStatusSelectionModalOpen(false)}
-                onStatusSelect={handleStatusSelect}
-                itemName={item?.name || ''}
-            />
         </>
     );
 } 

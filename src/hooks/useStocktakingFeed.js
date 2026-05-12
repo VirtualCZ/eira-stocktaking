@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { flushSync } from "react-dom";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { useSettings } from "@/hooks/useSettings";
+import { INVENTORY_STATES, INVENTORY_STATES_WITHOUT_UNCHECKED, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
 import {
   feedCanAppendMore,
   feedHighlightPage1Based,
@@ -22,7 +23,20 @@ export function useStocktakingFeed({
   location,
   enabled = true,
 }) {
-  const { itemsPerPage } = useSettings();
+  const { itemsPerPage, inventoryDisplayMode } = useSettings();
+
+  const effectiveFeedState = useMemo(() => {
+    const raw = filterState?.state || [];
+    let states = [...raw];
+    if (inventoryDisplayMode === INVENTORY_DISPLAY_MODE.WORKFLOW) {
+      states = states.filter((s) => s !== INVENTORY_STATES.UNCHECKED);
+      if (states.length === 0) {
+        states = [...INVENTORY_STATES_WITHOUT_UNCHECKED];
+      }
+    }
+    return states;
+  }, [filterState?.state, inventoryDisplayMode]);
+
   const pageSize = itemsPerPage;
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -39,16 +53,17 @@ export function useStocktakingFeed({
         sortBy,
         sortOrder,
         searchTerm,
-        state: filterState?.state || [],
+        state: effectiveFeedState,
+        displayMode: inventoryDisplayMode,
         hasNote: filterState?.hasNote || [],
         pageSize,
         room: location?.room || null,
         storey: location?.storey || null,
         building: location?.building || null,
       }),
-    [eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
+    [eventId, sortBy, sortOrder, searchTerm, effectiveFeedState, inventoryDisplayMode, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
   );
-  const cacheKey = useMemo(() => `stocktakingFeedCache_v6_${queryKey}`, [queryKey]);
+  const cacheKey = useMemo(() => `stocktakingFeedCache_v7_${queryKey}`, [queryKey]);
 
   const feedRequestId = useRef(0);
   const appendLock = useRef(false);
@@ -72,7 +87,7 @@ export function useStocktakingFeed({
         sortBy,
         sortOrder,
         search: searchTerm || "",
-        state: filterState?.state || [],
+        state: effectiveFeedState,
         hasNote: filterState?.hasNote || [],
         roomId: location?.room || null,
         storeyId: location?.storey || null,
@@ -105,7 +120,7 @@ export function useStocktakingFeed({
       }
       return parsePagedFeedPage(data);
     },
-    [enabled, eventId, sortBy, sortOrder, searchTerm, filterState?.state, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
+    [enabled, eventId, sortBy, sortOrder, searchTerm, effectiveFeedState, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
   );
 
   const replaceToPage0 = useCallback(

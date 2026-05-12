@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { INVENTORY_DISPLAY_MODE } from '@/utils/inventoryStates';
 
 const PAGE_SIZE_MIN = 5;
 const PAGE_SIZE_MAX = 50;
@@ -8,6 +9,23 @@ function normalizePageSize(value) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return PAGE_SIZE_DEFAULT;
     return Math.max(PAGE_SIZE_MIN, Math.min(Math.trunc(parsed), PAGE_SIZE_MAX));
+}
+
+function readInventoryDisplayMode() {
+    if (typeof window === 'undefined') return INVENTORY_DISPLAY_MODE.WORKFLOW;
+    try {
+        const v = localStorage.getItem('settings_inventoryDisplayMode');
+        if (v === INVENTORY_DISPLAY_MODE.FULL || v === INVENTORY_DISPLAY_MODE.WORKFLOW) {
+            return v;
+        }
+        const legacy = localStorage.getItem('settings_hideUncheckedInventoryItems');
+        if (legacy !== null) {
+            return JSON.parse(legacy) ? INVENTORY_DISPLAY_MODE.WORKFLOW : INVENTORY_DISPLAY_MODE.FULL;
+        }
+    } catch (_e) {
+        /* ignore */
+    }
+    return INVENTORY_DISPLAY_MODE.WORKFLOW;
 }
 
 export function useSettings() {
@@ -26,13 +44,6 @@ export function useSettings() {
         }
         return 700;
     });
-    const [recordStatus, setRecordStatus] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('settings_recordStatus');
-            return saved !== null ? JSON.parse(saved) : false;
-        }
-        return false;
-    });
     const [itemsPerPage, setItemsPerPage] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('settings_itemsPerPage');
@@ -40,14 +51,7 @@ export function useSettings() {
         }
         return PAGE_SIZE_DEFAULT;
     });
-
-    // Save settings to localStorage when changed
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('settings_recordStatus', JSON.stringify(recordStatus));
-            window.dispatchEvent(new CustomEvent('settings-updated'));
-        }
-    }, [recordStatus]);
+    const [inventoryDisplayMode, setInventoryDisplayMode] = useState(readInventoryDisplayMode);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -70,14 +74,31 @@ export function useSettings() {
         }
     }, [itemsPerPage]);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('settings_inventoryDisplayMode', inventoryDisplayMode);
+            try {
+                localStorage.removeItem('settings_hideUncheckedInventoryItems');
+            } catch (_e) {
+                /* ignore */
+            }
+            try {
+                localStorage.removeItem('settings_recordStatus');
+            } catch (_e2) {
+                /* ignore */
+            }
+            window.dispatchEvent(new CustomEvent('settings-updated'));
+        }
+    }, [inventoryDisplayMode]);
+
     return {
-        recordStatus,
-        setRecordStatus,
         imageDebugDelayEnabled,
         setImageDebugDelayEnabled,
         imageDebugDelayMs,
         setImageDebugDelayMs,
         itemsPerPage,
-        setItemsPerPage: (next) => setItemsPerPage(normalizePageSize(next))
+        setItemsPerPage: (next) => setItemsPerPage(normalizePageSize(next)),
+        inventoryDisplayMode,
+        setInventoryDisplayMode,
     };
 }

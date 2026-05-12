@@ -24,10 +24,13 @@ const MemoStocktakingItemCard = memo(StocktakingItemCard, (prev, next) => {
 });
 MemoStocktakingItemCard.displayName = "MemoStocktakingItemCard";
 
-function ItemLink({ stocktakingId, itemId, children, onNavigate }) {
+function ItemLink({ stocktakingId, itemId, children, onNavigate, itemDetailReturnTo }) {
+    const suffix = itemDetailReturnTo
+        ? `?returnTo=${encodeURIComponent(itemDetailReturnTo)}`
+        : "";
     return (
         <Link
-            href={`/stocktakingList/${stocktakingId}/${itemId}`}
+            href={`/stocktakingList/${stocktakingId}/${itemId}${suffix}`}
             scroll={false}
             onClick={() => onNavigate?.(itemId)}
             style={{ textDecoration: "none" }}
@@ -77,7 +80,8 @@ export default function StocktakingListItemViews({
     stocktakingId,
     pageSize,
     renderItemActions,
-    onItemNavigate
+    onItemNavigate,
+    itemDetailReturnTo,
 }) {
     if (loading) {
         if (viewMode === "grid") {
@@ -104,7 +108,7 @@ export default function StocktakingListItemViews({
             <>
                 <div className="grid grid-cols-2 gap-4 auto-rows-fr">
                     {items.map((item) => (
-                        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
+                        <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate} itemDetailReturnTo={itemDetailReturnTo}>
                             <MemoStocktakingItemCard
                                 item={item}
                                 renderActions={renderItemActions}
@@ -123,7 +127,7 @@ export default function StocktakingListItemViews({
         return (
             <>
                 {items.map((item) => (
-                    <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
+                    <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate} itemDetailReturnTo={itemDetailReturnTo}>
                         <MemoStocktakingItemCard
                             item={item}
                             renderActions={renderItemActions}
@@ -140,7 +144,7 @@ export default function StocktakingListItemViews({
     return (
         <>
             {items.map((item) => (
-                <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate}>
+                <ItemLink key={item.id} stocktakingId={stocktakingId} itemId={item.id} onNavigate={onItemNavigate} itemDetailReturnTo={itemDetailReturnTo}>
                     <MemoStocktakingItemCard
                         item={item}
                         renderActions={renderItemActions}

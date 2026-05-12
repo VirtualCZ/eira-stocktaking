@@ -29,6 +29,8 @@ export default function HeadingCard({
                     key={`${position}-${idx}`}
                     href={action.href}
                     style={commonStyle}
+                    title={action.title}
+                    aria-label={action.title || action.icon}
                 >
                     <span className="material-icons-round" style={{ fontSize: 16 }}>
                         {action.icon}
@@ -40,8 +42,11 @@ export default function HeadingCard({
         return (
             <button
                 key={`${position}-${idx}`}
+                type="button"
                 onClick={action.onClick}
                 style={commonStyle}
+                title={action.title}
+                aria-label={action.title || action.icon}
             >
                 <span className="material-icons-round" style={{ fontSize: 16 }}>
                     {action.icon}

@@ -11,6 +11,7 @@ import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
+import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
@@ -40,6 +41,18 @@ export default function ScanSessionClient() {
     const stocktakingId = Number.parseInt(String(params?.id ?? ""), 10);
     const canFetch = Number.isFinite(stocktakingId) && stocktakingId > 0;
 
+    const [feedLocation, setFeedLocation] = useState(() => getLocation());
+
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === "selectedLocation") {
+                setFeedLocation(getLocation());
+            }
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+    }, [getLocation]);
+
     const {
         items: feedItems,
         total: feedTotal,
@@ -58,7 +71,7 @@ export default function ScanSessionClient() {
         sortOrder: "desc",
         searchTerm: "",
         filterState: SCAN_FEED_FILTER,
-        location: null,
+        location: feedLocation,
         enabled: canFetch,
     });
 
@@ -95,12 +108,19 @@ export default function ScanSessionClient() {
     const [moveItem, setMoveItem] = useState(null);
     const [moveNewLocation, setMoveNewLocation] = useState(null);
     const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+    const [isScanUserLocationModalOpen, setIsScanUserLocationModalOpen] = useState(false);
+    const [isScanUserLocationNestedOpen, setIsScanUserLocationNestedOpen] = useState(false);
 
     const { updateItem } = useUpdateInventoryObject(stocktakingId);
 
     const scanReturnTo = useMemo(() => `/stocktakingList/${stocktakingId}/scan`, [stocktakingId]);
 
-    const scrollCacheKey = useMemo(() => `stocktakingScanScroll_${stocktakingId}`, [stocktakingId]);
+    const scrollCacheKey = useMemo(() => {
+        const r = feedLocation?.room ?? "";
+        const s = feedLocation?.storey ?? "";
+        const b = feedLocation?.building ?? "";
+        return `stocktakingScanScroll_${stocktakingId}_${r}_${s}_${b}`;
+    }, [stocktakingId, feedLocation?.room, feedLocation?.storey, feedLocation?.building]);
     const { persistScrollState, isRestoring } = useFeedScrollRestore({
         storageKey: scrollCacheKey,
         itemCount: feedItems.length,
@@ -345,7 +365,17 @@ export default function ScanSessionClient() {
                     gap: "0.75rem",
                 }}
             >
-                <HeadingCard heading="Skener inventury" leftActions={[{ icon: "home", href: "/" }]} />
+                <HeadingCard
+                    heading="Skener inventury"
+                    leftActions={[{ icon: "home", href: "/" }]}
+                    rightActions={[
+                        {
+                            icon: "place",
+                            title: "Změnit umístění",
+                            onClick: () => setIsScanUserLocationModalOpen(true),
+                        },
+                    ]}
+                />
 
                 <div
                     style={{
@@ -367,7 +397,7 @@ export default function ScanSessionClient() {
                     >
                         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
                             <InlineQrScanner
-                                active={canFetch && !scannerCollapsed}
+                                active={canFetch}
                                 onScan={handleScan}
                                 validate={false}
                                 wrapperStyle={{ flex: 1 }}
@@ -555,6 +585,35 @@ export default function ScanSessionClient() {
                     />
                 </div>
             </div>
+
+                <CenteredModal
+                    isOpen={isScanUserLocationModalOpen}
+                    onClose={() => {
+                        setIsScanUserLocationNestedOpen(false);
+                        setIsScanUserLocationModalOpen(false);
+                    }}
+                    title="Aktuální umístění"
+                    disableClickAway={isScanUserLocationNestedOpen}
+                >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <UserLocationPicker
+                            onChange={(loc) => setFeedLocation(loc)}
+                            onModalOpen={() => setIsScanUserLocationNestedOpen(true)}
+                            onModalClose={() => setIsScanUserLocationNestedOpen(false)}
+                        />
+                        <Button
+                            variant="secondary"
+                            icon="close"
+                            iconPosition="right"
+                            onClick={() => {
+                                setIsScanUserLocationNestedOpen(false);
+                                setIsScanUserLocationModalOpen(false);
+                            }}
+                        >
+                            Zavřít
+                        </Button>
+                    </div>
+                </CenteredModal>
 
                 <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

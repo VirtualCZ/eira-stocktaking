@@ -26,6 +26,7 @@ export default function StocktakingListItemDetail() {
     const [moveNewLocation, setMoveNewLocation] = useState(null);
     const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
     const bottomBarRef = useRef(null);
+    const attachmentsRef = useRef(null);
     const [bottomPadding, setBottomPadding] = useState(0);
     const [barRendered, setBarRendered] = useState(false);
 
@@ -199,13 +200,23 @@ export default function StocktakingListItemDetail() {
         }
 
         const result = await updateItem(mainData);
-        if(result) {
+        if (result) {
+            try {
+                await attachmentsRef.current?.commitPending?.();
+            } catch (e) {
+                showActionModal('Chyba', e?.message || 'Přílohy se nepodařilo uložit.', false);
+                return;
+            }
             setEditMode(false);
             showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
             if (refetchItem) refetchItem();
         } else {
             showActionModal('Chyba', 'Nepodařilo se upravit položku.', false);
         }
+    };
+
+    const handleCancelEdit = () => {
+        setEditMode(false);
     };
 
     // Duplicate handler
@@ -254,6 +265,7 @@ export default function StocktakingListItemDetail() {
                 setBottomPadding={setBottomPadding}
                 barRendered={barRendered}
                 setBarRendered={setBarRendered}
+                attachmentsRef={attachmentsRef}
             />
             <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={"Chyba"}>
                 <div style={{ color: '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
@@ -346,7 +358,7 @@ export default function StocktakingListItemDetail() {
                     }}
                 >
                     <div className="container flex items-center gap-2 p-4 justify-center">
-                        <Button variant="secondary" icon="close" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={() => setEditMode(false)}>
+                        <Button variant="secondary" icon="close" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={handleCancelEdit}>
                             Zrušit úpravy
                         </Button>
                         <Button icon="check" iconPosition="right" style={{ fontSize: "0.75rem" }} onClick={handleSave}>

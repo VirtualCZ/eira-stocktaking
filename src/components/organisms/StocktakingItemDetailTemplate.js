@@ -8,6 +8,7 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
 import ItemPropertyEditor from "@/components/molecules/ItemPropertyEditor";
+import ItemAttachmentsSection from "@/components/molecules/ItemAttachmentsSection";
 import { isFoundState } from "@/utils/inventoryStates";
 
 export default function StocktakingItemDetailTemplate({
@@ -32,7 +33,8 @@ export default function StocktakingItemDetailTemplate({
   setBottomPadding,
   barRendered,
   setBarRendered,
-  showInventoryDetails = true
+  showInventoryDetails = true,
+  attachmentsRef = null
 }) {
   const bottomBarRef = useRef(null);
   useLayoutEffect(() => {
@@ -129,6 +131,7 @@ export default function StocktakingItemDetailTemplate({
                           })}
                       </CardContainer>
                     )}
+                    <ItemAttachmentsSection ref={attachmentsRef} rmId={editItem.id} editMode={true} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                   {showInventoryDetails && <div>Poslední úprava {editItem.lastCheck || editItem.date}</div>}
                       <div>ID {editItem.id}</div>
@@ -209,6 +212,7 @@ export default function StocktakingItemDetailTemplate({
                        })}
                    </CardContainer>
                  )}
+                <ItemAttachmentsSection ref={attachmentsRef} rmId={item.id} editMode={false} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, fontStyle: 'italic', color: '#535353' }}>
                   {showInventoryDetails && <div>Poslední úprava {item.lastCheck}</div>}
                   <div>ID {item.id}</div>

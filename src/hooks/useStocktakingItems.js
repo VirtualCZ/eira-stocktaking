@@ -242,7 +242,7 @@ export function useDuplicateInventoryObject(eventId) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const duplicateItem = async (id) => {
+  const duplicateItem = async (id, code) => {
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -250,6 +250,11 @@ export function useDuplicateInventoryObject(eventId) {
       const body = { id };
       if (eventId) {
         body.eventId = eventId;
+      }
+      const trimmed = String(code ?? "").trim();
+      if (trimmed) {
+        body.invNumber = trimmed;
+        body.qr = trimmed;
       }
       const res = await fetch('/api/objects/duplicate', {
         method: 'POST',

@@ -1,20 +1,24 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject, useDuplicateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
+import DuplicateIdentifierModal from "@/components/molecules/DuplicateIdentifierModal";
+import { useDuplicateItemModal } from "@/hooks/useDuplicateItemModal";
 import { useGetLocation } from "@/hooks/useLocation";
+import { mapLocationToApi } from "@/utils/inventoryItemApi";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
-import { buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
+import { buildStocktakingItemUrl, buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
 
 
 export default function StocktakingListItemDetail() {
     const params = useParams();
+    const router = useRouter();
     const stocktakingId = parseInt(params.id);
     const itemId = parseInt(params.itemId);
     const searchParams = useSearchParams();
@@ -38,10 +42,9 @@ export default function StocktakingListItemDetail() {
     const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId, stocktakingId);
     const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateInventoryObject(stocktakingId);
     const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteInventoryObject(stocktakingId);
-    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateInventoryObject(stocktakingId);
+    const { duplicateItem, loading: duplicateLoading } = useDuplicateInventoryObject(stocktakingId);
+    const duplicateModal = useDuplicateItemModal(duplicateItem);
 
-    const [errorModalOpen, setErrorModalOpen] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
@@ -151,34 +154,6 @@ export default function StocktakingListItemDetail() {
         setIsMoveModalOpen(true);
     };
 
-    // Helper to convert properties array to object
-    function propertiesArrayToObject(propertiesArr) {
-        const obj = {};
-        for (const prop of propertiesArr || []) {
-            // For API-defined properties, use metaCode as key if available, otherwise use label
-            if (prop.fieldType) {
-                const key = prop.metaCode || prop.label;
-                if (key && prop.value !== undefined && prop.value !== null && prop.value.toString().trim() !== "") {
-                    obj[key] = prop.value;
-                }
-            } else if ((prop.key || prop.name) && (prop.key || prop.name).trim() !== "") {
-                // For custom properties, use the old format
-                obj[prop.key || prop.name] = prop.value;
-            }
-        }
-        return obj;
-    }
-
-    // Helper to map location fields to API format
-    function mapLocationToApi(location) {
-        if (!location) return undefined;
-        return {
-            building: location.building ?? 0,
-            storey: location.storey ?? 0,
-            room: location.room ?? 0,
-        };
-    }
-
     // Save handler
     const handleSave = async () => {
         if (!editItem) return;
@@ -222,11 +197,12 @@ export default function StocktakingListItemDetail() {
         setEditMode(false);
     };
 
-    // Duplicate handler
-    const handleDuplicate = async () => {
-        if (!editItem) return;
-        const result = await duplicateItem(editItem.id);
-        if(result) {
+    const handleDuplicateConfirm = async (code) => {
+        const { ok, newId } = await duplicateModal.confirm(code, item?.id);
+        if (newId) {
+            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
+            router.push(buildStocktakingItemUrl(stocktakingId, newId, { returnTo }));
+        } else if (ok) {
             showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
         } else {
             showActionModal('Chyba', 'Nepodařilo se duplikovat položku.', false);
@@ -253,7 +229,7 @@ export default function StocktakingListItemDetail() {
                 onEditItemChange={setEditItem}
                 onEditModeChange={() => setEditMode(!editMode)}
                 onDelete={() => setIsDeleteModalOpen(true)}
-                onDuplicate={handleDuplicate}
+                onDuplicate={duplicateModal.open}
                 onSave={handleSave}
                 onMove={openMoveModal}
                 onFound={handleFound}
@@ -270,9 +246,6 @@ export default function StocktakingListItemDetail() {
                 setBarRendered={setBarRendered}
                 attachmentsRef={attachmentsRef}
             />
-            <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={"Chyba"}>
-                <div style={{ color: '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
-            </CenteredModal>
             {/* Action result modal for update, delete, duplicate */}
             <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
                 <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>
@@ -284,6 +257,13 @@ export default function StocktakingListItemDetail() {
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
                 </div>
             </CenteredModal>
+            <DuplicateIdentifierModal
+                isOpen={duplicateModal.isOpen}
+                onClose={duplicateModal.close}
+                originalCode={item?.qr}
+                onConfirm={handleDuplicateConfirm}
+                loading={duplicateLoading}
+            />
             {/* Delete Confirmation Modal */}
             <CenteredModal title={"Opravdu chcete smazat předmět?"} isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

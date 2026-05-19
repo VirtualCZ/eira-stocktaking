@@ -1,16 +1,20 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject, useDuplicateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
+import DuplicateIdentifierModal from "@/components/molecules/DuplicateIdentifierModal";
+import { useDuplicateItemModal } from "@/hooks/useDuplicateItemModal";
 import { useGetLocation } from "@/hooks/useLocation";
+import { mapLocationToApi } from "@/utils/inventoryItemApi";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/atoms/Button';
 
 
 export default function ItemListDetail() {
     const params = useParams();
+    const router = useRouter();
     const itemId = params.itemId;
     const searchParams = useSearchParams();
     const returnTo = searchParams.get("returnTo") || "/";
@@ -26,12 +30,11 @@ export default function ItemListDetail() {
     const getLocation = useGetLocation();
 
     const [fetchedItem, loading, error, refetchItem] = useStocktakingItem(itemId, null);
-    const { updateItem, loading: updateLoading, error: updateError, success: updateSuccess } = useUpdateInventoryObject(null);
-    const { deleteItem, loading: deleteLoading, error: deleteError, success: deleteSuccess } = useDeleteInventoryObject(null);
-    const { duplicateItem, loading: duplicateLoading, error: duplicateError, success: duplicateSuccess } = useDuplicateInventoryObject(null);
+    const { updateItem, loading: updateLoading } = useUpdateInventoryObject(null);
+    const { deleteItem, loading: deleteLoading } = useDeleteInventoryObject(null);
+    const { duplicateItem, loading: duplicateLoading } = useDuplicateInventoryObject(null);
+    const duplicateModal = useDuplicateItemModal(duplicateItem);
 
-    const [errorModalOpen, setErrorModalOpen] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
 
@@ -82,31 +85,6 @@ export default function ItemListDetail() {
         }
     }, [editMode, barRendered]);
 
-    // Show modals based on hook states
-    useEffect(() => {
-        if (updateSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně upravena.', true);
-        } else if (updateError) {
-            showActionModal('Chyba', updateError?.message || 'Nepodařilo se upravit položku.', false);
-        }
-    }, [updateSuccess, updateError]);
-
-    useEffect(() => {
-        if (duplicateSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
-        } else if (duplicateError) {
-            showActionModal('Chyba', duplicateError?.message || 'Nepodařilo se duplikovat položku.', false);
-        }
-    }, [duplicateSuccess, duplicateError]);
-
-    useEffect(() => {
-        if (deleteSuccess) {
-            showActionModal('Hotovo', 'Položka byla úspěšně smazána.', true);
-        } else if (deleteError) {
-            showActionModal('Chyba', deleteError?.message || 'Nepodařilo se smazat položku.', false);
-        }
-    }, [deleteSuccess, deleteError]);
-
     // Show loading modal when any action is in progress
     const isAnyLoading = updateLoading || deleteLoading || duplicateLoading;
 
@@ -121,27 +99,6 @@ export default function ItemListDetail() {
     if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
 
     const item = { ...fetchedItem, location: editItem?.location };
-
-    // Helper to convert properties array to object
-    function propertiesArrayToObject(propertiesArr) {
-        const obj = {};
-        for (const prop of propertiesArr || []) {
-            if ((prop.key || prop.name) && (prop.key || prop.name).trim() !== "") {
-                obj[prop.key || prop.name] = prop.value;
-            }
-        }
-        return obj;
-    }
-
-    // Helper to map location fields to API format
-    function mapLocationToApi(location) {
-        if (!location) return undefined;
-        return {
-            building: location.building ?? 0,
-            storey: location.storey ?? 0,
-            room: location.room ?? 0,
-        };
-    }
 
     // Save handler
     const handleSave = async () => {
@@ -189,11 +146,13 @@ export default function ItemListDetail() {
         setEditMode(false);
     };
 
-    // Duplicate handler
-    const handleDuplicate = async () => {
-        if (!editItem) return;
-        const result = await duplicateItem(editItem.id);
-        if(result) {
+    const handleDuplicateConfirm = async (code) => {
+        const { ok, newId } = await duplicateModal.confirm(code, item?.id);
+        if (newId) {
+            showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
+            const path = `/itemList/${newId}${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`;
+            router.push(path);
+        } else if (ok) {
             showActionModal('Hotovo', 'Položka byla úspěšně duplikována.', true);
         } else {
             showActionModal('Chyba', 'Nepodařilo se duplikovat položku.', false);
@@ -220,7 +179,7 @@ export default function ItemListDetail() {
                 onEditItemChange={setEditItem}
                 onEditModeChange={() => setEditMode(!editMode)}
                 onDelete={() => setIsDeleteModalOpen(true)}
-                onDuplicate={handleDuplicate}
+                onDuplicate={duplicateModal.open}
                 onSave={handleSave}
                 showMove={false}
                 showFound={false}
@@ -236,9 +195,6 @@ export default function ItemListDetail() {
                 showInventoryDetails={false}
                 attachmentsRef={attachmentsRef}
             />
-            <CenteredModal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)} title={updateSuccess ? "Hotovo" : "Chyba"}>
-                <div style={{ color: updateSuccess ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{errorMessage}</div>
-            </CenteredModal>
             {/* Action result modal for update, delete, duplicate */}
             <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
                 <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>
@@ -250,6 +206,13 @@ export default function ItemListDetail() {
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
                 </div>
             </CenteredModal>
+            <DuplicateIdentifierModal
+                isOpen={duplicateModal.isOpen}
+                onClose={duplicateModal.close}
+                originalCode={item?.qr}
+                onConfirm={handleDuplicateConfirm}
+                loading={duplicateLoading}
+            />
             {/* Delete Confirmation Modal */}
             <CenteredModal title={"Opravdu chcete smazat předmět?"} isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

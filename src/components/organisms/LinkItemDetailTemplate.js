@@ -5,12 +5,13 @@ import DetailCardRow from "@/components/atoms/DetailCardRow";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
-import Link from "next/link";
+import NavBackLink from "@/components/molecules/NavBackLink";
+import { HOME_PATH } from "@/utils/inventoryNavigation";
 
 export default function LinkItemDetailTemplate({
   item,
   onEditItemChange,
-  returnTo = "/"
+  returnTo = HOME_PATH,
 }) {
   if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
 
@@ -18,30 +19,7 @@ export default function LinkItemDetailTemplate({
     <div className="relative min-h-screen flex flex-col">
       <main className="flex flex-col items-center" style={{ minHeight: "100vh" }}>
         <div className="flex flex-col container">
-          <Link
-            href={returnTo}
-            style={{
-              position: "absolute",
-              marginTop: "1rem",
-              marginLeft: "1rem",
-              background: "#000",
-              color: "#fff",
-              border: "none",
-              borderRadius: 16,
-              width: 38,
-              height: 38,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1100,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              textDecoration: "none"
-            }}
-          >
-            <span className="material-icons-round" style={{ fontSize: 16 }}>
-              {returnTo === "/" ? "home" : "arrow_back"}
-            </span>
-          </Link>
+          <NavBackLink returnTo={returnTo} />
           <PictureInput value={item.image || ""} itemId={item.id} editMode={false} />
           <div className="p-4 flex flex-col gap-4" style={{ paddingBottom: "6rem" }}>
             <div>

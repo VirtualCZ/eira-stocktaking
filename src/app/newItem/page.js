@@ -1,22 +1,30 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useCreateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEntregs } from "@/hooks/useEntregs";
 import DropdownCard from "@/components/molecules/DropdownCard";
 import PictureInput from "@/components/molecules/PictureInput";
 import TextInput from "@/components/atoms/TextInput";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
-import Link from "next/link";
+import { useGetLocation } from "@/hooks/useLocation";
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
+import { resolveReturnTo } from "@/utils/inventoryNavigation";
+import NavBackLink from "@/components/molecules/NavBackLink";
 
 
 export default function NewItem() {
     const { selectedInventura } = useSelectedInventura();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const getLocation = useGetLocation();
+    const returnTo = useMemo(
+        () => resolveReturnTo(searchParams, selectedInventura?.id),
+        [searchParams, selectedInventura?.id]
+    );
     const [entregs, entregsLoading, entregsError] = useEntregs();
     const [editItem, setEditItem] = useState({
         name: "",
@@ -28,18 +36,28 @@ export default function NewItem() {
         properties: [],
         entregId: null,
     });
-    const [editMode, setEditMode] = useState(true);
+    const [prefillDone, setPrefillDone] = useState(false);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
-    const { createItem, loading, error, success } = useCreateInventoryObject(selectedInventura?.id || null);
+    const { createItem, loading, error } = useCreateInventoryObject(selectedInventura?.id || null);
 
-    // Helper to show modal
+    useEffect(() => {
+        if (prefillDone) return;
+        const qrParam = searchParams.get("qr");
+        const userLoc = getLocation();
+        setEditItem((prev) => ({
+            ...prev,
+            ...(qrParam ? { qr: qrParam } : {}),
+            ...(userLoc ? { location: userLoc } : {}),
+        }));
+        setPrefillDone(true);
+    }, [searchParams, getLocation, prefillDone]);
+
     const showActionModal = (title, message, success) => {
         setActionModalContent({ title, message, success });
         setActionModalOpen(true);
     };
 
-    // Helper to convert properties array to object
     function propertiesArrayToObject(propertiesArr) {
         const obj = {};
         for (const prop of propertiesArr || []) {
@@ -50,7 +68,6 @@ export default function NewItem() {
         return obj;
     }
 
-    // Helper to map location fields to API format
     function mapLocationToApi(location) {
         if (!location) return undefined;
         return {
@@ -60,14 +77,25 @@ export default function NewItem() {
         };
     }
 
-    // Save handler
+    const navigateAfterCreate = useCallback(() => {
+        router.push(returnTo);
+    }, [router, returnTo]);
+
+    const handleCreateResult = useCallback(async (payload) => {
+        const result = await createItem(payload);
+        if (result && !error) {
+            navigateAfterCreate();
+        } else {
+            showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
+        }
+    }, [createItem, error, navigateAfterCreate]);
+
     const handleSave = async () => {
-        // Validate required fields
         if (!editItem.entregId) {
             showActionModal("Chyba", "Musíte vybrat typ objektu.", false);
             return;
         }
-        
+
         let propertiesArr = Array.isArray(editItem.properties)
             ? editItem.properties
             : Object.entries(editItem.properties || {}).map(([key, value]) => ({ key, value }));
@@ -75,8 +103,8 @@ export default function NewItem() {
             showActionModal("Chyba", "Všechny pole 'Vlastnost' musí být vyplněné.", false);
             return;
         }
-        
-        const newItem = {
+
+        const newItemPayload = {
             name: editItem.name,
             description: editItem.description,
             note: editItem.note,
@@ -84,77 +112,30 @@ export default function NewItem() {
             qr: editItem.qr,
             properties: propertiesArrayToObject(propertiesArr),
             entregId: editItem.entregId,
+            state: INVENTORY_STATES.NEW,
         };
 
-        // Handle image data conversion
         const currentImage = editItem.image || null;
-        if (currentImage) {
-            if (typeof currentImage === 'string') {
-                // If it's already a base64 string, use it directly
-                if (currentImage.startsWith('data:image/')) {
-                    newItem.image = currentImage;
-                } else {
-                    newItem.image = currentImage;
-                }
-            } else if (currentImage instanceof File) {
-                // Convert File to base64
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    const base64Data = reader.result;
-                    newItem.image = base64Data;
-                    console.log('Sending image as base64 data');
-                    
-                    // Send the create request with base64 image data
-                    const result = await createItem(newItem);
-                    if (result && !error) {
-                        // Navigate to the newly created item
-                        if (result.id) {
-                            if (selectedInventura?.id) {
-                                // If we have a stocktaking event, go to stocktaking item detail
-                                router.push(`/stocktakingList/${selectedInventura.id}/${result.id}`);
-                            } else {
-                                // Otherwise go to general item detail
-                                router.push(`/itemList/${result.id}`);
-                            }
-                        } else {
-                            showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
-                            setEditMode(false);
-                        }
-                    } else {
-                        showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
-                    }
-                };
-                reader.readAsDataURL(currentImage);
-                return; // Exit early, will be handled in onload
-            } else {
-                newItem.image = null;
-            }
-        } else {
-            newItem.image = null;
+        if (currentImage instanceof File) {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                newItemPayload.image = reader.result;
+                await handleCreateResult(newItemPayload);
+            };
+            reader.readAsDataURL(currentImage);
+            return;
         }
 
-        const result = await createItem(newItem);
-        if (result && !error) {
-            // Navigate to the newly created item
-            if (result.id) {
-                if (selectedInventura?.id) {
-                    // If we have a stocktaking event, go to stocktaking item detail
-                    router.push(`/stocktakingList/${selectedInventura.id}/${result.id}`);
-                } else {
-                    // Otherwise go to general item detail
-                    router.push(`/itemList/${result.id}`);
-                }
-            } else {
-                showActionModal('Hotovo', 'Položka byla úspěšně vytvořena.', true);
-                setEditMode(false);
-            }
+        if (currentImage && typeof currentImage === 'string') {
+            newItemPayload.image = currentImage;
         } else {
-            showActionModal('Chyba', error?.message || 'Nepodařilo se vytvořit položku.', false);
+            newItemPayload.image = null;
         }
+
+        await handleCreateResult(newItemPayload);
     };
 
-    // Prepare entreg options for dropdown - ensure entregs is an array
-    const entregOptions = Array.isArray(entregs) 
+    const entregOptions = Array.isArray(entregs)
         ? entregs.map(entreg => ({
             value: entreg.entregId,
             text: entreg.entregDesc || entreg.entregMetaCode
@@ -163,7 +144,6 @@ export default function NewItem() {
 
     const selectedEntreg = entregOptions.find(opt => opt.value === editItem.entregId) || null;
 
-    // Stable handlers to prevent re-renders
     const handleNameChange = useCallback((e) => {
         setEditItem(prev => ({ ...prev, name: e.target.value }));
     }, []);
@@ -197,32 +177,11 @@ export default function NewItem() {
             <div className="relative min-h-screen flex flex-col">
                 <main className="flex flex-col items-center" style={{ minHeight: "100vh" }}>
                     <div className="flex flex-col container">
-                        <Link
-                            href="/"
-                            style={{
-                                position: "absolute",
-                                marginTop: "1rem",
-                                marginLeft: "1rem",
-                                background: "#000",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 16,
-                                width: 38,
-                                height: 38,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                zIndex: 1100,
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                                textDecoration: "none"
-                            }}
-                        >
-                            <span className="material-icons-round" style={{ fontSize: 16 }}>home</span>
-                        </Link>
-                        <PictureInput 
-                            value={editItem.image || ""} 
+                        <NavBackLink returnTo={returnTo} />
+                        <PictureInput
+                            value={editItem.image || ""}
                             onChange={handleImageChange}
-                            editMode={true} 
+                            editMode={true}
                         />
                         <div className="p-4 flex flex-col gap-4" style={{ paddingBottom: "6rem" }}>
                             <div>
@@ -280,18 +239,15 @@ export default function NewItem() {
                     </div>
                 </main>
             </div>
-            {/* Action result modal for create */}
             <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
                 <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>
             </CenteredModal>
-            {/* Loading modal for create */}
             <CenteredModal isOpen={loading} title="Probíhá akce...">
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
                     <span>Probíhá akce...</span>
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
                 </div>
             </CenteredModal>
-            {/* Fixed bottom bar with save button */}
             <div
                 className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
                 style={{

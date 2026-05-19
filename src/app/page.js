@@ -6,12 +6,27 @@ import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthToken } from "@/utils/token";
 import SettingsModal from "@/components/organisms/SettingsModal";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  buildNewItemUrl,
+  buildLinkItemUrl,
+  buildStocktakingListUrl,
+  buildScanUrl,
+  HOME_PATH,
+} from "@/utils/inventoryNavigation";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
   const { user, loading: userLoading } = useCurrentUser();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  const inventoryReturnTo = useMemo(
+    () =>
+      selectedInventura?.id
+        ? buildStocktakingListUrl(selectedInventura.id, { returnTo: HOME_PATH })
+        : null,
+    [selectedInventura?.id]
+  );
 
   const handleLogout = () => {
     clearAuthToken();
@@ -120,13 +135,13 @@ export default function Home() {
                   <>
                     <NavLink
                       text="Začít inventuru"
-                      href={`stocktakingList/${selectedInventura.id}`}
+                      href={buildStocktakingListUrl(selectedInventura.id, { returnTo: "/" })}
                       size="small"
                       variant="dark"
                     />
                     <NavLink
                       text="Skener (QR)"
-                      href={`stocktakingList/${selectedInventura.id}/scan`}
+                      href={buildScanUrl(selectedInventura.id, { returnTo: HOME_PATH })}
                       size="small"
                       variant="dark"
                     />
@@ -153,7 +168,7 @@ export default function Home() {
               text="Přidat nový předmět"
               size="small"
               icon="add"
-              href="newItem"
+              href={inventoryReturnTo ? buildNewItemUrl({ returnTo: inventoryReturnTo }) : "newItem"}
               disabled={!selectedInventura}
             />
 
@@ -161,7 +176,7 @@ export default function Home() {
               text="Propojit existující položku"
               size="small"
               icon="link"
-              href="linkItem"
+              href={inventoryReturnTo ? buildLinkItemUrl({ returnTo: inventoryReturnTo }) : "linkItem"}
               disabled={!selectedInventura}
             />
           </div>

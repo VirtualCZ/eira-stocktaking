@@ -4,7 +4,7 @@ import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useSto
 import { useStocktakingListLayout, StocktakingListLayoutProvider } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
@@ -20,6 +20,15 @@ import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { INVENTORY_STATES, isFoundState, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
+import {
+    buildNewItemUrl,
+    buildLinkItemUrl,
+    buildStocktakingListUrl,
+    buildStocktakingItemUrl,
+    resolveScreenReturnTo,
+    headingBackAction,
+    HOME_PATH,
+} from "@/utils/inventoryNavigation";
 
 
 const sortOptions = [
@@ -38,7 +47,13 @@ const viewModes = [
 function StocktakingListContent() {
 
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { inventoryDisplayMode } = useSettings();
+
+    const backReturnTo = useMemo(
+        () => resolveScreenReturnTo(searchParams, HOME_PATH),
+        [searchParams]
+    );
 
     const {
         stocktakingId,
@@ -83,6 +98,13 @@ function StocktakingListContent() {
     const [isAddingScannedItem, setIsAddingScannedItem] = useState(false);
     const [isLookingUpOutsideInventory, setIsLookingUpOutsideInventory] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+    const [pendingCreateQr, setPendingCreateQr] = useState(null);
+
+    const listReturnTo = useMemo(
+        () => buildStocktakingListUrl(stocktakingId, { returnTo: backReturnTo }),
+        [stocktakingId, backReturnTo]
+    );
 
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: '', message: '', success: false });
@@ -203,7 +225,9 @@ function StocktakingListContent() {
             await loadMore();
 
             if (created?.id) {
-                router.push(`/stocktakingList/${stocktakingId}/${created.id}`);
+                router.push(
+                    buildStocktakingItemUrl(stocktakingId, created.id, { returnTo: listReturnTo })
+                );
             }
         } catch (_error) {
             showActionModal('Chyba', 'Položku se nepodařilo přidat do inventury.', false);
@@ -243,9 +267,10 @@ function StocktakingListContent() {
                 setIsPreviewModalOpen(false);
             }
         } else {
+            setPendingCreateQr(normalizedScannedQr);
             setIsPreviewModalOpen(false);
             setIsNotInInventoryModalOpen(true);
-            lookupItemOutsideCurrentEvent(scannedQr);
+            lookupItemOutsideCurrentEvent(normalizedScannedQr);
         }
     }, [apiItem, apiLoading, apiError, scannedQr, resolvedQr, location, lookupItemOutsideCurrentEvent]);
 
@@ -256,7 +281,14 @@ function StocktakingListContent() {
                 <ContextRow
                     icon="edit"
                     label="Upravit"
-                    action={() => router.push(`/stocktakingList/${stocktakingId}/${item.id}?edit=1`)}
+                    action={() =>
+                        router.push(
+                            buildStocktakingItemUrl(stocktakingId, item.id, {
+                                returnTo: listReturnTo,
+                                edit: true,
+                            })
+                        )
+                    }
                 />
                 <ContextRow
                     icon="swap_horiz"
@@ -322,11 +354,7 @@ function StocktakingListContent() {
             <div className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", paddingBottom: `calc(1rem + ${bottomPadding}px)`, flexDirection: "column", gap: "1rem" }}>
                 <HeadingCard
                     heading="Seznam předmětů"
-                    leftActions={[
-                        {
-                            icon: "home", href: "/"
-                        }
-                    ]}
+                    leftActions={[headingBackAction(backReturnTo)]}
                     rightActions={[
                         {
                             icon: viewModes[currentViewIdx].icon,
@@ -359,6 +387,7 @@ function StocktakingListContent() {
                             pageSize={pageSize}
                             renderItemActions={renderItemActions}
                             onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
+                            itemDetailReturnTo={listReturnTo}
                         />
                     )}
                 </div>
@@ -394,10 +423,19 @@ function StocktakingListContent() {
                             />
                         </div>
 
-                        {/* QR Button */}
                         <button
+                            type="button"
+                            className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
+                            onClick={() => setIsAddItemModalOpen(true)}
+                            aria-label="Přidat položku"
+                        >
+                            <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>add</span>
+                        </button>
+                        <button
+                            type="button"
                             className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer"
                             onClick={() => setIsQRModalOpen(true)}
+                            aria-label="Skenovat QR"
                         >
                             <span className="material-icons-round text-white" style={{ fontSize: "16px" }}>qr_code</span>
                         </button>
@@ -434,6 +472,43 @@ function StocktakingListContent() {
                     onScan={handleScan}
                     validate={false}
                 />
+
+                <CenteredModal
+                    isOpen={isAddItemModalOpen}
+                    onClose={() => setIsAddItemModalOpen(false)}
+                    title="Přidat položku"
+                >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                        <Button
+                            icon="add"
+                            iconPosition="right"
+                            onClick={() => {
+                                setIsAddItemModalOpen(false);
+                                router.push(buildNewItemUrl({ returnTo: listReturnTo }));
+                            }}
+                        >
+                            Založit novou položku
+                        </Button>
+                        <Button
+                            icon="link"
+                            iconPosition="right"
+                            onClick={() => {
+                                setIsAddItemModalOpen(false);
+                                router.push(buildLinkItemUrl({ returnTo: listReturnTo }));
+                            }}
+                        >
+                            Propojit existující
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            icon="close"
+                            iconPosition="right"
+                            onClick={() => setIsAddItemModalOpen(false)}
+                        >
+                            Storno
+                        </Button>
+                    </div>
+                </CenteredModal>
 
                 <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -486,7 +561,17 @@ function StocktakingListContent() {
                                 </Button>
                             )}
                             {!isLookingUpOutsideInventory && !notInInventoryItem && (
-                                <Button icon="add" iconPosition="right" onClick={() => router.push("/newItem") }>
+                                <Button
+                                    icon="add"
+                                    iconPosition="right"
+                                    onClick={() => {
+                                        setIsNotInInventoryModalOpen(false);
+                                        router.push(buildNewItemUrl({
+                                            qr: pendingCreateQr,
+                                            returnTo: listReturnTo,
+                                        }));
+                                    }}
+                                >
                                     Založit novou položku
                                 </Button>
                             )}
@@ -623,7 +708,11 @@ function StocktakingListContent() {
                                 </Button>
                                 <Button icon="edit" iconPosition="right" onClick={() => {
                                     if (scannedItem && scannedItem.id) {
-                                        router.push(`/stocktakingList/${stocktakingId}/${scannedItem.id}`);
+                                        router.push(
+                                            buildStocktakingItemUrl(stocktakingId, scannedItem.id, {
+                                                returnTo: listReturnTo,
+                                            })
+                                        );
                                     }
                                 }}>
                                     Upravit položku

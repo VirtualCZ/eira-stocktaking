@@ -7,6 +7,7 @@ import { Pagination } from "@/components/molecules/Pagination";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useSettings } from "@/hooks/useSettings";
 import StocktakingListCard from "@/components/organisms/StocktakingListCard";
+import { headingBackAction, HOME_PATH } from "@/utils/inventoryNavigation";
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -40,11 +41,7 @@ export default function StocktakingOperationsList() {
             <main className="container" style={{ minHeight: "100vh", background: "#fff", display: "flex", padding: "1rem", flexDirection: "column", gap: "1rem" }}>
                 <HeadingCard
                     heading="Seznam inventur"
-                    leftActions={[
-                        {
-                            icon: "home", href: "/"
-                        }
-                    ]}
+                    leftActions={[headingBackAction(HOME_PATH)]}
                     rightActions={[
                         { icon: "sort", onClick: () => setIsOptionsModalOpen(true) }
                     ]}

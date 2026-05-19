@@ -10,6 +10,7 @@ import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
+import { buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
 
 
 export default function StocktakingListItemDetail() {
@@ -17,7 +18,9 @@ export default function StocktakingListItemDetail() {
     const stocktakingId = parseInt(params.id);
     const itemId = parseInt(params.itemId);
     const searchParams = useSearchParams();
-    const returnTo = searchParams.get("returnTo") || "/";
+    const returnTo =
+        searchParams.get("returnTo") ||
+        buildStocktakingListUrl(stocktakingId, { returnTo: HOME_PATH });
     const [editMode, setEditMode] = useState(false);
 
     const [editItem, setEditItem] = useState(null);

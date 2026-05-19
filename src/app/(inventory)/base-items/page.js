@@ -13,6 +13,7 @@ import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import { useBaseItemsInventoryLayout } from "@/contexts/BaseItemsInventoryLayoutContext";
+import { buildNewItemUrl, headingBackAction, HOME_PATH } from "@/utils/inventoryNavigation";
 
 const sortOptions = [
     { label: "ID", value: "id" },
@@ -106,7 +107,7 @@ export default function BaseItemsPage() {
             >
                 <HeadingCard
                     heading="Majetek"
-                    leftActions={[{ icon: "home", href: "/" }]}
+                    leftActions={[headingBackAction(HOME_PATH)]}
                     rightActions={[
                         {
                             icon: viewModes[currentViewIdx].icon,
@@ -316,7 +317,7 @@ export default function BaseItemsPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>Položka nebyla nalezena v databázi.</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <Button icon="add" iconPosition="right" onClick={() => router.push("/newItem")}>
+                            <Button icon="add" iconPosition="right" onClick={() => router.push(buildNewItemUrl({ returnTo: "/base-items" }))}>
                                 Založit novou položku
                             </Button>
                             <Button

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useStocktakingItems";
 import { useStocktakingFeed } from "@/hooks/useStocktakingFeed";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
@@ -21,6 +21,15 @@ import { Pagination } from "@/components/molecules/Pagination";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { readScanListViewMode } from "@/utils/scanListViewMode";
 import { INVENTORY_STATES, isFoundState, isMovedState, isNewState } from "@/utils/inventoryStates";
+import {
+    buildNewItemUrl,
+    buildLinkItemUrl,
+    buildScanUrl,
+    buildStocktakingItemUrl,
+    resolveScreenReturnTo,
+    headingBackAction,
+    HOME_PATH,
+} from "@/utils/inventoryNavigation";
 
 const SCAN_FEED_FILTER = { state: [], hasNote: [] };
 
@@ -36,6 +45,7 @@ function resolveImageSrc(image) {
 export default function ScanSessionClient() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const getLocation = useGetLocation();
 
     const stocktakingId = Number.parseInt(String(params?.id ?? ""), 10);
@@ -94,6 +104,8 @@ export default function ScanSessionClient() {
     const [apiItem, apiLoading, apiError, resolvedQr] = useInventoryObjectByQr(scannedQr, stocktakingId);
 
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
+    const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+    const [pendingCreateQr, setPendingCreateQr] = useState(null);
     const [notInInventoryItem, setNotInInventoryItem] = useState(null);
     const [isAddingScannedItem, setIsAddingScannedItem] = useState(false);
     const [isLookingUpOutsideInventory, setIsLookingUpOutsideInventory] = useState(false);
@@ -113,7 +125,14 @@ export default function ScanSessionClient() {
 
     const { updateItem } = useUpdateInventoryObject(stocktakingId);
 
-    const scanReturnTo = useMemo(() => `/stocktakingList/${stocktakingId}/scan`, [stocktakingId]);
+    const backReturnTo = useMemo(
+        () => resolveScreenReturnTo(searchParams, HOME_PATH),
+        [searchParams]
+    );
+    const scanReturnTo = useMemo(
+        () => buildScanUrl(stocktakingId, { returnTo: backReturnTo }),
+        [stocktakingId, backReturnTo]
+    );
 
     const scrollCacheKey = useMemo(() => {
         const r = feedLocation?.room ?? "";
@@ -205,7 +224,7 @@ export default function ScanSessionClient() {
 
             if (created?.id) {
                 router.push(
-                    `/stocktakingList/${stocktakingId}/${created.id}?returnTo=${encodeURIComponent(scanReturnTo)}`
+                    buildStocktakingItemUrl(stocktakingId, created.id, { returnTo: scanReturnTo })
                 );
             }
         } catch (_error) {
@@ -263,6 +282,7 @@ export default function ScanSessionClient() {
                 }
             }
         } else {
+            setPendingCreateQr(normalizedScannedQr);
             setIsNotInInventoryModalOpen(true);
             lookupItemOutsideCurrentEvent(normalizedScannedQr);
         }
@@ -276,7 +296,10 @@ export default function ScanSessionClient() {
                     label="Upravit"
                     action={() =>
                         router.push(
-                            `/stocktakingList/${stocktakingId}/${item.id}?edit=1&returnTo=${encodeURIComponent(scanReturnTo)}`
+                            buildStocktakingItemUrl(stocktakingId, item.id, {
+                                returnTo: scanReturnTo,
+                                edit: true,
+                            })
                         )
                     }
                 />
@@ -367,8 +390,13 @@ export default function ScanSessionClient() {
             >
                 <HeadingCard
                     heading="Skener inventury"
-                    leftActions={[{ icon: "home", href: "/" }]}
+                    leftActions={[headingBackAction(backReturnTo)]}
                     rightActions={[
+                        {
+                            icon: "add",
+                            title: "Přidat položku",
+                            onClick: () => setIsAddItemModalOpen(true),
+                        },
                         {
                             icon: "place",
                             title: "Změnit umístění",
@@ -615,6 +643,43 @@ export default function ScanSessionClient() {
                     </div>
                 </CenteredModal>
 
+                <CenteredModal
+                    isOpen={isAddItemModalOpen}
+                    onClose={() => setIsAddItemModalOpen(false)}
+                    title="Přidat položku"
+                >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                        <Button
+                            icon="add"
+                            iconPosition="right"
+                            onClick={() => {
+                                setIsAddItemModalOpen(false);
+                                router.push(buildNewItemUrl({ returnTo: scanReturnTo }));
+                            }}
+                        >
+                            Založit novou položku
+                        </Button>
+                        <Button
+                            icon="link"
+                            iconPosition="right"
+                            onClick={() => {
+                                setIsAddItemModalOpen(false);
+                                router.push(buildLinkItemUrl({ returnTo: scanReturnTo }));
+                            }}
+                        >
+                            Propojit existující
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            icon="close"
+                            iconPosition="right"
+                            onClick={() => setIsAddItemModalOpen(false)}
+                        >
+                            Storno
+                        </Button>
+                    </div>
+                </CenteredModal>
+
                 <CenteredModal isOpen={isNotInInventoryModalOpen} onClose={() => setIsNotInInventoryModalOpen(false)} title="QR Sken">
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
@@ -660,7 +725,17 @@ export default function ScanSessionClient() {
                                 </Button>
                             )}
                             {!isLookingUpOutsideInventory && !notInInventoryItem && (
-                                <Button icon="add" iconPosition="right" onClick={() => router.push("/newItem")}>
+                                <Button
+                                    icon="add"
+                                    iconPosition="right"
+                                    onClick={() => {
+                                        setIsNotInInventoryModalOpen(false);
+                                        router.push(buildNewItemUrl({
+                                            qr: pendingCreateQr,
+                                            returnTo: scanReturnTo,
+                                        }));
+                                    }}
+                                >
                                     Založit novou položku
                                 </Button>
                             )}
@@ -780,7 +855,10 @@ export default function ScanSessionClient() {
                                         closeScanNotice();
                                         if (id) {
                                             router.push(
-                                                `/stocktakingList/${stocktakingId}/${id}?edit=1&returnTo=${encodeURIComponent(scanReturnTo)}`
+                                                buildStocktakingItemUrl(stocktakingId, id, {
+                                                    returnTo: scanReturnTo,
+                                                    edit: true,
+                                                })
                                             );
                                         }
                                     }}

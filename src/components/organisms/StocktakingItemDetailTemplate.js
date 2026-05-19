@@ -3,7 +3,8 @@ import PictureInput from "@/components/molecules/PictureInput";
 import CardContainer from "@/components/atoms/CardContainer";
 import DetailCardRow from "@/components/atoms/DetailCardRow";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
-import Link from "next/link";
+import NavBackLink from "@/components/molecules/NavBackLink";
+import { HOME_PATH } from "@/utils/inventoryNavigation";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
@@ -26,7 +27,7 @@ export default function StocktakingItemDetailTemplate({
   showFound = false,
   loading,
   error,
-  returnTo = "/",
+  returnTo = HOME_PATH,
   isDeleteModalOpen,
   setIsDeleteModalOpen,
   bottomPadding = 0,
@@ -51,30 +52,7 @@ export default function StocktakingItemDetailTemplate({
     <div className="relative min-h-screen flex flex-col">
       <main className="flex flex-col items-center" style={{ minHeight: "100vh", paddingBottom: bottomPadding }}>
         <div className="flex flex-col container">
-          <Link
-            href={returnTo}
-            style={{
-              position: "absolute",
-              marginTop: "1rem",
-              marginLeft: "1rem",
-              background: "#000",
-              color: "#fff",
-              border: "none",
-              borderRadius: 16,
-              width: 38,
-              height: 38,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1100,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              textDecoration: "none"
-            }}
-          >
-            <span className="material-icons-round" style={{ fontSize: 16 }}>
-              {returnTo === "/" ? "home" : "arrow_back"}
-            </span>
-          </Link>
+          <NavBackLink returnTo={returnTo} />
           {editMode ? (
             <>
               {editItem && (

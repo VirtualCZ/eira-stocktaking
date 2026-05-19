@@ -2,6 +2,7 @@
 
 import React, { memo } from "react";
 import Link from "next/link";
+import { buildStocktakingItemUrl } from "@/utils/inventoryNavigation";
 import StocktakingItemCard from "@/components/organisms/StocktakingItemCard";
 import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemCardSkeleton";
 
@@ -25,12 +26,11 @@ const MemoStocktakingItemCard = memo(StocktakingItemCard, (prev, next) => {
 MemoStocktakingItemCard.displayName = "MemoStocktakingItemCard";
 
 function ItemLink({ stocktakingId, itemId, children, onNavigate, itemDetailReturnTo }) {
-    const suffix = itemDetailReturnTo
-        ? `?returnTo=${encodeURIComponent(itemDetailReturnTo)}`
-        : "";
     return (
         <Link
-            href={`/stocktakingList/${stocktakingId}/${itemId}${suffix}`}
+            href={buildStocktakingItemUrl(stocktakingId, itemId, {
+                returnTo: itemDetailReturnTo,
+            })}
             scroll={false}
             onClick={() => onNavigate?.(itemId)}
             style={{ textDecoration: "none" }}

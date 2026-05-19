@@ -5,14 +5,17 @@ import BaseItemPicker from "@/components/molecules/BaseItemPicker";
 import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useBaseItems } from "@/hooks/useBaseItems";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { INVENTORY_STATES } from "@/utils/inventoryStates";
+import { resolveReturnTo } from "@/utils/inventoryNavigation";
 
 export default function LinkItem() {
     const { selectedInventura } = useSelectedInventura();
     const [, , baseItemsLoading, , , fetchBaseItemDetailsById, linkBaseItemToEvent] = useBaseItems({ skip: true });
     const apiLoading = baseItemsLoading;
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = resolveReturnTo(searchParams, selectedInventura?.id);
     const [isBaseItemPickerOpen, setIsBaseItemPickerOpen] = useState(false);
     const [selectedBaseItem, setSelectedBaseItem] = useState(null);
     
@@ -101,13 +104,9 @@ export default function LinkItem() {
                 location: editItem.location || null
             };
 
-            const result = await linkBaseItemToEvent(inventoryItem);
+            await linkBaseItemToEvent(inventoryItem);
             showActionModal('Hotovo', 'Položka byla úspěšně přidána do inventury.', true);
-            
-            // Navigate to the newly created inventory item page
-            if (result && result.id) {
-                router.push(`/stocktakingList/${selectedInventura.id}/${result.id}`);
-            }
+            router.push(returnTo);
         } catch (error) {
             console.error('Error creating inventory item:', error);
             showActionModal('Chyba', `Nepodařilo se vytvořit inventurní položku: ${error.message}`, false);
@@ -132,7 +131,7 @@ export default function LinkItem() {
              <LinkItemDetailTemplate
                  item={editItem}
                  onEditItemChange={setEditItem}
-                 returnTo="/"
+                 returnTo={returnTo}
              />
 
             {/* Base Item Selection Modal */}

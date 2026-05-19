@@ -4,7 +4,7 @@ import { useState } from "react";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import TextInput from "@/components/atoms/TextInput";
 
-/** Single field for inventurizační číslo (= QR on create). */
+/** Inventurizační číslo / QR — type manually or scan (same value for both DB columns). */
 export default function QRCodeInput({
   value,
   onChange,
@@ -43,35 +43,47 @@ export default function QRCodeInput({
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-        <TextInput
-          label="Inventurizační číslo / QR"
-          placeholder="Zadejte nebo naskenujte kód"
-          value={value ?? ""}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
+        <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            alignItems: "flex-end",
             gap: 8,
-            padding: "12px 16px",
-            borderRadius: 16,
-            background: "#f0f1f3",
-            border: "none",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: 12,
-            color: "#000",
+            width: "100%",
           }}
         >
-          <span className="material-icons-round" style={{ fontSize: 18 }}>
-            qr_code_scanner
-          </span>
-          Naskenovat kód
-        </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <TextInput
+              label="Inventurizační číslo / QR"
+              placeholder="Zadejte číslo"
+              value={value ?? ""}
+              onChange={(e) => onChange(e.target.value)}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            title="Naskenovat kód"
+            aria-label="Naskenovat kód"
+            style={{
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 44,
+              height: 44,
+              marginBottom: 2,
+              borderRadius: 12,
+              background: "#f0f1f3",
+              border: "1px solid #e0e0e0",
+              cursor: "pointer",
+              color: "#000",
+            }}
+          >
+            <span className="material-icons-round" style={{ fontSize: 22 }}>
+              qr_code_scanner
+            </span>
+          </button>
+        </div>
         {validateAvailability && trimmed && checking && (
           <div style={{ fontSize: 12, color: "#535353" }}>Kontroluji číslo…</div>
         )}

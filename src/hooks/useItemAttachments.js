@@ -45,11 +45,15 @@ export function useItemAttachments(rmId) {
   }, [fetchAttachments]);
 
   const uploadAttachment = useCallback(
-    async ({ fileName, mimeType, description, data }, { skipRefetch = false } = {}) => {
-      if (!rmId) throw new Error("Chybí ID položky");
+    async (
+      { fileName, mimeType, description, data },
+      { skipRefetch = false, rmId: rmIdOverride } = {}
+    ) => {
+      const targetRmId = rmIdOverride ?? rmId;
+      if (!targetRmId) throw new Error("Chybí ID položky");
       setMutating(true);
       try {
-        const res = await fetch(`/api/objects/${rmId}/attachments`, {
+        const res = await fetch(`/api/objects/${targetRmId}/attachments`, {
           method: "POST",
           headers: {
             ...getAuthHeadersSafe(),
@@ -72,8 +76,9 @@ export function useItemAttachments(rmId) {
   );
 
   const deleteAttachment = useCallback(
-    async (attachId, { skipRefetch = false } = {}) => {
-      if (!rmId || !attachId) return;
+    async (attachId, { skipRefetch = false, rmId: rmIdOverride } = {}) => {
+      const targetRmId = rmIdOverride ?? rmId;
+      if (!targetRmId || !attachId) return;
       setMutating(true);
       try {
         const res = await fetch("/api/attachments/delete", {
@@ -82,7 +87,7 @@ export function useItemAttachments(rmId) {
             ...getAuthHeadersSafe(),
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ attachId, rmId }),
+          body: JSON.stringify({ attachId, rmId: targetRmId }),
         });
         if (!res.ok) {
           const text = await res.text();

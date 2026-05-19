@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useCreateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -14,6 +14,7 @@ import { useGetLocation } from "@/hooks/useLocation";
 import {
   resolveScreenReturnTo,
   resolveAddToInventuraState,
+  buildStocktakingItemUrl,
   HOME_PATH,
 } from "@/utils/inventoryNavigation";
 import {
@@ -22,6 +23,7 @@ import {
   getIdentifierValidationError,
 } from "@/hooks/useInventoryIdentifiersAvailability";
 import NavBackLink from "@/components/molecules/NavBackLink";
+import ItemAttachmentsSection from "@/components/molecules/ItemAttachmentsSection";
 
 /**
  * @param {object} props
@@ -75,6 +77,7 @@ export default function NewItemForm({
     success: false,
   });
 
+  const attachmentsRef = useRef(null);
   const { createItem, loading, error } = useCreateInventoryObject(stocktakingId || null);
   const { checkAvailability } = useInventoryIdentifiersCheck();
 
@@ -114,20 +117,28 @@ export default function NewItemForm({
     };
   }
 
-  const navigateAfterCreate = useCallback(() => {
-    router.push(returnTo);
-  }, [router, returnTo]);
-
   const handleCreateResult = useCallback(
     async (payload) => {
       const result = await createItem(payload);
-      if (result && !error) {
-        navigateAfterCreate();
-      } else {
+      if (!result?.id) {
         showActionModal("Chyba", error?.message || "Nepodařilo se vytvořit položku.", false);
+        return;
       }
+      try {
+        await attachmentsRef.current?.commitPending?.(result.id);
+      } catch (err) {
+        showActionModal(
+          "Chyba",
+          err?.message || "Přílohy se nepodařilo uložit.",
+          false
+        );
+        return;
+      }
+      router.push(
+        buildStocktakingItemUrl(stocktakingId, result.id, { returnTo })
+      );
     },
-    [createItem, error, navigateAfterCreate]
+    [createItem, error, router, stocktakingId, returnTo]
   );
 
   const handleSave = async () => {
@@ -280,6 +291,7 @@ export default function NewItemForm({
                 available={identifierAvailable}
                 checkError={identifiersCheckError}
               />
+              <ItemAttachmentsSection ref={attachmentsRef} editMode />
             </div>
           </div>
         </main>

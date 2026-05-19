@@ -75,31 +75,38 @@ const ItemAttachmentsSection = forwardRef(function ItemAttachmentsSection(
     setPendingDeleteIds(new Set());
   }, [rmId]);
 
-  const commitPending = useCallback(async () => {
-    const toUpload = [...pendingUploads];
-    const toDelete = [...pendingDeleteIds];
-    if (toUpload.length === 0 && toDelete.length === 0) {
-      return;
-    }
-    const batchOpts = { skipRefetch: true };
-    for (const attachId of toDelete) {
-      await deleteAttachment(attachId, batchOpts);
-    }
-    for (const payload of toUpload) {
-      await uploadAttachment(
-        {
-          fileName: payload.fileName,
-          mimeType: payload.mimeType,
-          description: payload.description,
-          data: payload.data,
-        },
-        batchOpts
-      );
-    }
-    setPendingUploads([]);
-    setPendingDeleteIds(new Set());
-    await refetch();
-  }, [pendingUploads, pendingDeleteIds, deleteAttachment, uploadAttachment, refetch]);
+  const commitPending = useCallback(
+    async (overrideRmId) => {
+      const targetRmId = overrideRmId ?? rmId;
+      const toUpload = [...pendingUploads];
+      const toDelete = [...pendingDeleteIds];
+      if (toUpload.length === 0 && toDelete.length === 0) {
+        return;
+      }
+      if (!targetRmId && toUpload.length > 0) {
+        throw new Error("Chybí ID položky pro nahrání příloh");
+      }
+      const batchOpts = { skipRefetch: true, rmId: targetRmId };
+      for (const attachId of toDelete) {
+        await deleteAttachment(attachId, batchOpts);
+      }
+      for (const payload of toUpload) {
+        await uploadAttachment(
+          {
+            fileName: payload.fileName,
+            mimeType: payload.mimeType,
+            description: payload.description,
+            data: payload.data,
+          },
+          batchOpts
+        );
+      }
+      setPendingUploads([]);
+      setPendingDeleteIds(new Set());
+      if (targetRmId) await refetch();
+    },
+    [rmId, pendingUploads, pendingDeleteIds, deleteAttachment, uploadAttachment, refetch]
+  );
 
   const hasPendingChanges = useCallback(
     () => pendingUploads.length > 0 || pendingDeleteIds.size > 0,
@@ -259,8 +266,9 @@ const ItemAttachmentsSection = forwardRef(function ItemAttachmentsSection(
 
   const busy = mutating || stagingFiles;
   const showPendingHint = editMode && hasPendingChanges();
+  const isCreateMode = editMode && !rmId;
 
-  if (!rmId) return null;
+  if (!rmId && !editMode) return null;
 
   return (
     <>
@@ -272,7 +280,9 @@ const ItemAttachmentsSection = forwardRef(function ItemAttachmentsSection(
         />
         {showPendingHint && (
           <div style={{ fontSize: 11, color: "#888", fontStyle: "italic" }}>
-            Změny příloh se uloží tlačítkem Uložit
+            {isCreateMode
+              ? "Přílohy se uloží po vytvoření objektu"
+              : "Změny příloh se uloží tlačítkem Uložit"}
           </div>
         )}
         <input
@@ -285,11 +295,11 @@ const ItemAttachmentsSection = forwardRef(function ItemAttachmentsSection(
           disabled={busy}
         />
 
-        {loading && visibleAttachments.length === 0 && (
+        {!isCreateMode && loading && visibleAttachments.length === 0 && (
           <div style={{ fontSize: 12, color: "#535353" }}>Načítání příloh…</div>
         )}
 
-        {error && !loading && (
+        {!isCreateMode && error && !loading && (
           <div style={{ fontSize: 12, color: "#c62828" }}>Chyba načtení příloh</div>
         )}
 

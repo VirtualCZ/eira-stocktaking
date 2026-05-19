@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useStocktakingItems";
+import { useOutsideInventuraQrItem } from "@/hooks/useOutsideInventuraQrItem";
 import { useStocktakingListLayout, StocktakingListLayoutProvider } from "@/contexts/StocktakingListLayoutContext";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
@@ -18,11 +19,10 @@ import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
-import { getAuthHeadersSafe } from "@/utils/token";
 import { INVENTORY_STATES, isFoundState, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
 import {
-    buildNewItemUrl,
-    buildLinkItemUrl,
+    buildStocktakingNewItemUrl,
+    buildStocktakingLinkItemUrl,
     buildStocktakingListUrl,
     buildStocktakingItemUrl,
     resolveScreenReturnTo,
@@ -94,9 +94,6 @@ function StocktakingListContent() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
-    const [notInInventoryItem, setNotInInventoryItem] = useState(null);
-    const [isAddingScannedItem, setIsAddingScannedItem] = useState(false);
-    const [isLookingUpOutsideInventory, setIsLookingUpOutsideInventory] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [pendingCreateQr, setPendingCreateQr] = useState(null);
@@ -111,6 +108,14 @@ function StocktakingListContent() {
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
 
     const { updateItem } = useUpdateInventoryObject(stocktakingId);
+    const {
+        outsideInventuraItem,
+        resetOutsideInventuraItem,
+        lookupOutsideInventura,
+        addOutsideItemToInventura,
+        isLookingUpOutsideInventura,
+        isAddingOutsideItem,
+    } = useOutsideInventuraQrItem(stocktakingId);
 
     const [scannedQr, setScannedQr] = useState(null);
     const [apiItem, apiLoading, apiError, resolvedQr] = useInventoryObjectByQr(scannedQr, stocktakingId);
@@ -161,80 +166,40 @@ function StocktakingListContent() {
     const handleScan = useCallback((scannedValue) => {
         setIsQRModalOpen(false);
         setScannedItem(null);
-        setNotInInventoryItem(null);
-        setIsLookingUpOutsideInventory(false);
+        resetOutsideInventuraItem();
         setIsPreviewModalOpen(true);
         setIsNotInInventoryModalOpen(false);
         setScannedQr(scannedValue);
-    }, []);
-
-    const lookupItemOutsideCurrentEvent = useCallback(async (qrValue) => {
-        setIsLookingUpOutsideInventory(true);
-        setNotInInventoryItem(null);
-        try {
-            const response = await fetch('/api/objects/by-qr-any', {
-                method: 'POST',
-                headers: getAuthHeadersSafe(),
-                body: JSON.stringify({ qr: qrValue }),
-            });
-            if (!response.ok) {
-                setNotInInventoryItem(null);
-                return;
-            }
-            const data = await response.json();
-            setNotInInventoryItem(data || null);
-        } catch (_error) {
-            setNotInInventoryItem(null);
-        } finally {
-            setIsLookingUpOutsideInventory(false);
-        }
-    }, []);
+    }, [resetOutsideInventuraItem]);
 
     const addScannedItemToCurrentInventory = useCallback(async () => {
-        if (!notInInventoryItem?.id || !stocktakingId) return;
-
-        setIsAddingScannedItem(true);
         try {
-            const body = {
-                rmId: notInInventoryItem.id,
-                eventId: stocktakingId,
-                status: INVENTORY_STATES.UNCHECKED,
-                note: notInInventoryItem.note || "",
-                qr: notInInventoryItem.qr || "",
-                location: location || null,
-            };
+            const created = await addOutsideItemToInventura(location || null);
+            if (!created) return;
 
-            const response = await fetch('/api/base-items/link-to-event', {
-                method: 'POST',
-                headers: {
-                    ...getAuthHeadersSafe(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const created = await response.json();
             setIsNotInInventoryModalOpen(false);
-            setNotInInventoryItem(null);
             showActionModal('Hotovo', 'Položka byla přidána do aktuální inventury.', true);
             resetFeed();
             await loadMore();
 
-            if (created?.id) {
+            if (created.id) {
                 router.push(
                     buildStocktakingItemUrl(stocktakingId, created.id, { returnTo: listReturnTo })
                 );
             }
         } catch (_error) {
             showActionModal('Chyba', 'Položku se nepodařilo přidat do inventury.', false);
-        } finally {
-            setIsAddingScannedItem(false);
         }
-    }, [notInInventoryItem, stocktakingId, location, showActionModal, resetFeed, loadMore, router]);
+    }, [
+        addOutsideItemToInventura,
+        location,
+        showActionModal,
+        resetFeed,
+        loadMore,
+        router,
+        stocktakingId,
+        listReturnTo,
+    ]);
 
     useEffect(() => {
         if (!scannedQr) {
@@ -270,9 +235,9 @@ function StocktakingListContent() {
             setPendingCreateQr(normalizedScannedQr);
             setIsPreviewModalOpen(false);
             setIsNotInInventoryModalOpen(true);
-            lookupItemOutsideCurrentEvent(normalizedScannedQr);
+            lookupOutsideInventura(normalizedScannedQr);
         }
-    }, [apiItem, apiLoading, apiError, scannedQr, resolvedQr, location, lookupItemOutsideCurrentEvent]);
+    }, [apiItem, apiLoading, apiError, scannedQr, resolvedQr, location, lookupOutsideInventura]);
 
     // Function to render item actions (context menu)
     const renderItemActions = useCallback(
@@ -484,7 +449,9 @@ function StocktakingListContent() {
                             iconPosition="right"
                             onClick={() => {
                                 setIsAddItemModalOpen(false);
-                                router.push(buildNewItemUrl({ returnTo: listReturnTo }));
+                                router.push(
+                                    buildStocktakingNewItemUrl(stocktakingId, { returnTo: listReturnTo })
+                                );
                             }}
                         >
                             Založit novou položku
@@ -494,7 +461,11 @@ function StocktakingListContent() {
                             iconPosition="right"
                             onClick={() => {
                                 setIsAddItemModalOpen(false);
-                                router.push(buildLinkItemUrl({ returnTo: listReturnTo }));
+                                router.push(
+                                    buildStocktakingLinkItemUrl(stocktakingId, {
+                                        returnTo: listReturnTo,
+                                    })
+                                );
                             }}
                         >
                             Propojit existující
@@ -515,13 +486,13 @@ function StocktakingListContent() {
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
                             Položka není součástí inventurního seznamu.
                         </div>
-                        {isLookingUpOutsideInventory && (
+                        {isLookingUpOutsideInventura && (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "0.5rem 0" }}>
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                                 <div style={{ fontSize: 13, color: "#535353" }}>Vyhledávám položku podle QR...</div>
                             </div>
                         )}
-                        {!isLookingUpOutsideInventory && notInInventoryItem && (
+                        {!isLookingUpOutsideInventura && outsideInventuraItem && (
                             <div style={{
                                 borderRadius: 16,
                                 background: "#f0f1f3",
@@ -532,44 +503,46 @@ function StocktakingListContent() {
                             }}>
                                 <img
                                     src={
-                                        notInInventoryItem.image
-                                            ? (/^data:image\//.test(notInInventoryItem.image)
-                                                ? notInInventoryItem.image
-                                                : (/^[A-Za-z0-9+/=]+$/.test(notInInventoryItem.image) && notInInventoryItem.image.length > 100)
-                                                    ? `data:image/*;base64,${notInInventoryItem.image}`
-                                                    : notInInventoryItem.image)
+                                        outsideInventuraItem.image
+                                            ? (/^data:image\//.test(outsideInventuraItem.image)
+                                                ? outsideInventuraItem.image
+                                                : (/^[A-Za-z0-9+/=]+$/.test(outsideInventuraItem.image) && outsideInventuraItem.image.length > 100)
+                                                    ? `data:image/*;base64,${outsideInventuraItem.image}`
+                                                    : outsideInventuraItem.image)
                                             : "/file.svg"
                                     }
-                                    alt={notInInventoryItem.name}
+                                    alt={outsideInventuraItem.name}
                                     style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}
                                 />
                                 <div className="p-4 gap-2 flex flex-col">
-                                    <CardItemName>{notInInventoryItem.name}</CardItemName>
-                                    <div style={{ fontSize: 12, color: "#535353" }}>{notInInventoryItem.note}</div>
-                                    {notInInventoryItem.qr && (
+                                    <CardItemName>{outsideInventuraItem.name}</CardItemName>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{outsideInventuraItem.note}</div>
+                                    {outsideInventuraItem.qr && (
                                         <div style={{ fontSize: 12, color: "#535353", fontStyle: "italic" }}>
-                                            QR kód: {notInInventoryItem.qr}
+                                            QR kód: {outsideInventuraItem.qr}
                                         </div>
                                     )}
                                 </div>
                             </div>
                         )}
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            {!isLookingUpOutsideInventory && notInInventoryItem && (
+                            {!isLookingUpOutsideInventura && outsideInventuraItem && (
                                 <Button icon="playlist_add" iconPosition="right" onClick={addScannedItemToCurrentInventory}>
-                                    {isAddingScannedItem ? "Přidávám..." : "Přidat tuto položku do inventury"}
+                                    {isAddingOutsideItem ? "Přidávám..." : "Přidat tuto položku do inventury"}
                                 </Button>
                             )}
-                            {!isLookingUpOutsideInventory && !notInInventoryItem && (
+                            {!isLookingUpOutsideInventura && !outsideInventuraItem && (
                                 <Button
                                     icon="add"
                                     iconPosition="right"
                                     onClick={() => {
                                         setIsNotInInventoryModalOpen(false);
-                                        router.push(buildNewItemUrl({
-                                            qr: pendingCreateQr,
-                                            returnTo: listReturnTo,
-                                        }));
+                                        router.push(
+                                            buildStocktakingNewItemUrl(stocktakingId, {
+                                                qr: pendingCreateQr,
+                                                returnTo: listReturnTo,
+                                            })
+                                        );
                                     }}
                                 >
                                     Založit novou položku

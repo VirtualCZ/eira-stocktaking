@@ -13,7 +13,12 @@ import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import { useBaseItemsInventoryLayout } from "@/contexts/BaseItemsInventoryLayoutContext";
-import { buildNewItemUrl, headingBackAction, HOME_PATH } from "@/utils/inventoryNavigation";
+import {
+  buildStocktakingNewItemUrl,
+  headingBackAction,
+  HOME_PATH,
+} from "@/utils/inventoryNavigation";
+import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 
 const sortOptions = [
     { label: "ID", value: "id" },
@@ -23,6 +28,7 @@ const sortOptions = [
 
 export default function BaseItemsPage() {
     const router = useRouter();
+    const { selectedInventura } = useSelectedInventura();
     const {
         pageState,
         updatePageState,
@@ -317,7 +323,18 @@ export default function BaseItemsPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>Položka nebyla nalezena v databázi.</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            <Button icon="add" iconPosition="right" onClick={() => router.push(buildNewItemUrl({ returnTo: "/base-items" }))}>
+                            <Button
+                                icon="add"
+                                iconPosition="right"
+                                onClick={() => {
+                                    if (!selectedInventura?.id) return;
+                                    router.push(
+                                        buildStocktakingNewItemUrl(selectedInventura.id, {
+                                            returnTo: "/base-items",
+                                        })
+                                    );
+                                }}
+                            >
                                 Založit novou položku
                             </Button>
                             <Button

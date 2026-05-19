@@ -272,4 +272,37 @@ export function useDuplicateInventoryObject(eventId) {
   };
 
   return { duplicateItem, loading, error, success };
-} 
+}
+
+export function useLookupInventoryObjectByQrAny() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const lookupByQrAny = useCallback(async (qr) => {
+    const normalized = String(qr ?? "").trim();
+    if (!normalized) {
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/objects/by-qr-any", {
+        method: "POST",
+        headers: getAuthHeadersSafe(),
+        body: JSON.stringify({ qr: normalized }),
+      });
+      if (!res.ok) {
+        return null;
+      }
+      return await res.json();
+    } catch (err) {
+      setError(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { lookupByQrAny, loading, error };
+}

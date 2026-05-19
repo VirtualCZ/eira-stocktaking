@@ -3,7 +3,29 @@
  * returns to where the user came from.
  */
 
+import { INVENTORY_STATES } from "@/utils/inventoryStates";
+
 export const HOME_PATH = "/";
+
+/** Main menu — přidat / propojit před aktivní inventurou → Nezkontrolováno */
+export const MAIN_MENU_NEW_ITEM_PATH = "/newItem";
+export const MAIN_MENU_LINK_ITEM_PATH = "/linkItem";
+
+const MAIN_MENU_ADD_PATHS = [MAIN_MENU_NEW_ITEM_PATH, MAIN_MENU_LINK_ITEM_PATH];
+
+export function isMainMenuAddPath(pathname) {
+  if (!pathname) return false;
+  return MAIN_MENU_ADD_PATHS.some(
+    (p) => pathname === p || pathname.endsWith(p)
+  );
+}
+
+/** Create or link: main menu → Nezkontrolováno, inventura routes → Nový */
+export function resolveAddToInventuraState(pathname) {
+  return isMainMenuAddPath(pathname)
+    ? INVENTORY_STATES.UNCHECKED
+    : INVENTORY_STATES.NEW;
+}
 
 export function stocktakingListPath(stocktakingId) {
   return `/stocktakingList/${stocktakingId}`;
@@ -28,6 +50,14 @@ function buildFormPageUrl(path, { returnTo, qr } = {}) {
   return q ? `${path}?${q}` : path;
 }
 
+export function stocktakingNewItemPath(stocktakingId) {
+  return `/stocktakingList/${stocktakingId}/new`;
+}
+
+export function stocktakingLinkItemPath(stocktakingId) {
+  return `/stocktakingList/${stocktakingId}/link`;
+}
+
 export function buildStocktakingListUrl(stocktakingId, { returnTo } = {}) {
   return withReturnTo(stocktakingListPath(stocktakingId), returnTo);
 }
@@ -44,24 +74,29 @@ export function buildStocktakingItemUrl(stocktakingId, itemId, { returnTo, edit 
   return `/stocktakingList/${stocktakingId}/${itemId}${q ? `?${q}` : ""}`;
 }
 
+/** Main menu create → /newItem (Nezkontrolováno) */
 export function buildNewItemUrl({ returnTo, qr } = {}) {
-  return buildFormPageUrl("/newItem", { returnTo, qr });
+  return buildFormPageUrl(MAIN_MENU_NEW_ITEM_PATH, { returnTo, qr });
 }
 
+/** Inventura list / scan create → /stocktakingList/{id}/new (Nový) */
+export function buildStocktakingNewItemUrl(stocktakingId, { returnTo, qr } = {}) {
+  return buildFormPageUrl(stocktakingNewItemPath(stocktakingId), { returnTo, qr });
+}
+
+/** Main menu link → /linkItem (Nezkontrolováno) */
 export function buildLinkItemUrl({ returnTo, qr } = {}) {
-  return buildFormPageUrl("/linkItem", { returnTo, qr });
+  return buildFormPageUrl(MAIN_MENU_LINK_ITEM_PATH, { returnTo, qr });
+}
+
+/** Inventura list / scan link → /stocktakingList/{id}/link (Nový) */
+export function buildStocktakingLinkItemUrl(stocktakingId, { returnTo, qr } = {}) {
+  return buildFormPageUrl(stocktakingLinkItemPath(stocktakingId), { returnTo, qr });
 }
 
 export function resolveScreenReturnTo(searchParams, fallback = HOME_PATH) {
   const fromQuery = searchParams?.get?.("returnTo");
   return fromQuery || fallback;
-}
-
-export function resolveReturnTo(searchParams, selectedInventuraId) {
-  const fromQuery = searchParams?.get?.("returnTo");
-  if (fromQuery) return fromQuery;
-  if (selectedInventuraId) return stocktakingListPath(selectedInventuraId);
-  return HOME_PATH;
 }
 
 export function isHomeReturnTo(returnTo) {

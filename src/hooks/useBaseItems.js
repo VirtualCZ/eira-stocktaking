@@ -1,6 +1,80 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAuthHeadersSafe, isAuthenticated } from '@/utils/token';
 
+async function fetchBaseItemByIdRequest(id) {
+    const response = await fetch('/api/base-items/by-id', {
+        method: 'POST',
+        headers: {
+            ...getAuthHeadersSafe(),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch base item: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+async function linkBaseItemToEventRequest(inventoryData) {
+    const response = await fetch('/api/base-items/link-to-event', {
+        method: 'POST',
+        headers: {
+            ...getAuthHeadersSafe(),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(inventoryData),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to create inventory item: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+export function useBaseItemDetails() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const fetchById = useCallback(async (id) => {
+        setLoading(true);
+        setError(null);
+        try {
+            return await fetchBaseItemByIdRequest(id);
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    return { fetchById, loading, error };
+}
+
+export function useLinkBaseItemToEvent() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const linkToEvent = useCallback(async (inventoryData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            return await linkBaseItemToEventRequest(inventoryData);
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    return { linkToEvent, loading, error };
+}
+
 export function useBaseItems(options = {}) {
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
@@ -117,61 +191,5 @@ export function useBaseItems(options = {}) {
         };
     }, [fetchBaseItems, search]);
 
-    // Additional operations for individual base items
-    const fetchBaseItemDetailsById = useCallback(async (id) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch('/api/base-items/by-id', {
-                method: 'POST',
-                headers: {
-                    ...getAuthHeadersSafe(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to fetch base item: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data;
-        } catch (err) {
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const linkBaseItemToEvent = useCallback(async (inventoryData) => {
-        setLoading(true);
-        setError(null);
-        
-        try {
-            const response = await fetch('/api/base-items/link-to-event', {
-                method: 'POST',
-                headers: {
-                    ...getAuthHeadersSafe(),
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(inventoryData)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to create inventory item: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data;
-        } catch (err) {
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    return [items, total, loading, error, refetchItems, fetchBaseItemDetailsById, linkBaseItemToEvent];
+    return [items, total, loading, error, refetchItems];
 }

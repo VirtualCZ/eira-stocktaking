@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useUpdateInventoryObject, useInventoryObjectByQr } from "@/hooks/useStocktakingItems";
+import { useOutsideInventuraQrItem } from "@/hooks/useOutsideInventuraQrItem";
 import { useStocktakingFeed } from "@/hooks/useStocktakingFeed";
 import { useFeedScrollRestore } from "@/hooks/useFeedScrollRestore";
 import { useGetLocation } from "@/hooks/useLocation";
@@ -18,12 +19,11 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 import StocktakingListItemViews from "../StocktakingListItemViews";
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
-import { getAuthHeadersSafe } from "@/utils/token";
 import { readScanListViewMode } from "@/utils/scanListViewMode";
 import { INVENTORY_STATES, isFoundState, isMovedState, isNewState } from "@/utils/inventoryStates";
 import {
-    buildNewItemUrl,
-    buildLinkItemUrl,
+    buildStocktakingNewItemUrl,
+    buildStocktakingLinkItemUrl,
     buildScanUrl,
     buildStocktakingItemUrl,
     resolveScreenReturnTo,
@@ -106,10 +106,6 @@ export default function ScanSessionClient() {
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [pendingCreateQr, setPendingCreateQr] = useState(null);
-    const [notInInventoryItem, setNotInInventoryItem] = useState(null);
-    const [isAddingScannedItem, setIsAddingScannedItem] = useState(false);
-    const [isLookingUpOutsideInventory, setIsLookingUpOutsideInventory] = useState(false);
-
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const [actionModalContent, setActionModalContent] = useState({ title: "", message: "", success: false });
     const [isUpdatingItem, setIsUpdatingItem] = useState(false);
@@ -124,6 +120,14 @@ export default function ScanSessionClient() {
     const [isScanUserLocationNestedOpen, setIsScanUserLocationNestedOpen] = useState(false);
 
     const { updateItem } = useUpdateInventoryObject(stocktakingId);
+    const {
+        outsideInventuraItem,
+        resetOutsideInventuraItem,
+        lookupOutsideInventura,
+        addOutsideItemToInventura,
+        isLookingUpOutsideInventura,
+        isAddingOutsideItem,
+    } = useOutsideInventuraQrItem(stocktakingId);
 
     const backReturnTo = useMemo(
         () => resolveScreenReturnTo(searchParams, HOME_PATH),
@@ -157,82 +161,42 @@ export default function ScanSessionClient() {
 
     const handleScan = useCallback((scannedValue) => {
         setLastScannedItem(null);
-        setNotInInventoryItem(null);
-        setIsLookingUpOutsideInventory(false);
+        resetOutsideInventuraItem();
         setIsNotInInventoryModalOpen(false);
         closeScanNotice();
         setScanPending(true);
         setScannedQr(scannedValue);
-    }, [closeScanNotice]);
-
-    const lookupItemOutsideCurrentEvent = useCallback(async (qrValue) => {
-        setIsLookingUpOutsideInventory(true);
-        setNotInInventoryItem(null);
-        try {
-            const response = await fetch("/api/objects/by-qr-any", {
-                method: "POST",
-                headers: getAuthHeadersSafe(),
-                body: JSON.stringify({ qr: qrValue }),
-            });
-            if (!response.ok) {
-                setNotInInventoryItem(null);
-                return;
-            }
-            const data = await response.json();
-            setNotInInventoryItem(data || null);
-        } catch (_error) {
-            setNotInInventoryItem(null);
-        } finally {
-            setIsLookingUpOutsideInventory(false);
-        }
-    }, []);
+    }, [closeScanNotice, resetOutsideInventuraItem]);
 
     const addScannedItemToCurrentInventory = useCallback(async () => {
-        if (!notInInventoryItem?.id || !stocktakingId) return;
-
-        setIsAddingScannedItem(true);
         try {
             const loc = getLocation();
-            const body = {
-                rmId: notInInventoryItem.id,
-                eventId: stocktakingId,
-                status: INVENTORY_STATES.UNCHECKED,
-                note: notInInventoryItem.note || "",
-                qr: notInInventoryItem.qr || "",
-                location: loc || null,
-            };
+            const created = await addOutsideItemToInventura(loc || null);
+            if (!created) return;
 
-            const response = await fetch("/api/base-items/link-to-event", {
-                method: "POST",
-                headers: {
-                    ...getAuthHeadersSafe(),
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const created = await response.json();
             setIsNotInInventoryModalOpen(false);
-            setNotInInventoryItem(null);
             showActionModal("Hotovo", "Položka byla přidána do aktuální inventury.", true);
             resetFeed();
             await loadMore();
 
-            if (created?.id) {
+            if (created.id) {
                 router.push(
                     buildStocktakingItemUrl(stocktakingId, created.id, { returnTo: scanReturnTo })
                 );
             }
         } catch (_error) {
             showActionModal("Chyba", "Položku se nepodařilo přidat do inventury.", false);
-        } finally {
-            setIsAddingScannedItem(false);
         }
-    }, [notInInventoryItem, stocktakingId, getLocation, showActionModal, resetFeed, loadMore, router, scanReturnTo]);
+    }, [
+        addOutsideItemToInventura,
+        getLocation,
+        showActionModal,
+        resetFeed,
+        loadMore,
+        router,
+        stocktakingId,
+        scanReturnTo,
+    ]);
 
     useEffect(() => {
         if (!scannedQr) {
@@ -284,9 +248,9 @@ export default function ScanSessionClient() {
         } else {
             setPendingCreateQr(normalizedScannedQr);
             setIsNotInInventoryModalOpen(true);
-            lookupItemOutsideCurrentEvent(normalizedScannedQr);
+            lookupOutsideInventura(normalizedScannedQr);
         }
-    }, [apiItem, apiLoading, apiError, scannedQr, resolvedQr, getLocation, lookupItemOutsideCurrentEvent]);
+    }, [apiItem, apiLoading, apiError, scannedQr, resolvedQr, getLocation, lookupOutsideInventura]);
 
     const renderItemActions = useCallback(
         (item) => (
@@ -654,7 +618,9 @@ export default function ScanSessionClient() {
                             iconPosition="right"
                             onClick={() => {
                                 setIsAddItemModalOpen(false);
-                                router.push(buildNewItemUrl({ returnTo: scanReturnTo }));
+                                router.push(
+                                    buildStocktakingNewItemUrl(stocktakingId, { returnTo: scanReturnTo })
+                                );
                             }}
                         >
                             Založit novou položku
@@ -664,7 +630,11 @@ export default function ScanSessionClient() {
                             iconPosition="right"
                             onClick={() => {
                                 setIsAddItemModalOpen(false);
-                                router.push(buildLinkItemUrl({ returnTo: scanReturnTo }));
+                                router.push(
+                                    buildStocktakingLinkItemUrl(stocktakingId, {
+                                        returnTo: scanReturnTo,
+                                    })
+                                );
                             }}
                         >
                             Propojit existující
@@ -685,13 +655,13 @@ export default function ScanSessionClient() {
                         <div style={{ color: "#FF6262", fontWeight: 600 }}>
                             Položka není součástí inventurního seznamu.
                         </div>
-                        {isLookingUpOutsideInventory && (
+                        {isLookingUpOutsideInventura && (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "0.5rem 0" }}>
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
                                 <div style={{ fontSize: 13, color: "#535353" }}>Vyhledávám položku podle QR...</div>
                             </div>
                         )}
-                        {!isLookingUpOutsideInventory && notInInventoryItem && (
+                        {!isLookingUpOutsideInventura && outsideInventuraItem && (
                             <div
                                 style={{
                                     borderRadius: 16,
@@ -703,37 +673,39 @@ export default function ScanSessionClient() {
                                 }}
                             >
                                 <img
-                                    src={resolveImageSrc(notInInventoryItem.image)}
-                                    alt={notInInventoryItem.name}
+                                    src={resolveImageSrc(outsideInventuraItem.image)}
+                                    alt={outsideInventuraItem.name}
                                     style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}
                                 />
                                 <div className="p-4 gap-2 flex flex-col">
-                                    <CardItemName>{notInInventoryItem.name}</CardItemName>
-                                    <div style={{ fontSize: 12, color: "#535353" }}>{notInInventoryItem.note}</div>
-                                    {notInInventoryItem.qr && (
+                                    <CardItemName>{outsideInventuraItem.name}</CardItemName>
+                                    <div style={{ fontSize: 12, color: "#535353" }}>{outsideInventuraItem.note}</div>
+                                    {outsideInventuraItem.qr && (
                                         <div style={{ fontSize: 12, color: "#535353", fontStyle: "italic" }}>
-                                            QR kód: {notInInventoryItem.qr}
+                                            QR kód: {outsideInventuraItem.qr}
                                         </div>
                                     )}
                                 </div>
                             </div>
                         )}
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            {!isLookingUpOutsideInventory && notInInventoryItem && (
+                            {!isLookingUpOutsideInventura && outsideInventuraItem && (
                                 <Button icon="playlist_add" iconPosition="right" onClick={addScannedItemToCurrentInventory}>
-                                    {isAddingScannedItem ? "Přidávám..." : "Přidat tuto položku do inventury"}
+                                    {isAddingOutsideItem ? "Přidávám..." : "Přidat tuto položku do inventury"}
                                 </Button>
                             )}
-                            {!isLookingUpOutsideInventory && !notInInventoryItem && (
+                            {!isLookingUpOutsideInventura && !outsideInventuraItem && (
                                 <Button
                                     icon="add"
                                     iconPosition="right"
                                     onClick={() => {
                                         setIsNotInInventoryModalOpen(false);
-                                        router.push(buildNewItemUrl({
-                                            qr: pendingCreateQr,
-                                            returnTo: scanReturnTo,
-                                        }));
+                                        router.push(
+                                            buildStocktakingNewItemUrl(stocktakingId, {
+                                                qr: pendingCreateQr,
+                                                returnTo: scanReturnTo,
+                                            })
+                                        );
                                     }}
                                 >
                                     Založit novou položku

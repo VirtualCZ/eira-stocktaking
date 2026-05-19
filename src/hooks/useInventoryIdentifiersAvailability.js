@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getAuthHeadersSafe } from "@/utils/token";
 
-async function fetchIdentifiersAvailability({ invNumber, qr } = {}) {
-  const inv = String(invNumber ?? "").trim();
-  const q = String(qr ?? "").trim();
-  if (!inv && !q) {
+async function fetchIdentifiersAvailability(code) {
+  const value = String(code ?? "").trim();
+  if (!value) {
     return {
       available: true,
       invNumberAvailable: true,
@@ -15,10 +14,7 @@ async function fetchIdentifiersAvailability({ invNumber, qr } = {}) {
   const res = await fetch("/api/objects/qr-available", {
     method: "POST",
     headers: getAuthHeadersSafe(),
-    body: JSON.stringify({
-      ...(inv ? { invNumber: inv } : {}),
-      ...(q ? { qr: q } : {}),
-    }),
+    body: JSON.stringify({ invNumber: value, qr: value }),
   });
 
   if (!res.ok) {
@@ -28,33 +24,20 @@ async function fetchIdentifiersAvailability({ invNumber, qr } = {}) {
   return res.json();
 }
 
-export function getIdentifierValidationError({ invNumber, qr, result }) {
-  const inv = String(invNumber ?? "").trim();
-  const q = String(qr ?? "").trim();
-
-  if (inv && result && !result.invNumberAvailable) {
-    return "Toto inventurizační číslo je již použito. Zadejte jiné číslo.";
-  }
-  if (q && result && !result.qrAvailable) {
-    return "Tento QR kód je již použit v inventuře. Zadejte jiný kód.";
+export function getIdentifierValidationError({ code, result }) {
+  const value = String(code ?? "").trim();
+  if (!value || !result) return null;
+  if (!result.invNumberAvailable || !result.qrAvailable) {
+    return "Toto inventurizační číslo / QR je již použito. Zadejte jiné.";
   }
   return null;
 }
 
-function computeIdentifiersValid({
-  invNumber,
-  qr,
-  invNumberAvailable,
-  qrAvailable,
-  checking,
-  error,
-}) {
-  const inv = String(invNumber ?? "").trim();
-  const q = String(qr ?? "").trim();
-  if (!inv && !q) return true;
+function computeIdentifierValid({ code, invNumberAvailable, qrAvailable, checking, error }) {
+  const value = String(code ?? "").trim();
+  if (!value) return true;
   if (checking || error) return false;
-  if (inv && invNumberAvailable !== true) return false;
-  if (q && qrAvailable !== true) return false;
+  if (invNumberAvailable !== true || qrAvailable !== true) return false;
   return true;
 }
 
@@ -63,11 +46,11 @@ export function useInventoryIdentifiersCheck() {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState(null);
 
-  const checkAvailability = useCallback(async ({ invNumber, qr } = {}) => {
+  const checkAvailability = useCallback(async (code) => {
     setChecking(true);
     setError(null);
     try {
-      return await fetchIdentifiersAvailability({ invNumber, qr });
+      return await fetchIdentifiersAvailability(code);
     } catch (err) {
       setError(err);
       throw err;
@@ -79,9 +62,11 @@ export function useInventoryIdentifiersCheck() {
   return { checkAvailability, checking, error };
 }
 
-/** Debounced inventurizační číslo + QR availability. */
+/**
+ * Debounced availability for inventurizační číslo / QR (same value → rm_inv_number + RMINV_QR).
+ */
 export function useInventoryIdentifiersAvailability(
-  { invNumber, qr } = {},
+  code,
   { enabled = true, debounceMs = 400 } = {}
 ) {
   const [invNumberAvailable, setInvNumberAvailable] = useState(null);
@@ -90,8 +75,7 @@ export function useInventoryIdentifiersAvailability(
   const [error, setError] = useState(null);
   const requestIdRef = useRef(0);
 
-  const invTrimmed = String(invNumber ?? "").trim();
-  const qrTrimmed = String(qr ?? "").trim();
+  const trimmed = String(code ?? "").trim();
 
   useEffect(() => {
     if (!enabled) {
@@ -102,7 +86,7 @@ export function useInventoryIdentifiersAvailability(
       return;
     }
 
-    if (!invTrimmed && !qrTrimmed) {
+    if (!trimmed) {
       setInvNumberAvailable(null);
       setQrAvailable(null);
       setChecking(false);
@@ -116,15 +100,10 @@ export function useInventoryIdentifiersAvailability(
 
     const timer = setTimeout(async () => {
       try {
-        const result = await fetchIdentifiersAvailability({
-          invNumber: invTrimmed,
-          qr: qrTrimmed,
-        });
+        const result = await fetchIdentifiersAvailability(trimmed);
         if (requestId !== requestIdRef.current) return;
-        setInvNumberAvailable(
-          invTrimmed ? Boolean(result?.invNumberAvailable) : null
-        );
-        setQrAvailable(qrTrimmed ? Boolean(result?.qrAvailable) : null);
+        setInvNumberAvailable(Boolean(result?.invNumberAvailable));
+        setQrAvailable(Boolean(result?.qrAvailable));
       } catch (err) {
         if (requestId !== requestIdRef.current) return;
         setError(err);
@@ -138,37 +117,26 @@ export function useInventoryIdentifiersAvailability(
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [invTrimmed, qrTrimmed, enabled, debounceMs]);
+  }, [trimmed, enabled, debounceMs]);
 
   const valid = useMemo(
     () =>
-      computeIdentifiersValid({
-        invNumber: invTrimmed,
-        qr: qrTrimmed,
+      computeIdentifierValid({
+        code: trimmed,
         invNumberAvailable,
         qrAvailable,
         checking,
         error,
       }),
-    [
-      invTrimmed,
-      qrTrimmed,
-      invNumberAvailable,
-      qrAvailable,
-      checking,
-      error,
-    ]
+    [trimmed, invNumberAvailable, qrAvailable, checking, error]
   );
 
   const available =
-    (!invTrimmed || invNumberAvailable === true) &&
-    (!qrTrimmed || qrAvailable === true);
+    invNumberAvailable === true && qrAvailable === true;
 
   return {
-    available: invTrimmed || qrTrimmed ? available : null,
+    available: trimmed ? available : null,
     valid,
-    invNumberAvailable,
-    qrAvailable,
     checking,
     error,
   };

@@ -10,7 +10,6 @@ import PictureInput from "@/components/molecules/PictureInput";
 import TextInput from "@/components/atoms/TextInput";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import QRCodeInput from "@/components/molecules/QRCodeInput";
-import InvNumberInput from "@/components/molecules/InvNumberInput";
 import { useGetLocation } from "@/hooks/useLocation";
 import {
   resolveScreenReturnTo,
@@ -53,26 +52,22 @@ export default function NewItemForm({
     note: "",
     image: "",
     location: null,
-    invNumber: "",
     qr: "",
     properties: [],
     entregId: null,
   });
   const [prefillDone, setPrefillDone] = useState(false);
 
-  const invTrimmed = String(editItem.invNumber ?? "").trim();
-  const qrTrimmed = String(editItem.qr ?? "").trim();
+  const codeTrimmed = String(editItem.qr ?? "").trim();
 
   const {
     valid: identifiersValid,
-    invNumberAvailable,
-    qrAvailable,
+    available: identifierAvailable,
     checking: identifiersChecking,
     error: identifiersCheckError,
-  } = useInventoryIdentifiersAvailability(
-    { invNumber: invTrimmed, qr: qrTrimmed },
-    { enabled: Boolean(invTrimmed || qrTrimmed) }
-  );
+  } = useInventoryIdentifiersAvailability(codeTrimmed, {
+    enabled: Boolean(codeTrimmed),
+  });
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [actionModalContent, setActionModalContent] = useState({
     title: "",
@@ -145,15 +140,11 @@ export default function NewItemForm({
       return;
     }
 
-    if (invTrimmed || qrTrimmed) {
+    if (codeTrimmed) {
       try {
-        const result = await checkAvailability({
-          invNumber: invTrimmed,
-          qr: qrTrimmed,
-        });
+        const result = await checkAvailability(codeTrimmed);
         const validationError = getIdentifierValidationError({
-          invNumber: invTrimmed,
-          qr: qrTrimmed,
+          code: codeTrimmed,
           result,
         });
         if (validationError) {
@@ -161,7 +152,7 @@ export default function NewItemForm({
           return;
         }
       } catch {
-        showActionModal("Chyba", "Nepodařilo se ověřit inventurizační číslo a QR kód.", false);
+        showActionModal("Chyba", "Nepodařilo se ověřit inventurizační číslo / QR.", false);
         return;
       }
     }
@@ -169,7 +160,7 @@ export default function NewItemForm({
     if (!identifiersValid) {
       showActionModal(
         "Chyba",
-        "Inventurizační číslo nebo QR kód není platný nebo je již obsazený.",
+        "Inventurizační číslo / QR není platné nebo je již obsazené.",
         false
       );
       return;
@@ -188,8 +179,8 @@ export default function NewItemForm({
       description: editItem.description,
       note: editItem.note,
       location: mapLocationToApi(editItem.location),
-      invNumber: invTrimmed,
-      qr: qrTrimmed,
+      invNumber: codeTrimmed,
+      qr: codeTrimmed,
       properties: propertiesArrayToObject(propertiesArr),
       entregId: editItem.entregId,
       state: createInventoryState,
@@ -280,21 +271,13 @@ export default function NewItemForm({
                 onChange={(loc) => setEditItem((prev) => ({ ...prev, location: loc }))}
                 editMode
               />
-              <InvNumberInput
-                value={editItem.invNumber}
-                onChange={(code) => setEditItem((prev) => ({ ...prev, invNumber: code }))}
-                editMode
-                checking={identifiersChecking && Boolean(invTrimmed)}
-                available={invTrimmed ? invNumberAvailable : null}
-                checkError={identifiersCheckError}
-              />
               <QRCodeInput
                 value={editItem.qr}
                 onChange={(code) => setEditItem((prev) => ({ ...prev, qr: code }))}
                 editMode
                 validateAvailability
-                checking={identifiersChecking && Boolean(qrTrimmed)}
-                available={qrTrimmed ? qrAvailable : null}
+                checking={identifiersChecking}
+                available={identifierAvailable}
                 checkError={identifiersCheckError}
               />
             </div>

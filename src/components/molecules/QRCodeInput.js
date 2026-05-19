@@ -4,6 +4,7 @@ import { useState } from "react";
 import QRScannerModal from "@/components/organisms/QRScannerModal";
 import TextInput from "@/components/atoms/TextInput";
 
+/** Single field for inventurizační číslo (= QR on create). */
 export default function QRCodeInput({
   value,
   onChange,
@@ -29,7 +30,9 @@ export default function QRCodeInput({
   if (!editMode) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ color: "#535353", fontWeight: 500, fontSize: 14 }}>QR kód:</div>
+        <div style={{ color: "#535353", fontWeight: 500, fontSize: 14 }}>
+          Inventurizační číslo / QR:
+        </div>
         <div style={{ fontWeight: 700, fontSize: 12, color: "#000" }}>
           {trimmed || "—"}
         </div>
@@ -41,8 +44,8 @@ export default function QRCodeInput({
     <>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
         <TextInput
-          label="QR kód"
-          placeholder="Zadejte nebo naskenujte QR kód"
+          label="Inventurizační číslo / QR"
+          placeholder="Zadejte nebo naskenujte kód"
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -67,25 +70,24 @@ export default function QRCodeInput({
           <span className="material-icons-round" style={{ fontSize: 18 }}>
             qr_code_scanner
           </span>
-          Naskenovat QR kód
+          Naskenovat kód
         </button>
-        <div style={{ fontSize: 12, color: "#535353" }}>
-          QR kód bývá odvozen od inventurizačního čísla — oba musí být jedinečné.
-        </div>
         {validateAvailability && trimmed && checking && (
-          <div style={{ fontSize: 12, color: "#535353" }}>Kontroluji QR kód…</div>
+          <div style={{ fontSize: 12, color: "#535353" }}>Kontroluji číslo…</div>
         )}
         {showConflict && (
           <div style={{ fontSize: 12, color: "#FF6262", fontWeight: 600 }}>
-            Tento QR kód je již použit (včetně jako inventurizační číslo).
+            Toto inventurizační číslo / QR je již použito.
           </div>
         )}
         {showOk && (
-          <div style={{ fontSize: 12, color: "#2ecc40", fontWeight: 600 }}>QR kód je volný.</div>
+          <div style={{ fontSize: 12, color: "#2ecc40", fontWeight: 600 }}>
+            Inventurizační číslo / QR je volné.
+          </div>
         )}
         {checkError && (
           <div style={{ fontSize: 12, color: "#FF6262" }}>
-            Nepodařilo se ověřit QR kód.
+            Nepodařilo se ověřit inventurizační číslo / QR.
           </div>
         )}
       </div>

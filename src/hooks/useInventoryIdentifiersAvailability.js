@@ -26,7 +26,10 @@ async function fetchIdentifiersAvailability(code) {
 
 export function getIdentifierValidationError({ code, result }) {
   const value = String(code ?? "").trim();
-  if (!value || !result) return null;
+  if (!value) {
+    return "Inventurizační číslo / QR je povinné.";
+  }
+  if (!result) return null;
   if (!result.invNumberAvailable || !result.qrAvailable) {
     return "Toto inventurizační číslo / QR je již použito. Zadejte jiné.";
   }
@@ -35,7 +38,7 @@ export function getIdentifierValidationError({ code, result }) {
 
 function computeIdentifierValid({ code, invNumberAvailable, qrAvailable, checking, error }) {
   const value = String(code ?? "").trim();
-  if (!value) return true;
+  if (!value) return false;
   if (checking || error) return false;
   if (invNumberAvailable !== true || qrAvailable !== true) return false;
   return true;

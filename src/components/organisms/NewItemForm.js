@@ -150,6 +150,10 @@ export default function NewItemForm({
       showActionModal("Chyba", "Musíte vybrat typ objektu.", false);
       return;
     }
+    if (!codeTrimmed) {
+      showActionModal("Chyba", "Inventurizační číslo / QR je povinné.", false);
+      return;
+    }
 
     if (codeTrimmed) {
       try {
@@ -171,7 +175,9 @@ export default function NewItemForm({
     if (!identifiersValid) {
       showActionModal(
         "Chyba",
-        "Inventurizační číslo / QR není platné nebo je již obsazené.",
+        identifiersCheckError
+          ? "Nepodařilo se ověřit inventurizační číslo / QR."
+          : "Inventurizační číslo / QR není platné nebo je již obsazené.",
         false
       );
       return;

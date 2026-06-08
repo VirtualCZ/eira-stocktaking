@@ -78,7 +78,8 @@ export function NavLink({
     icon = null,
     size = "small", // "big" or "small"
     variant = "light", // "light" or "dark"
-    disabled = false
+    disabled = false,
+    onDisabledClick,
 }) {
     // Color logic
     const isDark = variant === "dark";
@@ -94,6 +95,15 @@ export function NavLink({
         if (size === "big") {
             return (
                 <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onDisabledClick?.()}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onDisabledClick?.();
+                        }
+                    }}
                     style={{
                         background: disabledBgColor,
                         borderRadius: 16,
@@ -134,6 +144,15 @@ export function NavLink({
         // Small variant
         return (
             <div
+                role="button"
+                tabIndex={0}
+                onClick={() => onDisabledClick?.()}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onDisabledClick?.();
+                    }
+                }}
                 style={{
                     display: "flex",
                     alignItems: "center",

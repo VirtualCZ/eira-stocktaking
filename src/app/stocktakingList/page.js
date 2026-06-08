@@ -8,6 +8,10 @@ import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useSettings } from "@/hooks/useSettings";
 import StocktakingListCard from "@/components/organisms/StocktakingListCard";
 import { headingBackAction, HOME_PATH } from "@/utils/inventoryNavigation";
+import {
+    CLOSED_INVENTURA_MESSAGE,
+    isInventuraClosed,
+} from "@/utils/inventuraEventStates";
 
 const sortOptions = [
     { label: 'ID', value: 'id' },
@@ -21,7 +25,8 @@ export default function StocktakingOperationsList() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [page, setPage] = useState(0);
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
-    const { selectInventura } = useSelectedInventura();
+    const { selectedInventura, selectInventura } = useSelectedInventura();
+    const closedInventuraSelected = isInventuraClosed(selectedInventura);
 
     const [operations, total, loading, error] = useStocktakingLists({ 
         page,
@@ -47,8 +52,29 @@ export default function StocktakingOperationsList() {
                     ]}
                 />
 
+                {closedInventuraSelected && (
+                    <div
+                        style={{
+                            padding: "12px 14px",
+                            borderRadius: 12,
+                            background: "#fff4f4",
+                            border: "1px solid #ffc9c9",
+                            color: "#8a1f1f",
+                            fontSize: 13,
+                            lineHeight: 1.45,
+                        }}
+                    >
+                        {CLOSED_INVENTURA_MESSAGE}
+                    </div>
+                )}
+
                 {loading ? <div>Načítání...</div> : null}
                 {error ? <div>Chyba: {error.message}</div> : null}
+                {!loading && !error && operations.length === 0 ? (
+                    <div style={{ color: "#535353", fontSize: 14 }}>
+                        Žádná inventura ve stavu Zahájený.
+                    </div>
+                ) : null}
                 <div className="flex flex-col gap-2">
                     {operations.map(op => (
                         <StocktakingListCard

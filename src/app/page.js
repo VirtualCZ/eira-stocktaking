@@ -14,19 +14,31 @@ import {
   buildScanUrl,
   HOME_PATH,
 } from "@/utils/inventoryNavigation";
+import {
+  CLOSED_INVENTURA_MESSAGE,
+  isInventuraActive,
+  isInventuraClosed,
+} from "@/utils/inventuraEventStates";
 
 export default function Home() {
   const { selectedInventura } = useSelectedInventura();
   const { user, loading: userLoading } = useCurrentUser();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
+  const inventuraActive = isInventuraActive(selectedInventura);
+  const closedInventuraSelected = isInventuraClosed(selectedInventura);
+
   const inventoryReturnTo = useMemo(
     () =>
-      selectedInventura?.id
+      inventuraActive && selectedInventura?.id
         ? buildStocktakingListUrl(selectedInventura.id, { returnTo: HOME_PATH })
         : null,
-    [selectedInventura?.id]
+    [inventuraActive, selectedInventura?.id]
   );
+
+  const showClosedInventuraMessage = () => {
+    alert(CLOSED_INVENTURA_MESSAGE);
+  };
 
   const handleLogout = () => {
     clearAuthToken();
@@ -127,6 +139,11 @@ export default function Home() {
                   ? selectedInventura.name || `Inventura #${selectedInventura.id}`
                   : "Vyberte inventuru"}
               </div>
+              {closedInventuraSelected && (
+                <div style={{ fontSize: 12, color: "#ffb4b4", marginBottom: 10, lineHeight: 1.4 }}>
+                  {CLOSED_INVENTURA_MESSAGE}
+                </div>
+              )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <NavLink text="Změnit inventuru" href="stocktakingList" size="small" variant="dark" />
@@ -138,12 +155,16 @@ export default function Home() {
                       href={buildStocktakingListUrl(selectedInventura.id, { returnTo: "/" })}
                       size="small"
                       variant="dark"
+                      disabled={closedInventuraSelected}
+                      onDisabledClick={showClosedInventuraMessage}
                     />
                     <NavLink
                       text="Skener (QR)"
                       href={buildScanUrl(selectedInventura.id, { returnTo: HOME_PATH })}
                       size="small"
                       variant="dark"
+                      disabled={closedInventuraSelected}
+                      onDisabledClick={showClosedInventuraMessage}
                     />
                   </>
                 )}
@@ -161,7 +182,8 @@ export default function Home() {
               size="small"
               icon="search"
               href="base-items"
-              disabled={!selectedInventura}
+              disabled={!inventuraActive}
+              onDisabledClick={closedInventuraSelected ? showClosedInventuraMessage : undefined}
             />
 
             <NavLink
@@ -169,7 +191,8 @@ export default function Home() {
               size="small"
               icon="add"
               href={inventoryReturnTo ? buildNewItemUrl({ returnTo: inventoryReturnTo }) : "newItem"}
-              disabled={!selectedInventura}
+              disabled={!inventuraActive}
+              onDisabledClick={closedInventuraSelected ? showClosedInventuraMessage : undefined}
             />
 
             <NavLink
@@ -177,7 +200,8 @@ export default function Home() {
               size="small"
               icon="link"
               href={inventoryReturnTo ? buildLinkItemUrl({ returnTo: inventoryReturnTo }) : "linkItem"}
-              disabled={!selectedInventura}
+              disabled={!inventuraActive}
+              onDisabledClick={closedInventuraSelected ? showClosedInventuraMessage : undefined}
             />
           </div>
         </nav>

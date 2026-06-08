@@ -19,6 +19,11 @@ export default function StocktakingListCard({ operation, href, onClick }) {
             <span className="material-icons-round" style={{ fontSize: 18, color: '#000' }}>arrow_forward_ios</span>
           </div>
           <CardItemDescription>{operation.note}</CardItemDescription>
+          {operation.stateLabel ? (
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#2ecc40", marginTop: 4 }}>
+              {operation.stateLabel}
+            </div>
+          ) : null}
         </div>
         <CardItemDate>Datum: {operation.date}</CardItemDate>
       </CardContainer>

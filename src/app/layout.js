@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AuthGuard from "@/components/AuthGuard";
+import InventuraGuard from "@/components/InventuraGuard";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,7 +23,9 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} antialiased`}
       >
         <AuthGuard>
-          {children}
+          <InventuraGuard>
+            {children}
+          </InventuraGuard>
         </AuthGuard>
       </body>
     </html>

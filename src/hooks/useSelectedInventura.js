@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 
 export function useSelectedInventura() {
     const [selectedInventura, setSelectedInventura] = useState(null);
+    const [ready, setReady] = useState(false);
 
     useEffect(() => {
-        // Load from localStorage on mount
         const saved = localStorage.getItem('selectedInventura');
         if (saved) {
             try {
@@ -13,6 +13,7 @@ export function useSelectedInventura() {
                 console.error('Failed to parse selected inventura:', e);
             }
         }
+        setReady(true);
     }, []);
 
     const selectInventura = (inventura) => {
@@ -28,6 +29,7 @@ export function useSelectedInventura() {
     return {
         selectedInventura,
         selectInventura,
-        clearSelectedInventura
+        clearSelectedInventura,
+        ready,
     };
 } 

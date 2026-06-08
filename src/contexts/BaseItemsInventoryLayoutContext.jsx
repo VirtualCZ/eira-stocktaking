@@ -10,7 +10,6 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { flushSync } from "react-dom";
 import { usePathname } from "next/navigation";
 import { usePageState } from "@/hooks/usePageState";
 import { getAuthHeadersSafe } from "@/utils/token";
@@ -186,12 +185,10 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
         async (pageIndex0) => {
             if (!locationInitialized) return;
             const id = ++feedRequestId.current;
-            flushSync(() => {
-                setViewPageIndex(pageIndex0);
-                setItems([]);
-                setLoading(true);
-                setError(null);
-            });
+            setViewPageIndex(pageIndex0);
+            setItems([]);
+            setLoading(true);
+            setError(null);
             try {
                 const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageIndex0);
                 if (id !== feedRequestId.current) return;
@@ -215,10 +212,8 @@ export function BaseItemsInventoryLayoutProvider({ children }) {
         appendLock.current = true;
         const id = ++feedRequestId.current;
         const pageToFetch = nextAppendPage0;
-        flushSync(() => {
-            setLoading(true);
-            setError(null);
-        });
+        setLoading(true);
+        setError(null);
         try {
             const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageToFetch);
             if (id !== feedRequestId.current) return;

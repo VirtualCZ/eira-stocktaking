@@ -10,6 +10,7 @@ import StocktakingListCard from "@/components/organisms/StocktakingListCard";
 import { headingBackAction, HOME_PATH } from "@/utils/inventoryNavigation";
 import {
     CLOSED_INVENTURA_MESSAGE,
+    EVENT_STATE_INITIATED,
     isInventuraClosed,
 } from "@/utils/inventuraEventStates";
 
@@ -38,7 +39,12 @@ export default function StocktakingOperationsList() {
     const totalPages = total > 0 ? Math.ceil(total / itemsPerPage) : 1;
 
     const handleInventuraClick = (op) => {
-        selectInventura(op);
+        // API returns only Zahájený rows — stamp state client-side (not in DTO / SQL).
+        selectInventura({
+            ...op,
+            state: EVENT_STATE_INITIATED,
+            stateLabel: "Zahájený",
+        });
     };
 
     return (

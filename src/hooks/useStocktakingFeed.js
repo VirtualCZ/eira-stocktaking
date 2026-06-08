@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { useSettings } from "@/hooks/useSettings";
 import { INVENTORY_STATES, INVENTORY_STATES_WITHOUT_UNCHECKED, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
@@ -124,21 +123,13 @@ export function useStocktakingFeed({
   );
 
   const replaceToPage0 = useCallback(
-    async (pageIndex0, opts = {}) => {
+    async (pageIndex0) => {
       if (!enabled || !eventId) return;
-      const syncPaint = opts?.syncPaint !== false;
       const id = ++feedRequestId.current;
-      const applyPendingUi = () => {
-        setViewPageIndex(pageIndex0);
-        setItems([]);
-        setLoading(true);
-        setError(null);
-      };
-      if (syncPaint) {
-        flushSync(applyPendingUi);
-      } else {
-        applyPendingUi();
-      }
+      setViewPageIndex(pageIndex0);
+      setItems([]);
+      setLoading(true);
+      setError(null);
       try {
         const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageIndex0);
         if (id !== feedRequestId.current) return;
@@ -162,10 +153,8 @@ export function useStocktakingFeed({
     appendLock.current = true;
     const id = ++feedRequestId.current;
     const pageToFetch = nextAppendPage0;
-    flushSync(() => {
-      setLoading(true);
-      setError(null);
-    });
+    setLoading(true);
+    setError(null);
     try {
       const { pageItems, resolvedTotal, hasMoreNext } = await loadPageFromApi(pageToFetch);
       if (id !== feedRequestId.current) return;
@@ -192,7 +181,7 @@ export function useStocktakingFeed({
 
   /** Re-fetch page 0 (e.g. after mutations). Name kept for callers; not infinite-scroll append. */
   const loadMore = useCallback(() => {
-    void replaceToPage0(0, { syncPaint: false });
+    void replaceToPage0(0);
   }, [replaceToPage0]);
 
   useLayoutEffect(() => {

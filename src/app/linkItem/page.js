@@ -8,17 +8,7 @@ import { buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation"
 export default function LinkItemPage() {
   const { selectedInventura } = useSelectedInventura();
 
-  if (!selectedInventura?.id) {
-    return (
-      <div className="container" style={{ padding: "2rem", textAlign: "center" }}>
-        <div style={{ color: "#FF6262", fontWeight: 600, fontSize: "1.2rem" }}>
-          Nejprve vyberte inventuru na hlavní stránce.
-        </div>
-      </div>
-    );
-  }
-
-  const defaultReturnTo = buildStocktakingListUrl(selectedInventura.id, {
+  const defaultReturnTo = buildStocktakingListUrl(selectedInventura?.id, {
     returnTo: HOME_PATH,
   });
 

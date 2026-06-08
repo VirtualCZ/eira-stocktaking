@@ -69,13 +69,13 @@ export default function StocktakingItemCard({
     >
       {/* Image (only in full mode) */}
       {showImage && (
-        <>
+        <div style={{ position: "relative", width: "100%", height: 100, flexShrink: 0 }}>
           {!imageLoaded && (
             <div
               className="image-placeholder-pulse"
               style={{
-                width: "100%",
-                height: 100,
+                position: "absolute",
+                inset: 0,
                 background: "linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%)",
                 backgroundSize: "200% 100%"
               }}
@@ -91,12 +91,12 @@ export default function StocktakingItemCard({
             onError={() => setImageError(true)}
             style={{
               width: "100%",
-              height: 100,
+              height: "100%",
               objectFit: "cover",
-              visibility: imageLoaded ? "visible" : "hidden"
+              display: imageLoaded ? "block" : "none"
             }}
           />
-        </>
+        </div>
       )}
       {showLoadingPlaceholder && (
         <div

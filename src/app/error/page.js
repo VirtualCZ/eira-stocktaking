@@ -23,20 +23,17 @@ export default function ErrorPage() {
   }, [router]);
 
   const handleSetToken = () => {
-    if (token.trim()) {
-      setIsSettingToken(true);
-      
-      try {
-        // Set token as cookie only
-        document.cookie = `auth_token=${token.trim()}; path=/; max-age=86400; SameSite=Lax`;
-        console.log('Token saved to cookie');
-        
-        // Redirect to home page
-        router.push('/');
-      } catch (error) {
-        console.error('Error setting token:', error);
-        alert('Chyba při nastavování tokenu: ' + error.message);
-      }
+    if (!token.trim()) return;
+
+    setIsSettingToken(true);
+    try {
+      setAuthToken(token.trim());
+      // Full reload so AuthGuard picks up the new cookie (client router.push left a blank page).
+      window.location.assign("/");
+    } catch (error) {
+      console.error("Error setting token:", error);
+      alert("Chyba při nastavování tokenu: " + error.message);
+      setIsSettingToken(false);
     }
   };
 

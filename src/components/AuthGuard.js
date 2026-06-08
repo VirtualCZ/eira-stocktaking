@@ -3,6 +3,22 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getAuthHeadersSafe, isAuthenticated } from "@/utils/token";
 
+function LoadingScreen() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f0f1f3",
+      }}
+    >
+      <div style={{ fontSize: "1rem", color: "#666" }}>Loading...</div>
+    </div>
+  );
+}
+
 export default function AuthGuard({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuth, setIsAuth] = useState(false);
@@ -13,6 +29,8 @@ export default function AuthGuard({ children }) {
     if (typeof window === "undefined") return;
 
     const checkAuthAndBackend = async () => {
+      setIsLoading(true);
+
       const authenticated = isAuthenticated();
       setIsAuth(authenticated);
 
@@ -32,6 +50,7 @@ export default function AuthGuard({ children }) {
         });
 
         if (response.status === 401) {
+          setIsAuth(false);
           if (pathname !== "/error") {
             router.push("/error");
           }
@@ -60,29 +79,14 @@ export default function AuthGuard({ children }) {
     };
 
     checkAuthAndBackend();
-  }, []);
+  }, [pathname, router]);
 
-  // Don't show loading for dedicated guard pages.
   if (pathname === "/error" || pathname === "/unavailable") {
     return children;
   }
 
-  if (isLoading) {
-    return (
-      <div style={{ 
-        minHeight: "100vh", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center",
-        background: "#f0f1f3"
-      }}>
-        <div style={{ fontSize: "1rem", color: "#666" }}>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuth) {
-    return null; // Will redirect to error
+  if (isLoading || !isAuth) {
+    return <LoadingScreen />;
   }
 
   return children;

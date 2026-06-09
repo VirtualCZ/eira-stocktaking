@@ -11,6 +11,14 @@ export function useFeedScrollRestore({
   const isHydratingRef = useRef(true);
   const [isRestoring, setIsRestoring] = useState(false);
 
+  const finishRestore = useCallback(() => {
+    restoringScrollRef.current = false;
+    pendingRestoreScrollYRef.current = null;
+    pendingRestoreAnchorIdRef.current = null;
+    isHydratingRef.current = false;
+    setIsRestoring(false);
+  }, []);
+
   const persistScrollState = useCallback((meta = {}) => {
     if (!enabled || typeof window === "undefined" || isHydratingRef.current) return;
     try {
@@ -43,17 +51,11 @@ export function useFeedScrollRestore({
         const reached = enoughHeight && Math.abs(window.scrollY - targetY) <= 2;
 
         if (reached || (enoughHeight && attempts > 2)) {
-          restoringScrollRef.current = false;
-          pendingRestoreScrollYRef.current = null;
-          isHydratingRef.current = false;
-          setIsRestoring(false);
+          finishRestore();
           return;
         }
         if (attempts >= maxAttempts) {
-          restoringScrollRef.current = false;
-          pendingRestoreScrollYRef.current = null;
-          isHydratingRef.current = false;
-          setIsRestoring(false);
+          finishRestore();
           return;
         }
 
@@ -63,8 +65,47 @@ export function useFeedScrollRestore({
 
       requestAnimationFrame(tick);
     },
-    [enabled]
+    [enabled, finishRestore]
   );
+
+  const restoreAnchorWithRetry = useCallback(() => {
+    if (!enabled || typeof window === "undefined") return;
+    restoringScrollRef.current = true;
+    setIsRestoring(true);
+    let attempts = 0;
+    const maxAttempts = 600;
+
+    const tick = () => {
+      const anchorId = pendingRestoreAnchorIdRef.current;
+      if (anchorId == null) {
+        finishRestore();
+        return;
+      }
+
+      const target = document.querySelector(`[data-feed-item-id="${anchorId}"]`);
+      if (target) {
+        target.scrollIntoView({ block: "center" });
+        finishRestore();
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        const fallbackY = pendingRestoreScrollYRef.current;
+        pendingRestoreAnchorIdRef.current = null;
+        if (typeof fallbackY === "number") {
+          restoreScrollWithRetry(fallbackY);
+          return;
+        }
+        finishRestore();
+        return;
+      }
+
+      attempts += 1;
+      requestAnimationFrame(tick);
+    };
+
+    requestAnimationFrame(tick);
+  }, [enabled, finishRestore, restoreScrollWithRetry]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -78,11 +119,13 @@ export function useFeedScrollRestore({
         return;
       }
       const parsed = JSON.parse(raw);
+      if (typeof parsed?.scrollY === "number") {
+        pendingRestoreScrollYRef.current = parsed.scrollY;
+      }
       if (parsed?.anchorId != null) {
         pendingRestoreAnchorIdRef.current = String(parsed.anchorId);
         setIsRestoring(true);
       } else if (typeof parsed?.scrollY === "number") {
-        pendingRestoreScrollYRef.current = parsed.scrollY;
         setIsRestoring(true);
       } else {
         isHydratingRef.current = false;
@@ -93,8 +136,10 @@ export function useFeedScrollRestore({
       setIsRestoring(false);
     }
     hydrationTimeout = setTimeout(() => {
-      isHydratingRef.current = false;
-      setIsRestoring(false);
+      if (pendingRestoreAnchorIdRef.current == null && pendingRestoreScrollYRef.current == null) {
+        isHydratingRef.current = false;
+        setIsRestoring(false);
+      }
     }, 5000);
     return () => {
       if (hydrationTimeout) clearTimeout(hydrationTimeout);
@@ -103,25 +148,14 @@ export function useFeedScrollRestore({
 
   useEffect(() => {
     if (!enabled) return;
+    if (itemCount === 0) return;
     if (pendingRestoreAnchorIdRef.current != null) {
-      const anchorId = pendingRestoreAnchorIdRef.current;
-      if (typeof document !== "undefined") {
-        const target = document.querySelector(`[data-feed-item-id="${anchorId}"]`);
-        if (target) {
-          target.scrollIntoView({ block: "center" });
-          pendingRestoreAnchorIdRef.current = null;
-          pendingRestoreScrollYRef.current = null;
-          isHydratingRef.current = false;
-          restoringScrollRef.current = false;
-          setIsRestoring(false);
-        }
-      }
+      restoreAnchorWithRetry();
       return;
     }
     if (pendingRestoreScrollYRef.current == null) return;
-    if (itemCount === 0) return;
     restoreScrollWithRetry(pendingRestoreScrollYRef.current);
-  }, [enabled, itemCount, restoreScrollWithRetry]);
+  }, [enabled, itemCount, restoreAnchorWithRetry, restoreScrollWithRetry]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;

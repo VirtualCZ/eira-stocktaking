@@ -159,7 +159,7 @@ function StocktakingListContent() {
         [stocktakingId]
     );
 
-    const { persistScrollState, isRestoring } = useFeedScrollRestore({
+    const { persistScrollState } = useFeedScrollRestore({
         storageKey: scrollCacheKey,
         itemCount: feedItems.length,
         enabled: canFetch
@@ -337,26 +337,17 @@ function StocktakingListContent() {
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    {isRestoring && feedItems.length > 0 ? (
-                        Array.from({ length: 8 }, (_, index) => (
-                            <StocktakingItemCardSkeleton
-                                key={`restore-skeleton-${index}`}
-                                compact={pageState.viewMode === "compact"}
-                            />
-                        ))
-                    ) : (
-                        <StocktakingListItemViews
-                            viewMode={pageState.viewMode}
-                            loading={loading && feedItems.length === 0}
-                            appendLoading={loading && feedItems.length > 0}
-                            items={feedItems}
-                            stocktakingId={stocktakingId}
-                            pageSize={pageSize}
-                            renderItemActions={renderItemActions}
-                            onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
-                            itemDetailReturnTo={listReturnTo}
-                        />
-                    )}
+                    <StocktakingListItemViews
+                        viewMode={pageState.viewMode}
+                        loading={loading && feedItems.length === 0}
+                        appendLoading={loading && feedItems.length > 0}
+                        items={feedItems}
+                        stocktakingId={stocktakingId}
+                        pageSize={pageSize}
+                        renderItemActions={renderItemActions}
+                        onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
+                        itemDetailReturnTo={listReturnTo}
+                    />
                 </div>
                 <Pagination
                     variant="feed"

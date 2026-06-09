@@ -146,7 +146,7 @@ export default function ScanSessionClient() {
         const b = feedLocation?.building ?? "";
         return `stocktakingScanScroll_${stocktakingId}_${r}_${s}_${b}`;
     }, [stocktakingId, feedLocation?.room, feedLocation?.storey, feedLocation?.building]);
-    const { persistScrollState, isRestoring } = useFeedScrollRestore({
+    const { persistScrollState } = useFeedScrollRestore({
         storageKey: scrollCacheKey,
         itemCount: feedItems.length,
         enabled: canFetch && scannerCollapsed,
@@ -546,26 +546,17 @@ export default function ScanSessionClient() {
                         WebkitOverflowScrolling: "touch",
                     }}
                 >
-                    {isRestoring && feedItems.length > 0 ? (
-                        Array.from({ length: 8 }, (_, index) => (
-                            <StocktakingItemCardSkeleton
-                                key={`restore-skeleton-${index}`}
-                                compact={viewMode === "compact"}
-                            />
-                        ))
-                    ) : (
-                        <StocktakingListItemViews
-                            viewMode={viewMode}
-                            loading={loading && feedItems.length === 0}
-                            appendLoading={loading && feedItems.length > 0}
-                            items={feedItems}
-                            stocktakingId={stocktakingId}
-                            pageSize={pageSize}
-                            renderItemActions={renderItemActions}
-                            onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
-                            itemDetailReturnTo={scanReturnTo}
-                        />
-                    )}
+                    <StocktakingListItemViews
+                        viewMode={viewMode}
+                        loading={loading && feedItems.length === 0}
+                        appendLoading={loading && feedItems.length > 0}
+                        items={feedItems}
+                        stocktakingId={stocktakingId}
+                        pageSize={pageSize}
+                        renderItemActions={renderItemActions}
+                        onItemNavigate={(itemId) => persistScrollState({ anchorId: itemId })}
+                        itemDetailReturnTo={scanReturnTo}
+                    />
                     <Pagination
                         variant="feed"
                         total={feedTotal}

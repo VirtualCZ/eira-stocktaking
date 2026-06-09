@@ -44,7 +44,6 @@ export default function BaseItemsPage() {
         canAppendMore,
         persistFeedState,
         persistScrollState,
-        isRestoring,
     } = useBaseItemsInventoryLayout();
 
     const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
@@ -128,16 +127,7 @@ export default function BaseItemsPage() {
 
                 {error ? <div>Chyba: {error.message}</div> : null}
                 <div className="flex flex-col gap-2">
-                    {isRestoring && items.length > 0 ? (
-                        <>
-                            {Array.from({ length: 8 }, (_, index) => (
-                                <StocktakingItemCardSkeleton
-                                    key={`restore-skeleton-${index}`}
-                                    compact={pageState.viewMode === "compact"}
-                                />
-                            ))}
-                        </>
-                    ) : loading && items.length === 0 ? (
+                    {loading && items.length === 0 ? (
                         <>
                             {pageState.viewMode === "grid" && (
                                 <div className="grid grid-cols-2 gap-4 auto-rows-fr">

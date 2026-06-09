@@ -8,30 +8,17 @@ import {
   mergeFeedPageIntoItems,
   parsePagedFeedPage,
 } from "@/utils/feedPagination";
+import {
+  clearLegacyFeedSessionStorage,
+  clearStocktakingFeedMemoryCache,
+  stocktakingFeedInFlight,
+  stocktakingFeedResponseCache,
+} from "@/utils/inventuraCache";
 
 const FEED_CACHE_TTL_MS = 30000;
-const LEGACY_FEED_SESSION_PREFIX = "stocktakingFeedCache_v7_";
-const feedResponseCache = new Map();
-const feedInFlight = new Map();
-
-function clearFeedResponseCache() {
-  feedResponseCache.clear();
-  feedInFlight.clear();
-}
-
-/** Drop legacy per-filter feed snapshots (removed — caused stale cross-filter state). */
-function clearLegacyFeedSessionStorage() {
-  if (typeof window === "undefined") return;
-  for (let i = sessionStorage.length - 1; i >= 0; i--) {
-    const key = sessionStorage.key(i);
-    if (key?.startsWith(LEGACY_FEED_SESSION_PREFIX)) {
-      sessionStorage.removeItem(key);
-    }
-  }
-}
 
 function invalidateFeedCaches() {
-  clearFeedResponseCache();
+  clearStocktakingFeedMemoryCache();
 }
 
 export function useStocktakingFeed({
@@ -122,12 +109,12 @@ export function useStocktakingFeed({
       };
       const requestKey = JSON.stringify(body);
       const now = Date.now();
-      const cached = feedResponseCache.get(requestKey);
+      const cached = stocktakingFeedResponseCache.get(requestKey);
       let data;
       if (cached && now - cached.ts < FEED_CACHE_TTL_MS) {
         data = cached.data;
-      } else if (feedInFlight.has(requestKey)) {
-        data = await feedInFlight.get(requestKey);
+      } else if (stocktakingFeedInFlight.has(requestKey)) {
+        data = await stocktakingFeedInFlight.get(requestKey);
       } else {
         const requestPromise = fetch("/api/objects/feed", {
           method: "POST",
@@ -137,12 +124,12 @@ export function useStocktakingFeed({
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
           return res.json();
         });
-        feedInFlight.set(requestKey, requestPromise);
+        stocktakingFeedInFlight.set(requestKey, requestPromise);
         try {
           data = await requestPromise;
-          feedResponseCache.set(requestKey, { ts: now, data });
+          stocktakingFeedResponseCache.set(requestKey, { ts: now, data });
         } finally {
-          feedInFlight.delete(requestKey);
+          stocktakingFeedInFlight.delete(requestKey);
         }
       }
       return parsePagedFeedPage(data);

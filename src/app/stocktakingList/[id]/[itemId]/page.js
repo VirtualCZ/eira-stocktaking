@@ -14,6 +14,7 @@ import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
 import { INVENTORY_STATES, isFoundState } from "@/utils/inventoryStates";
 import { buildStocktakingItemUrl, buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
+import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
 
 export default function StocktakingListItemDetail() {
@@ -105,9 +106,9 @@ export default function StocktakingListItemDetail() {
         setActionModalOpen(true);
     };
 
-    if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
-    if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
-    if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+    if (loading) return <PageLoadingScreen />;
+    if (error) return <PageLoadingScreen message={`Chyba: ${error.message}`} />;
+    if (!fetchedItem) return <PageLoadingScreen message="Položka nenalezena" />;
 
     const item = { ...fetchedItem, location: editItem?.location };
 

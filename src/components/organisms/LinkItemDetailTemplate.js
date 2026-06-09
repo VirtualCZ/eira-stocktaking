@@ -7,13 +7,14 @@ import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
 import NavBackLink from "@/components/molecules/NavBackLink";
 import { HOME_PATH } from "@/utils/inventoryNavigation";
+import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
 export default function LinkItemDetailTemplate({
   item,
   onEditItemChange,
   returnTo = HOME_PATH,
 }) {
-  if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+  if (!item) return <PageLoadingScreen message="Položka nenalezena" />;
 
   return (
     <div className="relative min-h-screen flex flex-col">

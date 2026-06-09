@@ -11,6 +11,7 @@ import TextInput from "@/components/atoms/TextInput";
 import ItemPropertyEditor from "@/components/molecules/ItemPropertyEditor";
 import ItemAttachmentsSection from "@/components/molecules/ItemAttachmentsSection";
 import { isFoundState } from "@/utils/inventoryStates";
+import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
 export default function StocktakingItemDetailTemplate({
   item,
@@ -44,9 +45,9 @@ export default function StocktakingItemDetailTemplate({
     }
   }, [editMode, barRendered, setBottomPadding]);
 
-  if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
-  if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
-  if (!item) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+  if (loading) return <PageLoadingScreen />;
+  if (error) return <PageLoadingScreen message={`Chyba: ${error.message}`} />;
+  if (!item) return <PageLoadingScreen message="Položka nenalezena" />;
 
   return (
     <div className="relative min-h-screen flex flex-col">

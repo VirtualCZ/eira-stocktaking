@@ -10,6 +10,7 @@ import { useGetLocation } from "@/hooks/useLocation";
 import { mapLocationToApi } from "@/utils/inventoryItemApi";
 import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingItemDetailTemplate";
 import Button from '@/components/atoms/Button';
+import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
 
 export default function ItemListDetail() {
@@ -94,9 +95,9 @@ export default function ItemListDetail() {
         setActionModalOpen(true);
     };
 
-    if (loading) return <div style={{ padding: 32 }}>Načítání...</div>;
-    if (error) return <div style={{ padding: 32 }}>Chyba: {error.message}</div>;
-    if (!fetchedItem) return <div style={{ padding: 32 }}>Položka nenalezena</div>;
+    if (loading) return <PageLoadingScreen />;
+    if (error) return <PageLoadingScreen message={`Chyba: ${error.message}`} />;
+    if (!fetchedItem) return <PageLoadingScreen message="Položka nenalezena" />;
 
     const item = { ...fetchedItem, location: editItem?.location };
 

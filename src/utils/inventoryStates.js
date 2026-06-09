@@ -32,6 +32,20 @@ export function isFoundState(value) {
   return matchesInventoryState(value, INVENTORY_STATES.FOUND);
 }
 
+export function isNotFoundState(value) {
+  return matchesInventoryState(value, INVENTORY_STATES.NOT_FOUND);
+}
+
+/** Show “Nalezeno” unless the row is already strictly nalezeno. */
+export function shouldShowMarkFoundAction(state) {
+  return !isFoundState(state);
+}
+
+/** Show “Nenalezeno” unless the row is already strictly nenalezeno. */
+export function shouldShowMarkNotFoundAction(state) {
+  return !isNotFoundState(state);
+}
+
 export function isMovedState(value) {
   return matchesInventoryState(value, INVENTORY_STATES.MOVED);
 }

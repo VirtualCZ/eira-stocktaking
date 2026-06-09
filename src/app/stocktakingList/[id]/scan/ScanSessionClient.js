@@ -21,6 +21,7 @@ import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { readScanListViewMode } from "@/utils/scanListViewMode";
 import { INVENTORY_STATES, isFoundState, isMovedState, isNewState } from "@/utils/inventoryStates";
+import { buildInventoryStateContextRows } from "@/components/molecules/InventoryStateContextRows";
 import {
     buildStocktakingNewItemUrl,
     buildStocktakingLinkItemUrl,
@@ -278,51 +279,49 @@ export default function ScanSessionClient() {
                         setIsMoveModalOpen(true);
                     }}
                 />
-                <ContextRow
-                    icon={isFoundState(item.state) ? "visibility_off" : "visibility"}
-                    label={isFoundState(item.state) ? "Nenalezeno" : "Nalezeno"}
-                    action={async () => {
-                        if (isFoundState(item.state)) {
-                            setIsUpdatingItem(true);
-                            try {
-                                const { image, ...rest } = item;
-                                const result = await updateItem({
-                                    ...rest,
-                                    stocktakingId,
-                                    state: INVENTORY_STATES.NOT_FOUND,
-                                });
-                                if (result) {
-                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
-                                    await refreshFeed();
-                                    showActionModal("Hotovo", "Položka byla označena jako nenalezena.", true);
-                                } else {
-                                    showActionModal("Chyba", "Nepodařilo se označit položku jako nenalezenou.", false);
-                                }
-                            } finally {
-                                setIsUpdatingItem(false);
+                {buildInventoryStateContextRows({
+                    state: item.state,
+                    onMarkFound: async () => {
+                        setIsUpdatingItem(true);
+                        try {
+                            const { image, ...rest } = item;
+                            const result = await updateItem({
+                                ...rest,
+                                stocktakingId,
+                                state: INVENTORY_STATES.FOUND,
+                            });
+                            if (result) {
+                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
+                                await refreshFeed();
+                                showActionModal("Hotovo", "Položka byla označena jako nalezena.", true);
+                            } else {
+                                showActionModal("Chyba", "Nepodařilo se označit položku jako nalezenou.", false);
                             }
-                        } else {
-                            setIsUpdatingItem(true);
-                            try {
-                                const { image, ...rest } = item;
-                                const result = await updateItem({
-                                    ...rest,
-                                    stocktakingId,
-                                    state: INVENTORY_STATES.FOUND,
-                                });
-                                if (result) {
-                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
-                                    await refreshFeed();
-                                    showActionModal("Hotovo", "Položka byla označena jako nalezena.", true);
-                                } else {
-                                    showActionModal("Chyba", "Nepodařilo se označit položku jako nalezenou.", false);
-                                }
-                            } finally {
-                                setIsUpdatingItem(false);
-                            }
+                        } finally {
+                            setIsUpdatingItem(false);
                         }
-                    }}
-                />
+                    },
+                    onMarkNotFound: async () => {
+                        setIsUpdatingItem(true);
+                        try {
+                            const { image, ...rest } = item;
+                            const result = await updateItem({
+                                ...rest,
+                                stocktakingId,
+                                state: INVENTORY_STATES.NOT_FOUND,
+                            });
+                            if (result) {
+                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
+                                await refreshFeed();
+                                showActionModal("Hotovo", "Položka byla označena jako nenalezena.", true);
+                            } else {
+                                showActionModal("Chyba", "Nepodařilo se označit položku jako nenalezenou.", false);
+                            }
+                        } finally {
+                            setIsUpdatingItem(false);
+                        }
+                    },
+                })}
             </ContextButton>
         ),
         [router, stocktakingId, updateItem, patchFeedItem, refreshFeed, showActionModal, scanReturnTo]

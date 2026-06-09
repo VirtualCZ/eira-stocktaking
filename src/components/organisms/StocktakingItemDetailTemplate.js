@@ -10,7 +10,7 @@ import QRCodeInput from "@/components/molecules/QRCodeInput";
 import TextInput from "@/components/atoms/TextInput";
 import ItemPropertyEditor from "@/components/molecules/ItemPropertyEditor";
 import ItemAttachmentsSection from "@/components/molecules/ItemAttachmentsSection";
-import { isFoundState } from "@/utils/inventoryStates";
+import { buildInventoryStateContextRows } from "@/components/molecules/InventoryStateContextRows";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
 export default function StocktakingItemDetailTemplate({
@@ -23,9 +23,10 @@ export default function StocktakingItemDetailTemplate({
   onDuplicate,
   onSave,
   onMove,
-  onFound,
+  onMarkFound,
+  onMarkNotFound,
   showMove = false,
-  showFound = false,
+  showFoundActions = false,
   loading,
   error,
   returnTo = HOME_PATH,
@@ -150,13 +151,13 @@ export default function StocktakingItemDetailTemplate({
                           action={onMove}
                         />
                       )}
-                      {showFound && (
-                        <ContextRow
-                          icon={isFoundState(item.state) ? 'visibility_off' : 'visibility'}
-                          label={isFoundState(item.state) ? 'Nenalezeno' : 'Nalezeno'}
-                          action={onFound}
-                        />
-                      )}
+                      {showFoundActions
+                        ? buildInventoryStateContextRows({
+                            state: item.state,
+                            onMarkFound,
+                            onMarkNotFound,
+                          })
+                        : null}
                     </ContextButton>
                   </div>
                   <div style={{ fontSize: 12, color: "#535353" }}>{item.description}</div>

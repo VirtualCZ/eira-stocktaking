@@ -183,7 +183,7 @@ export default function ItemListDetail() {
                 onDuplicate={duplicateModal.open}
                 onSave={handleSave}
                 showMove={false}
-                showFound={false}
+                showFoundActions={false}
                 loading={loading}
                 error={error}
                 returnTo={returnTo}

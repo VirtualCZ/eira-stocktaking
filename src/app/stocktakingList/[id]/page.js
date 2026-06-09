@@ -71,6 +71,8 @@ function StocktakingListContent() {
         goToPage1Based,
         appendNextChunk,
         loadMore,
+        refreshFeed,
+        patchFeedItem,
         reset: resetFeed,
         pageSize,
         highlightPage1Based,
@@ -274,9 +276,9 @@ function StocktakingListContent() {
                                 const { image, ...rest } = item;
                                 const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.NOT_FOUND });
                                 if (result) {
+                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
+                                    await refreshFeed();
                                     showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
-                                    resetFeed();
-                                    loadMore();
                                 } else {
                                     showActionModal('Chyba', 'Nepodařilo se označit položku jako nenalezenou.', false);
                                 }
@@ -289,9 +291,9 @@ function StocktakingListContent() {
                                 const { image, ...rest } = item;
                             const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
                                 if (result) {
+                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
+                                    await refreshFeed();
                                     showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
-                                    resetFeed();
-                                    loadMore();
                                 } else {
                                     showActionModal('Chyba', 'Nepodařilo se označit položku jako nalezenou.', false);
                                 }
@@ -303,7 +305,7 @@ function StocktakingListContent() {
                 />
             </ContextButton>
         ),
-        [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal]
+        [router, stocktakingId, updateItem, patchFeedItem, refreshFeed, showActionModal, listReturnTo]
     );
 
     if (!canFetch) {
@@ -667,9 +669,9 @@ function StocktakingListContent() {
                                             const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
                                             setIsPreviewModalOpen(false);
                                             if (result) {
+                                                patchFeedItem(result);
+                                                await refreshFeed();
                                                 showActionModal('Hotovo', 'Položka byla označena jako nalezená.', true);
-                                    resetFeed();
-                                    loadMore();
                                             } else {
                                                 showActionModal('Chyba', 'Položku se nepodařilo označit jako nalezenou.', false);
                                             }
@@ -750,9 +752,9 @@ function StocktakingListContent() {
                           setMoveItem(null);
                           setMoveNewLocation(null);
                           if (result) {
+                            patchFeedItem(result);
+                            await refreshFeed();
                             showActionModal('Hotovo', 'Položka byla úspěšně přesunuta.', true);
-                            resetFeed();
-                            loadMore();
                           } else {
                             showActionModal('Chyba', 'Položku se nepodařilo přesunout.', false);
                           }

@@ -71,6 +71,8 @@ export default function ScanSessionClient() {
         goToPage1Based,
         appendNextChunk,
         loadMore,
+        refreshFeed,
+        patchFeedItem,
         reset: resetFeed,
         pageSize,
         highlightPage1Based,
@@ -290,9 +292,9 @@ export default function ScanSessionClient() {
                                     state: INVENTORY_STATES.NOT_FOUND,
                                 });
                                 if (result) {
+                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
+                                    await refreshFeed();
                                     showActionModal("Hotovo", "Položka byla označena jako nenalezena.", true);
-                                    resetFeed();
-                                    loadMore();
                                 } else {
                                     showActionModal("Chyba", "Nepodařilo se označit položku jako nenalezenou.", false);
                                 }
@@ -309,9 +311,9 @@ export default function ScanSessionClient() {
                                     state: INVENTORY_STATES.FOUND,
                                 });
                                 if (result) {
+                                    patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
+                                    await refreshFeed();
                                     showActionModal("Hotovo", "Položka byla označena jako nalezena.", true);
-                                    resetFeed();
-                                    loadMore();
                                 } else {
                                     showActionModal("Chyba", "Nepodařilo se označit položku jako nalezenou.", false);
                                 }
@@ -323,7 +325,7 @@ export default function ScanSessionClient() {
                 />
             </ContextButton>
         ),
-        [router, stocktakingId, updateItem, resetFeed, loadMore, showActionModal, scanReturnTo]
+        [router, stocktakingId, updateItem, patchFeedItem, refreshFeed, showActionModal, scanReturnTo]
     );
 
     if (!canFetch) {
@@ -780,9 +782,9 @@ export default function ScanSessionClient() {
                                         setMoveItem(null);
                                         setMoveNewLocation(null);
                                         if (result) {
+                                            patchFeedItem(result);
+                                            await refreshFeed();
                                             showActionModal("Hotovo", "Položka byla úspěšně přesunuta.", true);
-                                            resetFeed();
-                                            loadMore();
                                         } else {
                                             showActionModal("Chyba", "Položku se nepodařilo přesunout.", false);
                                         }

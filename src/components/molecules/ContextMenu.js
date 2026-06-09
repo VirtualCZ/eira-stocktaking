@@ -61,11 +61,14 @@ function placeMenu(anchor, menu) {
 }
 
 export function ContextRow({ icon, label, action, color = '#fff', closeMenu, rowPadding: padding }) {
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
-    action?.(e);
-    closeMenu?.();
+    try {
+      await action?.(e);
+    } finally {
+      closeMenu?.();
+    }
   };
 
   return (

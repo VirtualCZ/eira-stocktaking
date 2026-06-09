@@ -13,6 +13,10 @@ const FEED_CACHE_TTL_MS = 30000;
 const feedResponseCache = new Map();
 const feedInFlight = new Map();
 
+function clearFeedResponseCache() {
+  feedResponseCache.clear();
+}
+
 export function useStocktakingFeed({
   eventId,
   sortBy,
@@ -68,12 +72,21 @@ export function useStocktakingFeed({
   const appendLock = useRef(false);
 
   const reset = useCallback(() => {
+    clearFeedResponseCache();
     setItems([]);
     setTotal(0);
     setViewPageIndex(0);
     setNextAppendPage0(0);
     setHasMore(true);
     setError(null);
+  }, []);
+
+  const patchFeedItem = useCallback((updated) => {
+    const id = updated?.id;
+    if (id == null) return;
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updated } : item))
+    );
   }, []);
 
   const loadPageFromApi = useCallback(
@@ -184,6 +197,12 @@ export function useStocktakingFeed({
     void replaceToPage0(0);
   }, [replaceToPage0]);
 
+  /** Re-fetch current view after a mutation (bypasses feed response cache). */
+  const refreshFeed = useCallback(async () => {
+    clearFeedResponseCache();
+    await replaceToPage0(viewPageIndex);
+  }, [replaceToPage0, viewPageIndex]);
+
   useLayoutEffect(() => {
     let fromCache = false;
     if (typeof window !== "undefined") {
@@ -256,6 +275,8 @@ export function useStocktakingFeed({
     appendNextChunk,
     reset,
     loadMore,
+    refreshFeed,
+    patchFeedItem,
     pageSize,
     highlightPage1Based,
     canAppendMore,

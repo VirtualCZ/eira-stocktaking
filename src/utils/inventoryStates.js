@@ -65,6 +65,19 @@ export function resolveStateForUpdate(requestedState, currentState) {
   return requestedState;
 }
 
+/** Inventární číslo z RM (invNumber) nebo záložní QR z rminv. */
+export function getEffectiveInvNumber(item) {
+  if (item == null) return "";
+  const inv = String(item.invNumber ?? "").trim();
+  const qr = String(item.qr ?? "").trim();
+  return inv || qr;
+}
+
+/** Propojení do inventury: Nalezeno vs Nezkontrolováno (nikdy Nový). */
+export function resolveLinkToInventuraState(markAsFound) {
+  return markAsFound ? INVENTORY_STATES.FOUND : INVENTORY_STATES.UNCHECKED;
+}
+
 export function isMovedState(value) {
   return matchesInventoryState(value, INVENTORY_STATES.MOVED);
 }

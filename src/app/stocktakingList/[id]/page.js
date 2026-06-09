@@ -17,9 +17,10 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 import StocktakingListItemViews from "./StocktakingListItemViews";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
+import Checkbox from "@/components/atoms/Checkbox";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
-import { INVENTORY_STATES, INVENTORY_DISPLAY_MODE, isNewState, resolveStateForMove, resolveStateForUpdate, shouldShowMarkFoundAction } from "@/utils/inventoryStates";
+import { INVENTORY_STATES, INVENTORY_DISPLAY_MODE, getEffectiveInvNumber, isNewState, resolveStateForMove, resolveStateForUpdate, shouldShowMarkFoundAction } from "@/utils/inventoryStates";
 import { buildInventoryStateContextRows } from "@/components/molecules/InventoryStateContextRows";
 import {
     buildStocktakingNewItemUrl,
@@ -97,6 +98,7 @@ function StocktakingListContent() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
+    const [linkMarkAsFound, setLinkMarkAsFound] = useState(true);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [pendingCreateQr, setPendingCreateQr] = useState(null);
@@ -177,7 +179,9 @@ function StocktakingListContent() {
 
     const addScannedItemToCurrentInventory = useCallback(async () => {
         try {
-            const created = await addOutsideItemToInventura(location || null);
+            const created = await addOutsideItemToInventura(location || null, {
+                markAsFound: linkMarkAsFound,
+            });
             if (!created) return;
 
             setIsNotInInventoryModalOpen(false);
@@ -190,11 +194,16 @@ function StocktakingListContent() {
                     buildStocktakingItemUrl(stocktakingId, created.id, { returnTo: listReturnTo })
                 );
             }
-        } catch (_error) {
-            showActionModal('Chyba', 'Položku se nepodařilo přidat do inventury.', false);
+        } catch (error) {
+            showActionModal(
+                'Chyba',
+                error?.message || 'Položku se nepodařilo přidat do inventury.',
+                false
+            );
         }
     }, [
         addOutsideItemToInventura,
+        linkMarkAsFound,
         location,
         showActionModal,
         resetFeed,
@@ -518,7 +527,19 @@ function StocktakingListContent() {
                             </div>
                         )}
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
-                            {!isLookingUpOutsideInventura && outsideInventuraItem && (
+                            {!isLookingUpOutsideInventura && outsideInventuraItem && !getEffectiveInvNumber(outsideInventuraItem) && (
+                                <div style={{ fontSize: 12, color: "#FF6262" }}>
+                                    Položka nemá inventární číslo — nelze ji přidat do inventury.
+                                </div>
+                            )}
+                            {!isLookingUpOutsideInventura && outsideInventuraItem && getEffectiveInvNumber(outsideInventuraItem) && (
+                                <Checkbox
+                                    label="Označit jako nalezeno"
+                                    checked={linkMarkAsFound}
+                                    onChange={() => setLinkMarkAsFound((prev) => !prev)}
+                                />
+                            )}
+                            {!isLookingUpOutsideInventura && outsideInventuraItem && getEffectiveInvNumber(outsideInventuraItem) && (
                                 <Button icon="playlist_add" iconPosition="right" onClick={addScannedItemToCurrentInventory}>
                                     {isAddingOutsideItem ? "Přidávám..." : "Přidat tuto položku do inventury"}
                                 </Button>

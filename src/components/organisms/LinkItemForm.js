@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BaseItemPicker from "@/components/molecules/BaseItemPicker";
 import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useBaseItemDetails, useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
 import {
-  resolveAddToInventuraState,
-  resolveScreenReturnTo,
-  HOME_PATH,
-} from "@/utils/inventoryNavigation";
+  getEffectiveInvNumber,
+  resolveLinkToInventuraState,
+} from "@/utils/inventoryStates";
+import { resolveScreenReturnTo, HOME_PATH } from "@/utils/inventoryNavigation";
 
 export default function LinkItemForm({
   stocktakingId,
@@ -20,17 +20,12 @@ export default function LinkItemForm({
   const { linkToEvent, loading: linkLoading } = useLinkBaseItemToEvent();
   const baseItemsLoading = detailsLoading || linkLoading;
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const returnTo = useMemo(
     () => resolveScreenReturnTo(searchParams, defaultReturnTo),
     [searchParams, defaultReturnTo]
   );
-  const linkInventoryState = useMemo(
-    () => resolveAddToInventuraState(pathname),
-    [pathname]
-  );
-
+  const [markAsFound, setMarkAsFound] = useState(true);
   const [isBaseItemPickerOpen, setIsBaseItemPickerOpen] = useState(false);
   const [selectedBaseItem, setSelectedBaseItem] = useState(null);
   const [editItem, setEditItem] = useState({
@@ -72,7 +67,8 @@ export default function LinkItemForm({
         description: baseItemDetails.description,
         image: baseItemDetails.image,
         location: baseItemDetails.location,
-        qr: baseItemDetails.qr || "",
+        qr: baseItemDetails.invNumber || baseItemDetails.qr || "",
+        invNumber: baseItemDetails.invNumber || baseItemDetails.qr || "",
       }));
     } catch {
       setEditItem((prev) => ({
@@ -83,7 +79,8 @@ export default function LinkItemForm({
         description: baseItem.description,
         image: baseItem.image,
         location: baseItem.location,
-        qr: baseItem.qr || "",
+        qr: baseItem.invNumber || baseItem.qr || "",
+        invNumber: baseItem.invNumber || baseItem.qr || "",
       }));
     }
   };
@@ -99,13 +96,23 @@ export default function LinkItemForm({
       return;
     }
 
+    const invCode = getEffectiveInvNumber(editItem);
+    if (!invCode) {
+      showActionModal(
+        "Chyba",
+        "Vybraná položka nemá inventární číslo — nelze ji propojit.",
+        false
+      );
+      return;
+    }
+
     try {
       await linkToEvent({
         rmId: selectedBaseItem.id,
         eventId: stocktakingId,
-        status: linkInventoryState,
+        status: resolveLinkToInventuraState(markAsFound),
         note: editItem.note || "",
-        qr: editItem.qr || "",
+        qr: invCode,
         location: editItem.location || null,
       });
       showActionModal("Hotovo", "Položka byla úspěšně přidána do inventury.", true);
@@ -125,6 +132,8 @@ export default function LinkItemForm({
         item={editItem}
         onEditItemChange={setEditItem}
         returnTo={returnTo}
+        markAsFound={markAsFound}
+        onMarkAsFoundChange={setMarkAsFound}
       />
 
       <BaseItemPicker
@@ -161,7 +170,11 @@ export default function LinkItemForm({
             className="flex items-center gap-2 rounded-2xl bg-[#282828] p-3 text-white border-none cursor-pointer flex-1 justify-between"
             style={{ fontSize: "0.75rem" }}
             onClick={handleSave}
-            disabled={!selectedBaseItem || baseItemsLoading}
+            disabled={
+              !selectedBaseItem ||
+              baseItemsLoading ||
+              !getEffectiveInvNumber(editItem)
+            }
           >
             {linkLoading ? "Ukládám..." : "Propojit s inventurou"}
             <span className="material-icons-round text-white" style={{ fontSize: "20px" }}>

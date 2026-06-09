@@ -29,6 +29,9 @@ async function linkBaseItemToEventRequest(inventoryData) {
     });
 
     if (!response.ok) {
+        if (response.status === 400) {
+            throw new Error('Inventární číslo je povinné nebo propojení není platné.');
+        }
         throw new Error(`Failed to create inventory item: ${response.status}`);
     }
 

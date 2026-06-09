@@ -1,10 +1,13 @@
 import { useState, useCallback } from "react";
 import { useLookupInventoryObjectByQrAny } from "@/hooks/useStocktakingItems";
 import { useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
-import { INVENTORY_STATES } from "@/utils/inventoryStates";
+import {
+  getEffectiveInvNumber,
+  resolveLinkToInventuraState,
+} from "@/utils/inventoryStates";
 
 /**
- * QR found in master data but not on current inventura: lookup + link as Nový.
+ * QR found in master data but not on current inventura: lookup + link into inventura.
  */
 export function useOutsideInventuraQrItem(stocktakingId) {
   const { lookupByQrAny, loading: isLookingUpOutsideInventura } =
@@ -27,16 +30,20 @@ export function useOutsideInventuraQrItem(stocktakingId) {
   );
 
   const addOutsideItemToInventura = useCallback(
-    async (location = null) => {
+    async (location = null, { markAsFound = true } = {}) => {
       if (!outsideInventuraItem?.id || !stocktakingId) {
         return null;
+      }
+      const invCode = getEffectiveInvNumber(outsideInventuraItem);
+      if (!invCode) {
+        throw new Error("Položka nemá inventární číslo — nelze ji přidat do inventury.");
       }
       const created = await linkToEvent({
         rmId: outsideInventuraItem.id,
         eventId: stocktakingId,
-        status: INVENTORY_STATES.NEW,
+        status: resolveLinkToInventuraState(markAsFound),
         note: outsideInventuraItem.note || "",
-        qr: outsideInventuraItem.qr || "",
+        qr: invCode,
         location,
       });
       setOutsideInventuraItem(null);

@@ -8,11 +8,15 @@ import TextInput from "@/components/atoms/TextInput";
 import NavBackLink from "@/components/molecules/NavBackLink";
 import { HOME_PATH } from "@/utils/inventoryNavigation";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
+import Checkbox from "@/components/atoms/Checkbox";
+import { getEffectiveInvNumber } from "@/utils/inventoryStates";
 
 export default function LinkItemDetailTemplate({
   item,
   onEditItemChange,
   returnTo = HOME_PATH,
+  markAsFound,
+  onMarkAsFoundChange,
 }) {
   if (!item) return <PageLoadingScreen message="Položka nenalezena" />;
 
@@ -64,6 +68,18 @@ export default function LinkItemDetailTemplate({
               onChange={code => onEditItemChange({ ...item, qr: code })}
               editMode={false}
             />
+            {item.baseItemId && !getEffectiveInvNumber(item) && (
+              <div style={{ fontSize: 12, color: "#FF6262" }}>
+                Položka nemá inventární číslo — nelze ji propojit.
+              </div>
+            )}
+            {item.baseItemId && onMarkAsFoundChange != null && getEffectiveInvNumber(item) && (
+              <Checkbox
+                label="Označit jako nalezeno"
+                checked={Boolean(markAsFound)}
+                onChange={() => onMarkAsFoundChange(!markAsFound)}
+              />
+            )}
             {item.properties && (
               <CardContainer className="gap-2">
                 {(Array.isArray(item.properties)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getAuthHeadersSafe } from "@/utils/token";
 import { useSettings } from "@/hooks/useSettings";
 import { INVENTORY_STATES, INVENTORY_STATES_WITHOUT_UNCHECKED, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
@@ -10,11 +10,28 @@ import {
 } from "@/utils/feedPagination";
 
 const FEED_CACHE_TTL_MS = 30000;
+const LEGACY_FEED_SESSION_PREFIX = "stocktakingFeedCache_v7_";
 const feedResponseCache = new Map();
 const feedInFlight = new Map();
 
 function clearFeedResponseCache() {
   feedResponseCache.clear();
+  feedInFlight.clear();
+}
+
+/** Drop legacy per-filter feed snapshots (removed — caused stale cross-filter state). */
+function clearLegacyFeedSessionStorage() {
+  if (typeof window === "undefined") return;
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i);
+    if (key?.startsWith(LEGACY_FEED_SESSION_PREFIX)) {
+      sessionStorage.removeItem(key);
+    }
+  }
+}
+
+function invalidateFeedCaches() {
+  clearFeedResponseCache();
 }
 
 export function useStocktakingFeed({
@@ -66,13 +83,11 @@ export function useStocktakingFeed({
       }),
     [eventId, sortBy, sortOrder, searchTerm, effectiveFeedState, inventoryDisplayMode, filterState?.hasNote, pageSize, location?.room, location?.storey, location?.building]
   );
-  const cacheKey = useMemo(() => `stocktakingFeedCache_v7_${queryKey}`, [queryKey]);
-
   const feedRequestId = useRef(0);
   const appendLock = useRef(false);
 
   const reset = useCallback(() => {
-    clearFeedResponseCache();
+    invalidateFeedCaches();
     setItems([]);
     setTotal(0);
     setViewPageIndex(0);
@@ -197,62 +212,19 @@ export function useStocktakingFeed({
     void replaceToPage0(0);
   }, [replaceToPage0]);
 
-  /** Re-fetch current view after a mutation (bypasses feed response cache). */
+  /** Re-fetch current view after a mutation (clears all filter variants for this inventura). */
   const refreshFeed = useCallback(async () => {
-    clearFeedResponseCache();
+    invalidateFeedCaches();
     await replaceToPage0(viewPageIndex);
   }, [replaceToPage0, viewPageIndex]);
 
   useLayoutEffect(() => {
-    let fromCache = false;
-    if (typeof window !== "undefined") {
-      try {
-        const raw = sessionStorage.getItem(cacheKey);
-        if (raw) {
-          const cached = JSON.parse(raw);
-          const vp = Number(cached.viewPageIndex);
-          if (Array.isArray(cached.items) && cached.items.length > 0 && Number.isInteger(vp) && vp >= 0) {
-            const nap = Number(cached.nextAppendPage0);
-            const derivedNext =
-              Number.isInteger(nap) && nap >= 0
-                ? nap
-                : Math.max(vp + 1, Math.ceil(cached.items.length / pageSize));
-            setItems(cached.items);
-            setTotal(Number(cached.total) || 0);
-            setViewPageIndex(vp);
-            setNextAppendPage0(derivedNext);
-            setHasMore(Boolean(cached.hasMoreNext));
-            setError(null);
-            fromCache = true;
-          }
-        }
-      } catch (_e) {}
+    clearLegacyFeedSessionStorage();
+    reset();
+    if (enabled && eventId) {
+      void replaceToPage0Ref.current(0);
     }
-    if (!fromCache) {
-      reset();
-      if (enabled && eventId) {
-        void replaceToPage0Ref.current(0);
-      }
-    }
-  }, [queryKey, cacheKey, reset, enabled, eventId]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (loading && items.length === 0) return;
-    try {
-      sessionStorage.setItem(
-        cacheKey,
-        JSON.stringify({
-          items,
-          total,
-          viewPageIndex,
-          nextAppendPage0,
-          hasMoreNext: hasMore,
-          ts: Date.now(),
-        })
-      );
-    } catch (_e) {}
-  }, [cacheKey, items, total, viewPageIndex, nextAppendPage0, hasMore, loading]);
+  }, [queryKey, reset, enabled, eventId]);
 
   const highlightPage1Based = useMemo(
     () => feedHighlightPage1Based(viewPageIndex, nextAppendPage0, total, pageSize),

@@ -3,7 +3,7 @@
 import NewItemForm from "@/components/organisms/NewItemForm";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import { buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
+import { HOME_PATH } from "@/utils/inventoryNavigation";
 
 /** Main menu: add new asset → Nezkontrolováno */
 export default function NewItemPage() {
@@ -24,14 +24,10 @@ export default function NewItemPage() {
     );
   }
 
-  const defaultReturnTo = buildStocktakingListUrl(stocktakingId, {
-    returnTo: HOME_PATH,
-  });
-
   return (
     <NewItemForm
       stocktakingId={stocktakingId}
-      defaultReturnTo={defaultReturnTo}
+      defaultReturnTo={HOME_PATH}
     />
   );
 }

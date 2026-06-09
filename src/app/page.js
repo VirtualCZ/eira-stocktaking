@@ -6,7 +6,7 @@ import { useSelectedInventura } from "@/hooks/useSelectedInventura";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { clearAuthToken } from "@/utils/token";
 import SettingsModal from "@/components/organisms/SettingsModal";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   buildNewItemUrl,
   buildLinkItemUrl,
@@ -27,14 +27,6 @@ export default function Home() {
 
   const inventuraActive = isInventuraActive(selectedInventura);
   const closedInventuraSelected = isInventuraClosed(selectedInventura);
-
-  const inventoryReturnTo = useMemo(
-    () =>
-      inventuraActive && selectedInventura?.id
-        ? buildStocktakingListUrl(selectedInventura.id, { returnTo: HOME_PATH })
-        : null,
-    [inventuraActive, selectedInventura?.id]
-  );
 
   const showClosedInventuraMessage = () => {
     alert(CLOSED_INVENTURA_MESSAGE);
@@ -190,7 +182,7 @@ export default function Home() {
               text="Přidat nový předmět"
               size="small"
               icon="add"
-              href={inventoryReturnTo ? buildNewItemUrl({ returnTo: inventoryReturnTo }) : "newItem"}
+              href={buildNewItemUrl({ returnTo: HOME_PATH })}
               disabled={!inventuraActive}
               onDisabledClick={closedInventuraSelected ? showClosedInventuraMessage : undefined}
             />
@@ -199,7 +191,7 @@ export default function Home() {
               text="Propojit existující položku"
               size="small"
               icon="link"
-              href={inventoryReturnTo ? buildLinkItemUrl({ returnTo: inventoryReturnTo }) : "linkItem"}
+              href={buildLinkItemUrl({ returnTo: HOME_PATH })}
               disabled={!inventuraActive}
               onDisabledClick={closedInventuraSelected ? showClosedInventuraMessage : undefined}
             />

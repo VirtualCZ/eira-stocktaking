@@ -3,7 +3,7 @@
 import LinkItemForm from "@/components/organisms/LinkItemForm";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 import { useSelectedInventura } from "@/hooks/useSelectedInventura";
-import { buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
+import { HOME_PATH } from "@/utils/inventoryNavigation";
 
 /** Main menu: propojit existující → Nezkontrolováno */
 export default function LinkItemPage() {
@@ -24,14 +24,10 @@ export default function LinkItemPage() {
     );
   }
 
-  const defaultReturnTo = buildStocktakingListUrl(stocktakingId, {
-    returnTo: HOME_PATH,
-  });
-
   return (
     <LinkItemForm
       stocktakingId={stocktakingId}
-      defaultReturnTo={defaultReturnTo}
+      defaultReturnTo={HOME_PATH}
     />
   );
 }

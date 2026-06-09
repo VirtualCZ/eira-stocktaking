@@ -1,13 +1,10 @@
 import { useState, useCallback } from "react";
 import { useLookupInventoryObjectByQrAny } from "@/hooks/useStocktakingItems";
 import { useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
-import {
-  getEffectiveInvNumber,
-  resolveLinkToInventuraState,
-} from "@/utils/inventoryStates";
+import { getEffectiveInvNumber, INVENTORY_STATES } from "@/utils/inventoryStates";
 
 /**
- * QR found in master data but not on current inventura: lookup + link into inventura.
+ * QR found in master data but not on current inventura: lookup + link as Nalezeno (scan = found).
  */
 export function useOutsideInventuraQrItem(stocktakingId) {
   const { lookupByQrAny, loading: isLookingUpOutsideInventura } =
@@ -30,7 +27,7 @@ export function useOutsideInventuraQrItem(stocktakingId) {
   );
 
   const addOutsideItemToInventura = useCallback(
-    async (location = null, { markAsFound = true } = {}) => {
+    async (location = null) => {
       if (!outsideInventuraItem?.id || !stocktakingId) {
         return null;
       }
@@ -41,7 +38,7 @@ export function useOutsideInventuraQrItem(stocktakingId) {
       const created = await linkToEvent({
         rmId: outsideInventuraItem.id,
         eventId: stocktakingId,
-        status: resolveLinkToInventuraState(markAsFound),
+        status: INVENTORY_STATES.FOUND,
         note: outsideInventuraItem.note || "",
         qr: invCode,
         location,

@@ -73,9 +73,29 @@ export function getEffectiveInvNumber(item) {
   return inv || qr;
 }
 
-/** Propojení do inventury: Nalezeno vs Nezkontrolováno (nikdy Nový). */
-export function resolveLinkToInventuraState(markAsFound) {
-  return markAsFound ? INVENTORY_STATES.FOUND : INVENTORY_STATES.UNCHECKED;
+/** Stav při propojení na link stránce (nikdy Nový / Přesun). */
+export const LINK_INVENTURA_STATE_OPTIONS = [
+  { text: "Nezkontrolováno", value: INVENTORY_STATES.UNCHECKED },
+  { text: "Nalezeno", value: INVENTORY_STATES.FOUND },
+  { text: "Nenalezeno", value: INVENTORY_STATES.NOT_FOUND },
+];
+
+export const DEFAULT_LINK_INVENTURA_STATE = INVENTORY_STATES.UNCHECKED;
+
+const LINK_INVENTURA_ALLOWED_STATES = new Set(
+  LINK_INVENTURA_STATE_OPTIONS.map((option) => option.value)
+);
+
+/** Propojení do inventury: Nezkontrolováno, Nalezeno, Nenalezeno (nikdy Nový). */
+export function resolveLinkToInventuraState(statusOrMarkAsFound) {
+  if (typeof statusOrMarkAsFound === "boolean") {
+    return statusOrMarkAsFound ? INVENTORY_STATES.FOUND : INVENTORY_STATES.UNCHECKED;
+  }
+  const normalized = String(statusOrMarkAsFound ?? "").trim();
+  if (LINK_INVENTURA_ALLOWED_STATES.has(normalized)) {
+    return normalized;
+  }
+  return INVENTORY_STATES.UNCHECKED;
 }
 
 export function isMovedState(value) {

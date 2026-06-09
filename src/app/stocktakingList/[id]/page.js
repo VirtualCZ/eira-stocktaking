@@ -17,7 +17,6 @@ import StocktakingItemCardSkeleton from "@/components/organisms/StocktakingItemC
 import StocktakingListItemViews from "./StocktakingListItemViews";
 import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
-import Checkbox from "@/components/atoms/Checkbox";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
 import { INVENTORY_STATES, INVENTORY_DISPLAY_MODE, getEffectiveInvNumber, isNewState, resolveStateForMove, resolveStateForUpdate, shouldShowMarkFoundAction } from "@/utils/inventoryStates";
@@ -98,7 +97,6 @@ function StocktakingListContent() {
     const [scannedItem, setScannedItem] = useState(null);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isNotInInventoryModalOpen, setIsNotInInventoryModalOpen] = useState(false);
-    const [linkMarkAsFound, setLinkMarkAsFound] = useState(true);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [pendingCreateQr, setPendingCreateQr] = useState(null);
@@ -179,9 +177,7 @@ function StocktakingListContent() {
 
     const addScannedItemToCurrentInventory = useCallback(async () => {
         try {
-            const created = await addOutsideItemToInventura(location || null, {
-                markAsFound: linkMarkAsFound,
-            });
+            const created = await addOutsideItemToInventura(location || null);
             if (!created) return;
 
             setIsNotInInventoryModalOpen(false);
@@ -203,7 +199,6 @@ function StocktakingListContent() {
         }
     }, [
         addOutsideItemToInventura,
-        linkMarkAsFound,
         location,
         showActionModal,
         resetFeed,
@@ -531,13 +526,6 @@ function StocktakingListContent() {
                                 <div style={{ fontSize: 12, color: "#FF6262" }}>
                                     Položka nemá inventární číslo — nelze ji přidat do inventury.
                                 </div>
-                            )}
-                            {!isLookingUpOutsideInventura && outsideInventuraItem && getEffectiveInvNumber(outsideInventuraItem) && (
-                                <Checkbox
-                                    label="Označit jako nalezeno"
-                                    checked={linkMarkAsFound}
-                                    onChange={() => setLinkMarkAsFound((prev) => !prev)}
-                                />
                             )}
                             {!isLookingUpOutsideInventura && outsideInventuraItem && getEffectiveInvNumber(outsideInventuraItem) && (
                                 <Button icon="playlist_add" iconPosition="right" onClick={addScannedItemToCurrentInventory}>

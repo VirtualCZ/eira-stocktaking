@@ -8,15 +8,15 @@ import TextInput from "@/components/atoms/TextInput";
 import NavBackLink from "@/components/molecules/NavBackLink";
 import { HOME_PATH } from "@/utils/inventoryNavigation";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
-import Checkbox from "@/components/atoms/Checkbox";
+import LinkInventuraStateSelect from "@/components/molecules/LinkInventuraStateSelect";
 import { getEffectiveInvNumber } from "@/utils/inventoryStates";
 
 export default function LinkItemDetailTemplate({
   item,
   onEditItemChange,
   returnTo = HOME_PATH,
-  markAsFound,
-  onMarkAsFoundChange,
+  linkStatus,
+  onLinkStatusChange,
 }) {
   if (!item) return <PageLoadingScreen message="Položka nenalezena" />;
 
@@ -73,11 +73,10 @@ export default function LinkItemDetailTemplate({
                 Položka nemá inventární číslo — nelze ji propojit.
               </div>
             )}
-            {item.baseItemId && onMarkAsFoundChange != null && getEffectiveInvNumber(item) && (
-              <Checkbox
-                label="Označit jako nalezeno"
-                checked={Boolean(markAsFound)}
-                onChange={() => onMarkAsFoundChange(!markAsFound)}
+            {item.baseItemId && onLinkStatusChange != null && getEffectiveInvNumber(item) && (
+              <LinkInventuraStateSelect
+                value={linkStatus}
+                onChange={onLinkStatusChange}
               />
             )}
             {item.properties && (

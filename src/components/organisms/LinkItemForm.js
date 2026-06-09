@@ -7,6 +7,7 @@ import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplat
 import CenteredModal from "@/components/molecules/CenteredModal";
 import { useBaseItemDetails, useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
 import {
+  DEFAULT_LINK_INVENTURA_STATE,
   getEffectiveInvNumber,
   resolveLinkToInventuraState,
 } from "@/utils/inventoryStates";
@@ -25,7 +26,7 @@ export default function LinkItemForm({
     () => resolveScreenReturnTo(searchParams, defaultReturnTo),
     [searchParams, defaultReturnTo]
   );
-  const [markAsFound, setMarkAsFound] = useState(true);
+  const [linkStatus, setLinkStatus] = useState(DEFAULT_LINK_INVENTURA_STATE);
   const [isBaseItemPickerOpen, setIsBaseItemPickerOpen] = useState(false);
   const [selectedBaseItem, setSelectedBaseItem] = useState(null);
   const [editItem, setEditItem] = useState({
@@ -110,7 +111,7 @@ export default function LinkItemForm({
       await linkToEvent({
         rmId: selectedBaseItem.id,
         eventId: stocktakingId,
-        status: resolveLinkToInventuraState(markAsFound),
+        status: resolveLinkToInventuraState(linkStatus),
         note: editItem.note || "",
         qr: invCode,
         location: editItem.location || null,
@@ -132,8 +133,8 @@ export default function LinkItemForm({
         item={editItem}
         onEditItemChange={setEditItem}
         returnTo={returnTo}
-        markAsFound={markAsFound}
-        onMarkAsFoundChange={setMarkAsFound}
+        linkStatus={linkStatus}
+        onLinkStatusChange={setLinkStatus}
       />
 
       <BaseItemPicker

@@ -19,7 +19,7 @@ import FilterOptionsModal from "@/components/organisms/FilterOptionsModal";
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { useSettings } from "@/hooks/useSettings";
-import { INVENTORY_STATES, INVENTORY_DISPLAY_MODE } from "@/utils/inventoryStates";
+import { INVENTORY_STATES, INVENTORY_DISPLAY_MODE, isNewState, resolveStateForMove, resolveStateForUpdate, shouldShowMarkFoundAction } from "@/utils/inventoryStates";
 import { buildInventoryStateContextRows } from "@/components/molecules/InventoryStateContextRows";
 import {
     buildStocktakingNewItemUrl,
@@ -273,9 +273,9 @@ function StocktakingListContent() {
                         setIsUpdatingItem(true);
                         try {
                             const { image, ...rest } = item;
-                            const result = await updateItem({ ...rest, stocktakingId, state: INVENTORY_STATES.FOUND });
+                            const result = await updateItem({ ...rest, stocktakingId, state: resolveStateForUpdate(INVENTORY_STATES.FOUND, item.state) });
                             if (result) {
-                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
+                                patchFeedItem({ ...item, ...result, state: result.state ?? item.state });
                                 await refreshFeed();
                                 showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
                             } else {
@@ -289,9 +289,9 @@ function StocktakingListContent() {
                         setIsUpdatingItem(true);
                         try {
                             const { image, ...rest } = item;
-                            const result = await updateItem({ ...rest, stocktakingId, state: INVENTORY_STATES.NOT_FOUND });
+                            const result = await updateItem({ ...rest, stocktakingId, state: resolveStateForUpdate(INVENTORY_STATES.NOT_FOUND, item.state) });
                             if (result) {
-                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
+                                patchFeedItem({ ...item, ...result, state: result.state ?? item.state });
                                 await refreshFeed();
                                 showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
                             } else {
@@ -651,12 +651,13 @@ function StocktakingListContent() {
                                 </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+                                {shouldShowMarkFoundAction(scannedItem.state) && (
                                 <Button icon="check" iconPosition="right" onClick={async () => {
                                     if (!scannedItem || !scannedItem.id) return;
                                         setIsUpdatingItem(true);
                                         try {
                                             const { image, ...rest } = scannedItem;
-                                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: INVENTORY_STATES.FOUND });
+                                            const result = await updateItem({ ...rest, stocktakingId: stocktakingId, state: resolveStateForUpdate(INVENTORY_STATES.FOUND, scannedItem.state) });
                                             setIsPreviewModalOpen(false);
                                             if (result) {
                                                 patchFeedItem(result);
@@ -671,6 +672,12 @@ function StocktakingListContent() {
                                 }}>
                                     Označit jako nalezeno
                                 </Button>
+                                )}
+                                {isNewState(scannedItem.state) && (
+                                <div style={{ fontSize: 12, color: "#535353", fontStyle: "italic" }}>
+                                    Položka ve stavu Nový — stav se nemění.
+                                </div>
+                                )}
                                 <Button icon="edit" iconPosition="right" onClick={() => {
                                     if (scannedItem && scannedItem.id) {
                                         router.push(
@@ -737,7 +744,7 @@ function StocktakingListContent() {
                         <Button icon="check" iconPosition="right" onClick={async () => {
                           if (!moveNewLocation) return;
                           const { image, ...rest } = moveItem;
-                          const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: moveNewLocation, state: INVENTORY_STATES.MOVED });
+                          const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: moveNewLocation, state: resolveStateForMove(moveItem.state) });
                           setIsMoveModalOpen(false);
                           setMoveItem(null);
                           setMoveNewLocation(null);

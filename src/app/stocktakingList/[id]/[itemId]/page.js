@@ -12,7 +12,7 @@ import StocktakingItemDetailTemplate from "@/components/organisms/StocktakingIte
 import Button from '@/components/atoms/Button';
 import LocationPicker from "@/components/organisms/LocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
-import { INVENTORY_STATES } from "@/utils/inventoryStates";
+import { INVENTORY_STATES, resolveStateForMove, resolveStateForUpdate } from "@/utils/inventoryStates";
 import { buildStocktakingItemUrl, buildStocktakingListUrl, HOME_PATH } from "@/utils/inventoryNavigation";
 import PageLoadingScreen from "@/components/atoms/PageLoadingScreen";
 
@@ -115,7 +115,7 @@ export default function StocktakingListItemDetail() {
     const handleMarkFound = async () => {
         if (!item) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, stocktakingId, state: INVENTORY_STATES.FOUND });
+        const result = await updateItem({ ...rest, stocktakingId, state: resolveStateForUpdate(INVENTORY_STATES.FOUND, item.state) });
         if (result) {
             showActionModal('Hotovo', 'Položka byla označena jako nalezena.', true);
             if (refetchItem) refetchItem();
@@ -127,7 +127,7 @@ export default function StocktakingListItemDetail() {
     const handleMarkNotFound = async () => {
         if (!item) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, stocktakingId, state: INVENTORY_STATES.NOT_FOUND });
+        const result = await updateItem({ ...rest, stocktakingId, state: resolveStateForUpdate(INVENTORY_STATES.NOT_FOUND, item.state) });
         if (result) {
             showActionModal('Hotovo', 'Položka byla označena jako nenalezena.', true);
             if (refetchItem) refetchItem();
@@ -139,7 +139,7 @@ export default function StocktakingListItemDetail() {
     const handleMoveConfirm = async () => {
         if (!item || !moveNewLocation) return;
         const { image, ...rest } = item;
-        const result = await updateItem({ ...rest, stocktakingId: stocktakingId, location: mapLocationToApi(moveNewLocation), state: INVENTORY_STATES.MOVED });
+        const result = await updateItem({ ...rest, stocktakingId, location: mapLocationToApi(moveNewLocation), state: resolveStateForMove(item.state) });
         setIsMoveModalOpen(false);
         if(result) {
             showActionModal('Hotovo', 'Položka byla přesunuta.', true);
@@ -169,7 +169,7 @@ export default function StocktakingListItemDetail() {
             note: editItem.note,
             qr: editItem.qr,
             lastCheck: editItem.date || editItem.lastCheck || null,
-            state: editItem.state,
+            state: resolveStateForUpdate(editItem.state, fetchedItem?.state ?? item.state),
             location: mapLocationToApi(editItem.location),
         };
         mainData.imgChanged = imageChanged;

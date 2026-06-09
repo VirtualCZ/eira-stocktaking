@@ -36,14 +36,33 @@ export function isNotFoundState(value) {
   return matchesInventoryState(value, INVENTORY_STATES.NOT_FOUND);
 }
 
-/** Show “Nalezeno” unless the row is already strictly nalezeno. */
+/** Nový rows keep Nový — no found/not-found toggles. */
+export function isStateLockedAsNew(state) {
+  return isNewState(state);
+}
+
+/** Show “Nalezeno” unless already nalezeno or locked as Nový. */
 export function shouldShowMarkFoundAction(state) {
+  if (isStateLockedAsNew(state)) return false;
   return !isFoundState(state);
 }
 
-/** Show “Nenalezeno” unless the row is already strictly nenalezeno. */
+/** Show “Nenalezeno” unless already nenalezeno or locked as Nový. */
 export function shouldShowMarkNotFoundAction(state) {
+  if (isStateLockedAsNew(state)) return false;
   return !isNotFoundState(state);
+}
+
+/** Move updates location; Nový stays Nový, everything else becomes Přesun. */
+export function resolveStateForMove(currentState) {
+  if (isNewState(currentState)) return INVENTORY_STATES.NEW;
+  return INVENTORY_STATES.MOVED;
+}
+
+/** Any update that would change state keeps Nový when the row is already Nový. */
+export function resolveStateForUpdate(requestedState, currentState) {
+  if (isNewState(currentState)) return INVENTORY_STATES.NEW;
+  return requestedState;
 }
 
 export function isMovedState(value) {

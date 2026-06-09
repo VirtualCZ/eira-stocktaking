@@ -20,7 +20,7 @@ import StocktakingListItemViews from "../StocktakingListItemViews";
 import Button from "@/components/atoms/Button";
 import { Pagination } from "@/components/molecules/Pagination";
 import { readScanListViewMode } from "@/utils/scanListViewMode";
-import { INVENTORY_STATES, isFoundState, isMovedState, isNewState } from "@/utils/inventoryStates";
+import { INVENTORY_STATES, isFoundState, isMovedState, isNewState, resolveStateForMove, resolveStateForUpdate } from "@/utils/inventoryStates";
 import { buildInventoryStateContextRows } from "@/components/molecules/InventoryStateContextRows";
 import {
     buildStocktakingNewItemUrl,
@@ -288,10 +288,10 @@ export default function ScanSessionClient() {
                             const result = await updateItem({
                                 ...rest,
                                 stocktakingId,
-                                state: INVENTORY_STATES.FOUND,
+                                state: resolveStateForUpdate(INVENTORY_STATES.FOUND, item.state),
                             });
                             if (result) {
-                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.FOUND });
+                                patchFeedItem({ ...item, ...result, state: result.state ?? item.state });
                                 await refreshFeed();
                                 showActionModal("Hotovo", "Položka byla označena jako nalezena.", true);
                             } else {
@@ -308,10 +308,10 @@ export default function ScanSessionClient() {
                             const result = await updateItem({
                                 ...rest,
                                 stocktakingId,
-                                state: INVENTORY_STATES.NOT_FOUND,
+                                state: resolveStateForUpdate(INVENTORY_STATES.NOT_FOUND, item.state),
                             });
                             if (result) {
-                                patchFeedItem({ ...item, ...result, state: INVENTORY_STATES.NOT_FOUND });
+                                patchFeedItem({ ...item, ...result, state: result.state ?? item.state });
                                 await refreshFeed();
                                 showActionModal("Hotovo", "Položka byla označena jako nenalezena.", true);
                             } else {
@@ -766,7 +766,7 @@ export default function ScanSessionClient() {
                                             ...rest,
                                             stocktakingId,
                                             location: moveNewLocation,
-                                            state: INVENTORY_STATES.MOVED,
+                                            state: resolveStateForMove(moveItem.state),
                                         });
                                         setIsMoveModalOpen(false);
                                         setMoveItem(null);

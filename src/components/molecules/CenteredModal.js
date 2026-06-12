@@ -12,6 +12,7 @@ export default function CenteredModal({
     width = "90vw",
     height = "auto",
     disableClickAway = false,
+    hideCloseButton = false,
     autoDismissMs = null,
     autoDismissProgressColor = "#2ecc40",
     autoDismissEdge = "bottom",
@@ -151,29 +152,31 @@ export default function CenteredModal({
                                     {title}
                                 </h3>
                             )}
-                            <button
-                                onClick={onClose}
-                                style={{
-                                    position: "absolute",
-                                    top: "1rem",
-                                    right: "1rem",
-                                    borderRadius: "50%",
-                                    width: "30px",
-                                    height: "30px",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#000",
-                                    zIndex: 1000,
-                                }}
-                                className="hover:bg-gray-200 active:bg-gray-300"
-                            >
-                                <span className="material-icons-round" style={{ fontSize: "18px" }}>
-                                    close
-                                </span>
-                            </button>
+                            {onClose && !hideCloseButton && (
+                                <button
+                                    onClick={onClose}
+                                    style={{
+                                        position: "absolute",
+                                        top: "1rem",
+                                        right: "1rem",
+                                        borderRadius: "50%",
+                                        width: "30px",
+                                        height: "30px",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#000",
+                                        zIndex: 1000,
+                                    }}
+                                    className="hover:bg-gray-200 active:bg-gray-300"
+                                >
+                                    <span className="material-icons-round" style={{ fontSize: "18px" }}>
+                                        close
+                                    </span>
+                                </button>
+                            )}
                         </div>
                     )}
 

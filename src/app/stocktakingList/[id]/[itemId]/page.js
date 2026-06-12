@@ -4,6 +4,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject, useDuplicateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
+import ActionLoadingModal from "@/components/molecules/ActionLoadingModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import DuplicateIdentifierModal from "@/components/molecules/DuplicateIdentifierModal";
 import { useDuplicateItemModal } from "@/hooks/useDuplicateItemModal";
@@ -257,12 +258,7 @@ export default function StocktakingListItemDetail() {
                 success={actionModalContent.success}
             />
             {/* Loading modal for any action */}
-            <CenteredModal isOpen={isAnyLoading} title="Probíhá akce...">
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                    <span>Probíhá akce...</span>
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
-                </div>
-            </CenteredModal>
+            <ActionLoadingModal isOpen={isAnyLoading} />
             <DuplicateIdentifierModal
                 isOpen={duplicateModal.isOpen}
                 onClose={duplicateModal.close}

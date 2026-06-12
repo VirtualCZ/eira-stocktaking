@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import BaseItemPicker from "@/components/molecules/BaseItemPicker";
 import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
 import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
+import ActionLoadingModal from "@/components/molecules/ActionLoadingModal";
 import { useBaseItemDetails, useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
 import {
   DEFAULT_LINK_INVENTURA_STATE,
@@ -150,6 +151,8 @@ export default function LinkItemForm({
         message={actionModalContent.message}
         success={actionModalContent.success}
       />
+
+      <ActionLoadingModal isOpen={linkLoading} />
 
       <div
         className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useCreateInventoryObject } from "@/hooks/useStocktakingItems";
-import CenteredModal from "@/components/molecules/CenteredModal";
 import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
+import ActionLoadingModal from "@/components/molecules/ActionLoadingModal";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEntregs } from "@/hooks/useEntregs";
 import DropdownCard from "@/components/molecules/DropdownCard";
@@ -310,12 +310,7 @@ export default function NewItemForm({
         message={actionModalContent.message}
         success={actionModalContent.success}
       />
-      <CenteredModal isOpen={loading} title="Probíhá akce...">
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          <span>Probíhá akce...</span>
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500" />
-        </div>
-      </CenteredModal>
+      <ActionLoadingModal isOpen={loading} />
       <div
         className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"
         style={{

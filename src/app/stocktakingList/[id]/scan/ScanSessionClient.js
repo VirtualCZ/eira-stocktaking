@@ -12,6 +12,7 @@ import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import CenteredModal from "@/components/molecules/CenteredModal";
 import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
+import ActionLoadingModal from "@/components/molecules/ActionLoadingModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
@@ -173,6 +174,7 @@ export default function ScanSessionClient() {
     }, [closeScanNotice, resetOutsideInventuraItem]);
 
     const addScannedItemToCurrentInventory = useCallback(async () => {
+        setIsUpdatingItem(true);
         try {
             const loc = getLocation();
             const created = await addOutsideItemToInventura(loc || null);
@@ -194,6 +196,8 @@ export default function ScanSessionClient() {
                 error?.message || "Položku se nepodařilo přidat do inventury.",
                 false
             );
+        } finally {
+            setIsUpdatingItem(false);
         }
     }, [
         addOutsideItemToInventura,
@@ -771,22 +775,27 @@ export default function ScanSessionClient() {
                                     iconPosition="right"
                                     onClick={async () => {
                                         if (!moveNewLocation) return;
-                                        const { image, ...rest } = moveItem;
-                                        const result = await updateItem({
-                                            ...rest,
-                                            stocktakingId,
-                                            location: moveNewLocation,
-                                            state: resolveStateForMove(moveItem.state),
-                                        });
-                                        setIsMoveModalOpen(false);
-                                        setMoveItem(null);
-                                        setMoveNewLocation(null);
-                                        if (result) {
-                                            patchFeedItem(result);
-                                            await refreshFeed();
-                                            showActionModal("Hotovo", "Položka byla úspěšně přesunuta.", true);
-                                        } else {
-                                            showActionModal("Chyba", "Položku se nepodařilo přesunout.", false);
+                                        setIsUpdatingItem(true);
+                                        try {
+                                            const { image, ...rest } = moveItem;
+                                            const result = await updateItem({
+                                                ...rest,
+                                                stocktakingId,
+                                                location: moveNewLocation,
+                                                state: resolveStateForMove(moveItem.state),
+                                            });
+                                            setIsMoveModalOpen(false);
+                                            setMoveItem(null);
+                                            setMoveNewLocation(null);
+                                            if (result) {
+                                                patchFeedItem(result);
+                                                await refreshFeed();
+                                                showActionModal("Hotovo", "Položka byla úspěšně přesunuta.", true);
+                                            } else {
+                                                showActionModal("Chyba", "Položku se nepodařilo přesunout.", false);
+                                            }
+                                        } finally {
+                                            setIsUpdatingItem(false);
                                         }
                                     }}
                                 >
@@ -855,12 +864,7 @@ export default function ScanSessionClient() {
                     success={actionModalContent.success}
                 />
 
-                <CenteredModal isOpen={isUpdatingItem} title="Probíhá akce...">
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                        <span>Probíhá akce...</span>
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500" />
-                    </div>
-                </CenteredModal>
+                <ActionLoadingModal isOpen={isUpdatingItem || isAddingOutsideItem} />
         </main>
     );
 }

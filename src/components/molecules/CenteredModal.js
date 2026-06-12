@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export default function CenteredModal({
@@ -11,9 +11,13 @@ export default function CenteredModal({
     titleStyle = {},
     width = "90vw",
     height = "auto",
-    disableClickAway = false
+    disableClickAway = false,
+    autoDismissMs = null,
+    autoDismissProgressColor = "#2ecc40",
+    autoDismissEdge = "bottom",
 }) {
     const modalRef = useRef(null);
+    const [dismissRunId, setDismissRunId] = useState(0);
 
     // Handle click outside
     useEffect(() => {
@@ -52,6 +56,17 @@ export default function CenteredModal({
             };
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen || autoDismissMs == null || !onClose) return;
+        setDismissRunId((id) => id + 1);
+        const timer = setTimeout(onClose, autoDismissMs);
+        return () => clearTimeout(timer);
+    }, [isOpen, autoDismissMs, onClose]);
+
+    const showDismissProgress =
+        isOpen && autoDismissMs != null && autoDismissMs > 0;
+    const dismissOnTop = autoDismissEdge === "top";
 
     const modalContent = (
         <div style={{
@@ -99,6 +114,25 @@ export default function CenteredModal({
                     transition: "transform 0.3s ease-in-out",
                     willChange: "transform",
                 }}>
+                    {showDismissProgress && (
+                        <div
+                            key={dismissRunId}
+                            aria-hidden
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
+                                height: 3,
+                                ...(dismissOnTop ? { top: 0 } : { bottom: 0 }),
+                                background: autoDismissProgressColor,
+                                transformOrigin: dismissOnTop ? "left center" : "left center",
+                                animation: `centeredModalDismissProgress ${autoDismissMs}ms linear forwards`,
+                                borderRadius: dismissOnTop ? "1rem 1rem 0 0" : "0 0 1rem 1rem",
+                                zIndex: 2,
+                                pointerEvents: "none",
+                            }}
+                        />
+                    )}
                     {/* Header section */}
                     {(title || onClose) && (
                         <div style={{
@@ -164,7 +198,18 @@ export default function CenteredModal({
 
     // Use portal to render at document body level
     if (typeof window !== 'undefined' && isOpen) {
-        return createPortal(modalContent, document.body);
+        return createPortal(
+            <>
+                <style>{`
+                    @keyframes centeredModalDismissProgress {
+                        from { transform: scaleX(0); }
+                        to { transform: scaleX(1); }
+                    }
+                `}</style>
+                {modalContent}
+            </>,
+            document.body
+        );
     }
 
     return null;

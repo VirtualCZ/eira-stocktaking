@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BaseItemPicker from "@/components/molecules/BaseItemPicker";
 import LinkItemDetailTemplate from "@/components/organisms/LinkItemDetailTemplate";
-import CenteredModal from "@/components/molecules/CenteredModal";
+import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
 import { useBaseItemDetails, useLinkBaseItemToEvent } from "@/hooks/useBaseItems";
 import {
   DEFAULT_LINK_INVENTURA_STATE,
@@ -143,21 +143,13 @@ export default function LinkItemForm({
         onSelectBaseItem={handleBaseItemSelect}
       />
 
-      <CenteredModal
+      <ActionFeedbackModal
         isOpen={actionModalOpen}
         onClose={() => setActionModalOpen(false)}
         title={actionModalContent.title}
-      >
-        <div
-          style={{
-            color: actionModalContent.success ? "#2ecc40" : "#FF6262",
-            fontWeight: 600,
-            fontSize: 16,
-          }}
-        >
-          {actionModalContent.message}
-        </div>
-      </CenteredModal>
+        message={actionModalContent.message}
+        success={actionModalContent.success}
+      />
 
       <div
         className="fixed left-0 right-0 bottom-0 z-[100] backdrop-blur-md flex justify-center"

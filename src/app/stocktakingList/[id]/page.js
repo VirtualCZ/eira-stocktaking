@@ -10,6 +10,7 @@ import HeadingCard from "@/components/molecules/HeadingCard";
 import { ContextButton, ContextRow } from "@/components/molecules/ContextMenu";
 import SortOptionsModal from "@/components/organisms/SortOptionsModal";
 import CenteredModal from "@/components/molecules/CenteredModal";
+import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
 import LocationPicker from "@/components/organisms/LocationPicker";
 import UserLocationPicker from "@/components/organisms/UserLocationPicker";
 import CardItemName from "@/components/atoms/CardItemName";
@@ -775,11 +776,13 @@ function StocktakingListContent() {
                   )}
                 </CenteredModal>
 
-                <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
-                    <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>
-                        {actionModalContent.message}
-                    </div>
-                </CenteredModal>
+                <ActionFeedbackModal
+                    isOpen={actionModalOpen}
+                    onClose={() => setActionModalOpen(false)}
+                    title={actionModalContent.title}
+                    message={actionModalContent.message}
+                    success={actionModalContent.success}
+                />
 
                 {/* Loading modal for item updates */}
                 <CenteredModal isOpen={isUpdatingItem} title="Probíhá akce...">

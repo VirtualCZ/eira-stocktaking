@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useStocktakingItem, useUpdateInventoryObject, useDeleteInventoryObject, useDuplicateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
+import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
 import SwipeToDelete from "@/components/molecules/SwipeToDelete";
 import DuplicateIdentifierModal from "@/components/molecules/DuplicateIdentifierModal";
 import { useDuplicateItemModal } from "@/hooks/useDuplicateItemModal";
@@ -197,9 +198,13 @@ export default function ItemListDetail() {
                 attachmentsRef={attachmentsRef}
             />
             {/* Action result modal for update, delete, duplicate */}
-            <CenteredModal isOpen={actionModalOpen} onClose={() => setActionModalOpen(false)} title={actionModalContent.title}>
-                <div style={{ color: actionModalContent.success ? '#2ecc40' : '#FF6262', fontWeight: 600, fontSize: 16 }}>{actionModalContent.message}</div>
-            </CenteredModal>
+            <ActionFeedbackModal
+                isOpen={actionModalOpen}
+                onClose={() => setActionModalOpen(false)}
+                title={actionModalContent.title}
+                message={actionModalContent.message}
+                success={actionModalContent.success}
+            />
             {/* Loading modal for any action */}
             <CenteredModal isOpen={isAnyLoading} title="Probíhá akce...">
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useCreateInventoryObject } from "@/hooks/useStocktakingItems";
 import CenteredModal from "@/components/molecules/CenteredModal";
+import ActionFeedbackModal from "@/components/molecules/ActionFeedbackModal";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEntregs } from "@/hooks/useEntregs";
 import DropdownCard from "@/components/molecules/DropdownCard";
@@ -302,21 +303,13 @@ export default function NewItemForm({
           </div>
         </main>
       </div>
-      <CenteredModal
+      <ActionFeedbackModal
         isOpen={actionModalOpen}
         onClose={() => setActionModalOpen(false)}
         title={actionModalContent.title}
-      >
-        <div
-          style={{
-            color: actionModalContent.success ? "#2ecc40" : "#FF6262",
-            fontWeight: 600,
-            fontSize: 16,
-          }}
-        >
-          {actionModalContent.message}
-        </div>
-      </CenteredModal>
+        message={actionModalContent.message}
+        success={actionModalContent.success}
+      />
       <CenteredModal isOpen={loading} title="Probíhá akce...">
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           <span>Probíhá akce...</span>
